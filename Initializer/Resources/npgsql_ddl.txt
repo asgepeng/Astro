@@ -1,0 +1,330 @@
+-- countries
+CREATE TABLE countries (
+    country_id SMALLINT PRIMARY KEY,
+    country_name VARCHAR(100) NOT NULL DEFAULT '',
+    country_a2code CHAR(2) NOT NULL DEFAULT '',
+    country_a3code CHAR(3) NOT NULL DEFAULT '',
+    country_phone_code INTEGER NOT NULL DEFAULT 0
+);
+
+-- provinces
+CREATE TABLE states (
+    state_id SMALLINT PRIMARY KEY,
+    state_name VARCHAR(100) NOT NULL DEFAULT '',
+    country_id SMALLINT NOT NULL DEFAULT 0
+);
+
+-- cities
+CREATE TABLE cities (
+    city_id INTEGER PRIMARY KEY,
+    city_name VARCHAR(200) NOT NULL DEFAULT '',
+    state_id INTEGER NOT NULL DEFAULT 0
+);
+
+-- roles
+CREATE TABLE roles (
+    role_id SMALLSERIAL PRIMARY KEY,
+    role_name VARCHAR(150) NOT NULL DEFAULT '',
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP
+);
+
+-- sections
+CREATE TABLE sections (
+    section_id SMALLSERIAL PRIMARY KEY,
+    section_title VARCHAR(100) NOT NULL DEFAULT '',
+    is_disabled BOOLEAN NOT NULL DEFAULT false
+);
+
+-- menus
+CREATE TABLE menus (
+    menu_id SMALLSERIAL PRIMARY KEY,
+    section_id SMALLINT NOT NULL DEFAULT 0,
+    menu_title VARCHAR(100) NOT NULL DEFAULT '',
+    menu_tooltip_text VARCHAR(250) NOT NULL DEFAULT '',
+    is_disabled BOOLEAN NOT NULL DEFAULT false
+);
+
+-- roletomenus
+CREATE TABLE role_to_menus (
+    role_id INTEGER NOT NULL,
+    menu_id INTEGER NOT NULL,
+    allow_create BOOLEAN NOT NULL DEFAULT false,
+    allow_read BOOLEAN NOT NULL DEFAULT false,
+    allow_update BOOLEAN NOT NULL DEFAULT false,
+    allow_delete BOOLEAN NOT NULL DEFAULT false,
+    PRIMARY KEY (role_id, menu_id)
+);
+
+-- users
+CREATE TABLE users (
+    user_id SMALLSERIAL PRIMARY KEY,
+    prefix_id SMALLINT NOT NULL DEFAULT 0,
+    user_name VARCHAR(100) NOT NULL DEFAULT '',
+    suffix_id SMALLINT NOT NULL DEFAULT 0,
+    date_of_birth DATE NOT NULL DEFAULT '1900-01-01',
+    user_sex SMALLINT NOT NULL DEFAULT 0,
+    marital_status SMALLINT NOT NULL DEFAULT 0,
+    role_id SMALLINT NOT NULL DEFAULT 0,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- settings
+CREATE TABLE settings (
+    setting_id SERIAL PRIMARY KEY,
+    setting_name VARCHAR(100) NOT NULL DEFAULT '',
+    contact_type SMALLINT NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT false
+);
+
+-- addresses
+CREATE TABLE addresses (
+    address_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL DEFAULT 0,
+    address_type SMALLINT NOT NULL DEFAULT 0,
+    street_address VARCHAR(250) NOT NULL DEFAULT '',
+    city_id INTEGER NOT NULL DEFAULT 0,
+    zip_code INTEGER NOT NULL DEFAULT 0,
+    is_primary BOOLEAN NOT NULL DEFAULT false
+);
+
+-- emails
+CREATE TABLE emails (
+    email_id BIGSERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL DEFAULT 0,
+    email_address VARCHAR(60) NOT NULL DEFAULT '',
+    email_type SMALLINT NOT NULL DEFAULT 0,
+    is_primary BOOLEAN NOT NULL DEFAULT false,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP
+);
+
+-- phones
+CREATE TABLE phones (
+    phone_id BIGSERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL DEFAULT 0,
+    phone_type INTEGER NOT NULL DEFAULT 0,
+    phone_number VARCHAR(60) NOT NULL DEFAULT '',
+    phone_ext SMALLINT NOT NULL DEFAULT 0,
+    is_primary BOOLEAN NOT NULL DEFAULT false,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP
+);
+
+-- faxes
+CREATE TABLE faxes (
+    fax_id BIGSERIAL PRIMARY KEY,
+    user_id SMALLINT NOT NULL DEFAULT 0,
+    fax_type SMALLINT NOT NULL DEFAULT 0,
+    fax_number VARCHAR(60) NOT NULL DEFAULT '',
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP
+);
+
+-- logins
+CREATE TABLE logins (
+    login_name VARCHAR(80) NOT NULL PRIMARY KEY,
+    login_password VARCHAR(255) NOT NULL DEFAULT '',
+    user_id SMALLINT NOT NULL DEFAULT 0,
+    failed_count SMALLINT NOT NULL DEFAULT 0,
+    is_locked BOOLEAN NOT NULL DEFAULT false,
+    locked_expired TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT NOT NULL DEFAULT 0,
+    edited_date TIMESTAMP
+);
+
+-- auths
+CREATE TABLE auths (
+    token CHAR(36) PRIMARY KEY,
+    user_id SMALLINT NOT NULL DEFAULT 0,
+    token_expired_date TIMESTAMP NOT NULL,
+    ipv4_address VARCHAR(50) NOT NULL DEFAULT '',
+    ipv6_address BYTEA,
+    user_agent VARCHAR(250) NOT NULL DEFAULT ''
+);
+
+-- units
+CREATE TABLE units (
+    unit_id SERIAL PRIMARY KEY,
+    unit_name VARCHAR(100) NOT NULL DEFAULT '',
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP
+);
+
+-- categories
+CREATE TABLE categories (
+    category_id SMALLSERIAL PRIMARY KEY,
+    categriry_name VARCHAR(100) NOT NULL DEFAULT '',
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- products
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL DEFAULT '',
+    product_description VARCHAR(8000) NOT NULL DEFAULT '',
+    product_sku VARCHAR(40) NOT NULL DEFAULT '',
+    category_id SMALLINT NOT NULL DEFAULT 0,
+    product_type INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    stock BIGINT NOT NULL DEFAULT 0,
+    min_stock SMALLINT NOT NULL DEFAULT 0,
+    max_stock SMALLINT NOT NULL DEFAULT 0,
+    unit_id SMALLINT NOT NULL DEFAULT 0,
+    price BIGINT NOT NULL DEFAULT 0,
+    cost_average BIGINT NOT NULL DEFAULT 0,
+    images VARCHAR(250) NOT NULL DEFAULT '',
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- contactgroups
+CREATE TABLE contact_groups (
+    group_id SMALLSERIAL PRIMARY KEY,
+    group_name VARCHAR(100) NOT NULL DEFAULT '',
+    contact_type SMALLINT NOT NULL DEFAULT 0,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- contacts
+CREATE TABLE contacts (
+    contact_id SERIAL PRIMARY KEY,
+    contact_name VARCHAR(250) NOT NULL DEFAULT '',
+    contact_type SMALLINT NOT NULL DEFAULT 0,
+    group_id SMALLINT NOT NULL DEFAULT 0,
+    account_limit INTEGER NOT NULL DEFAULT 0,
+    account_due SMALLINT NOT NULL DEFAULT 0,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- contactaddresses
+CREATE TABLE contact_addresses (
+    address_id BIGSERIAL PRIMARY KEY,
+    contact_id SMALLINT NOT NULL DEFAULT 0,
+    street_address VARCHAR(250) NOT NULL DEFAULT '',
+    city_id INTEGER NOT NULL DEFAULT 0,
+    zip_code VARCHAR(15) NOT NULL DEFAULT '',
+    is_primary BOOLEAN NOT NULL DEFAULT false
+);
+
+-- contactphones
+CREATE TABLE contact_phones (
+    phone_id BIGSERIAL PRIMARY KEY,
+    contact_id SMALLINT NOT NULL DEFAULT 0,
+    phone_number VARCHAR(25) NOT NULL DEFAULT '',
+    phone_type SMALLINT NOT NULL DEFAULT 0,
+    is_primary BOOLEAN NOT NULL DEFAULT false
+);
+
+-- wsprices
+CREATE TABLE wholesale_prices (
+    product_id BIGINT NOT NULL,
+    min_qty SMALLINT NOT NULL,
+    price BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (product_id, min_qty)
+);
+
+-- promotions
+CREATE TABLE promotions (
+    promo_id BIGSERIAL PRIMARY KEY,
+    promo_title VARCHAR(250) NOT NULL DEFAULT '',
+    promo_start_date TIMESTAMP NOT NULL,
+    promo_end_date TIMESTAMP NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- promoproducts
+CREATE TABLE promo_products (
+    promo_id BIGINT NOT NULL,
+    product_id SMALLINT NOT NULL,
+    promo_type SMALLINT NOT NULL DEFAULT 0,
+    promo_value BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (promo_id, product_id)
+);
+
+-- groupprices
+CREATE TABLE group_prices (
+    group_id SMALLINT NOT NULL,
+    product_id SMALLINT NOT NULL,
+    min_qty BIGINT NOT NULL DEFAULT 0,
+    discount_type SMALLINT NOT NULL DEFAULT 0,
+    discount_amount BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (group_id, product_id)
+);
+
+-- vouchers
+CREATE TABLE vouchers (
+    voucher_id BIGINT PRIMARY KEY,
+    voucher_expired_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    voucher_amount BIGINT NOT NULL DEFAULT 0,
+    creator_id BIGINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- accproviders
+CREATE TABLE account_providers (
+    provider_id SMALLINT PRIMARY KEY,
+    provider_name VARCHAR(100) NOT NULL DEFAULT '',
+    provider_type SMALLINT NOT NULL DEFAULT 0
+);
+
+-- accounts
+CREATE TABLE accounts (
+    account_id SERIAL PRIMARY KEY,
+    account_name VARCHAR(250) NOT NULL DEFAULT '',
+    account_number VARCHAR(50) NOT NULL DEFAULT '',
+    provider_id SMALLINT NOT NULL DEFAULT 0,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id SMALLINT,
+    edited_date TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
+);
+
+-- cashflows
+CREATE TABLE cashflows (
+    cashflow_id BIGSERIAL PRIMARY KEY,
+    cashflow_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    account_id INTEGER NOT NULL DEFAULT 0,
+    account_type INTEGER NOT NULL DEFAULT 0,
+    debt BIGINT NOT NULL DEFAULT 0,
+    credit BIGINT NOT NULL DEFAULT 0,
+    creator_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
