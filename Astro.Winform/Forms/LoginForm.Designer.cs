@@ -43,7 +43,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(34, 233);
+            label1.Location = new Point(35, 199);
             label1.Name = "label1";
             label1.Size = new Size(67, 17);
             label1.TabIndex = 0;
@@ -51,24 +51,26 @@
             // 
             // usernameTextBox
             // 
-            usernameTextBox.Location = new Point(34, 253);
+            usernameTextBox.BackColor = Color.Lavender;
+            usernameTextBox.Location = new Point(35, 219);
             usernameTextBox.Name = "usernameTextBox";
-            usernameTextBox.Size = new Size(282, 25);
+            usernameTextBox.Size = new Size(280, 25);
             usernameTextBox.TabIndex = 1;
             // 
             // passwordTextBox
             // 
-            passwordTextBox.Location = new Point(34, 301);
+            passwordTextBox.BackColor = Color.Lavender;
+            passwordTextBox.Location = new Point(35, 272);
             passwordTextBox.Name = "passwordTextBox";
             passwordTextBox.PasswordChar = '*';
-            passwordTextBox.Size = new Size(282, 25);
+            passwordTextBox.Size = new Size(280, 25);
             passwordTextBox.TabIndex = 3;
             passwordTextBox.UseSystemPasswordChar = true;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(34, 281);
+            label2.Location = new Point(35, 252);
             label2.Name = "label2";
             label2.Size = new Size(70, 17);
             label2.TabIndex = 2;
@@ -79,13 +81,13 @@
             button1.BackColor = SystemColors.HotTrack;
             button1.FlatAppearance.BorderSize = 0;
             button1.FlatStyle = FlatStyle.Flat;
-            button1.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold);
+            button1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button1.ForeColor = Color.White;
-            button1.Location = new Point(178, 344);
+            button1.Location = new Point(178, 325);
             button1.Name = "button1";
-            button1.Size = new Size(138, 32);
+            button1.Size = new Size(137, 32);
             button1.TabIndex = 4;
-            button1.Text = "Login";
+            button1.Text = "🔑 Login";
             button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
             // 
@@ -94,33 +96,34 @@
             button2.BackColor = Color.Red;
             button2.FlatAppearance.BorderSize = 0;
             button2.FlatStyle = FlatStyle.Flat;
-            button2.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold);
+            button2.Font = new Font("Segoe UI Emoji", 9.75F);
             button2.ForeColor = Color.White;
-            button2.Location = new Point(34, 344);
+            button2.Location = new Point(35, 325);
             button2.Name = "button2";
-            button2.Size = new Size(138, 32);
+            button2.Size = new Size(137, 32);
             button2.TabIndex = 5;
-            button2.Text = "Batal";
+            button2.Text = "❌ Batal";
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_Click;
             // 
             // pictureBox1
             // 
             pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
-            pictureBox1.Location = new Point(34, 97);
+            pictureBox1.Location = new Point(35, 96);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(282, 48);
+            pictureBox1.Size = new Size(280, 48);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 6;
             pictureBox1.TabStop = false;
             // 
             // label3
             // 
-            label3.Location = new Point(34, 398);
+            label3.ForeColor = SystemColors.ControlDarkDark;
+            label3.Location = new Point(29, 405);
             label3.Name = "label3";
-            label3.Size = new Size(282, 93);
+            label3.Size = new Size(282, 74);
             label3.TabIndex = 7;
-            label3.Text = "Copyright (c) 2025 Havas Media";
+            label3.Text = "Copyright © 2025 Havas Media";
             label3.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // LoginForm
@@ -128,7 +131,7 @@
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(350, 500);
+            ClientSize = new Size(348, 498);
             ControlBox = false;
             Controls.Add(label3);
             Controls.Add(pictureBox1);

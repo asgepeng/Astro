@@ -61,10 +61,6 @@ namespace Astro.Security
             }
             File.WriteAllText("E:\\combined.txt", builder.ToString());
         }
-        public static string HashPassword(string password)
-        {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
     }
 
 }

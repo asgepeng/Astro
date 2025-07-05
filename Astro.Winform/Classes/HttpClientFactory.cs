@@ -30,11 +30,7 @@ namespace Astro.Winform.Classes
         }
         internal static async Task<bool> SignInAsync(string username, string password)
         {
-            LoginRequest request = new LoginRequest()
-            {
-                Username = username,
-                Password = password
-            };
+            Credential request = new Credential(username, password);
             Uri endpoint = CreateUri("/auth/login");
             HttpContent content = new StringContent(request.ToString(), Encoding.UTF8, "application/json");
             try
@@ -42,31 +38,30 @@ namespace Astro.Winform.Classes
                 HttpResponseMessage response = await Instance.PostAsync(endpoint, content);
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
-                LoginResponse? loginResponse = LoginResponse.Create(json);
-                if (loginResponse != null)
+                AuthResponse? authResult = AuthResponse.Create(json);
+                if (authResult != null)
                 {
-                    if (loginResponse.Success)
+                    if (authResult.IsAuthenticated())
                     {
-                        My.Application.ApiToken = loginResponse.Token;
-                        My.Application.User = loginResponse.UserInfo;
+                        if (authResult.AccessToken is null) throw new ArgumentException("token is null");
+
+                        My.Application.ApiToken = authResult.AccessToken;
+                        My.Application.User = authResult.UserInfo;
                         return true;
                     }
-                    else
-                    {
-                        if (loginResponse.Message.Length > 0)
-                        {
-                            MessageBox.Show(loginResponse.Message);
-                        }
-                    }
+
+                    if (!string.IsNullOrEmpty(authResult.Message)) MessageBox.Show(authResult.Message, "Access denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    else MessageBox.Show("Invalid username or password", "Access denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show("Request Failed: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Request Failed 1: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Request Failed: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Request Failed 2: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Clipboard.SetText(ex.Message);
             }
             return false;
         }

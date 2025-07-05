@@ -16,6 +16,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astro.DbInitialializer", "Initializer\Astro.DbInitialializer.csproj", "{5DA44301-1752-4B5F-9BEB-5D7ED3740CDD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4A18BBCB-93F8-42E0-8F9D-0DE7A4D1B23E} = {4A18BBCB-93F8-42E0-8F9D-0DE7A4D1B23E}
+		{625D9F56-5910-4A9C-91B8-F71DEDBD1408} = {625D9F56-5910-4A9C-91B8-F71DEDBD1408}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astro.Winform", "Astro.Winform\Astro.Winform.csproj", "{783EE715-4D35-4319-9278-1686D23E76E8}"

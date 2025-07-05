@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Astro.Data\Astro.Data.csproj" />
+    <ProjectReference Include="..\Astro.Objects\Astro.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,10 +35,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>

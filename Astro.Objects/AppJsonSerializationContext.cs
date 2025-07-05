@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(List<City>))]
 [JsonSerializable(typeof(List<Menu>))]
 
+[JsonSerializable(typeof(ChangePasswordRequest))]
 [JsonSerializable(typeof(ListSection))]
 [JsonSerializable(typeof(Menu))]
 [JsonSerializable(typeof(Section))]
@@ -25,11 +26,12 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(City))]
 [JsonSerializable(typeof(Province))]
 [JsonSerializable(typeof(Country))]
-[JsonSerializable(typeof(LoginResponse))]
-[JsonSerializable(typeof(LoginRequest))]
+[JsonSerializable(typeof(AuthResponse))]
+[JsonSerializable(typeof(Credential))]
 [JsonSerializable(typeof(Permission))]
 [JsonSerializable(typeof(Role))]
 [JsonSerializable(typeof(User))]
+[JsonSerializable(typeof(CommonResult))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }

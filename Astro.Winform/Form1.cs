@@ -85,6 +85,8 @@ namespace PointOfSale
             var form = new LoginForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
+                var changePassword = new ChangePasswordForm();
+                changePassword.ShowDialog();
                 this.WindowState = FormWindowState.Maximized;
                 if (My.Application.User != null)
                 {

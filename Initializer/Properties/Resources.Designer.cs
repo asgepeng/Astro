@@ -61,23 +61,25 @@ namespace Astro.DbInitialializer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CREATE TABLE countries
-        ///(
-        ///    `id` SMALLINT NOT NULL,
-        ///    `name` VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
-        ///    `a2code` CHAR(2) NOT NULL DEFAULT &apos;&apos;,
-        ///    `a3code` CHAR(3) NOT NULL DEFAULT &apos;&apos;,
-        ///    `phoneCode` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-        ///    CONSTRAINT pk_countries PRIMARY KEY (`id`)
+        ///   Looks up a localized string similar to -- countries
+        ///CREATE TABLE countries (
+        ///    country_id SMALLINT PRIMARY KEY,
+        ///    country_name VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
+        ///    country_a2code CHAR(2) NOT NULL DEFAULT &apos;&apos;,
+        ///    country_a3code CHAR(3) NOT NULL DEFAULT &apos;&apos;,
+        ///    country_phone_code INTEGER NOT NULL DEFAULT 0
         ///);
-        ///CREATE TABLE provinces
-        ///(
-        ///    `id` SMALLINT UNSIGNED NOT NULL,
-        ///    `name` VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
-        ///    `country` SMALLINT NOT NULL DEFAULT 0,
-        ///    CONSTRAINT pk_states PRIMARY KEY (`id`)
+        ///
+        ///-- provinces
+        ///CREATE TABLE states (
+        ///    state_id SMALLINT PRIMARY KEY,
+        ///    state_name VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
+        ///    country_id SMALLINT NOT NULL DEFAULT 0
         ///);
-        ///CREATE TABLE  [rest of string was truncated]&quot;;.
+        ///
+        ///-- cities
+        ///CREATE TABLE cities (
+        ///    city_id INTEGER  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ddl {
             get {
@@ -86,7 +88,9 @@ namespace Astro.DbInitialializer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to INSERT INTO units (name) VALUES
+        ///   Looks up a localized string similar to INSERT INTO roles (role_name) VALUES (&apos;superadmin&apos;);
+        ///INSERT INTO users (user_name, role_id) VALUES (&apos;havas-media.com&apos;, 1);
+        ///INSERT INTO units (unit_name) VALUES
         ///(&apos;pcs&apos;),
         ///(&apos;buah&apos;),
         ///(&apos;bungkus&apos;),
@@ -115,51 +119,11 @@ namespace Astro.DbInitialializer.Properties {
         ///(&apos;ton&apos;),
         ///(&apos;milimeter&apos;),
         ///(&apos;centimeter&apos;),
-        ///(&apos;meter&apos;),
-        ///(&apos;gulung&apos;),
-        ///(&apos;meter persegi&apos;),
-        ///(&apos;hektar&apos;),
-        ///(&apos;lembar&apos;),
-        ///(&apos;batang&apos;),
-        ///(&apos;biji&apos;),
-        ///(&apos;pasang&apos;),
-        ///(&apos;unit&apos;),
-        ///(&apos;pack&apos;);
-        ///
-        ///INSERT I [rest of string was truncated]&quot;;.
+        ///(&apos;meter&apos;), [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string dml {
             get {
                 return ResourceManager.GetString("dml", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to -- countries
-        ///CREATE TABLE countries (
-        ///    id SMALLINT PRIMARY KEY,
-        ///    name VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
-        ///    a2code CHAR(2) NOT NULL DEFAULT &apos;&apos;,
-        ///    a3code CHAR(3) NOT NULL DEFAULT &apos;&apos;,
-        ///    phoneCode INTEGER NOT NULL DEFAULT 0
-        ///);
-        ///
-        ///-- provinces
-        ///CREATE TABLE provinces (
-        ///    id INTEGER PRIMARY KEY,
-        ///    name VARCHAR(100) NOT NULL DEFAULT &apos;&apos;,
-        ///    country SMALLINT NOT NULL DEFAULT 0
-        ///);
-        ///
-        ///-- cities
-        ///CREATE TABLE cities (
-        ///    id INTEGER PRIMARY KEY,
-        ///    name VARCHAR(200) NOT NULL DEFAULT &apos;&apos;,
-        ///  [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string npgsql_ddl {
-            get {
-                return ResourceManager.GetString("npgsql_ddl", resourceCulture);
             }
         }
     }

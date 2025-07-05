@@ -60,19 +60,58 @@ CREATE TABLE role_to_menus (
 
 -- users
 CREATE TABLE users (
-    user_id SMALLSERIAL PRIMARY KEY,
-    prefix_id SMALLINT NOT NULL DEFAULT 0,
-    user_name VARCHAR(100) NOT NULL DEFAULT '',
-    suffix_id SMALLINT NOT NULL DEFAULT 0,
-    date_of_birth DATE NOT NULL DEFAULT '1900-01-01',
-    user_sex SMALLINT NOT NULL DEFAULT 0,
-    marital_status SMALLINT NOT NULL DEFAULT 0,
-    role_id SMALLINT NOT NULL DEFAULT 0,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    user_id                  SMALLSERIAL PRIMARY KEY,
+
+    prefix_id                SMALLINT     NOT NULL DEFAULT 0,
+    user_firstname           VARCHAR(100) NOT NULL DEFAULT '',
+    user_lastname            VARCHAR(100) NOT NULL DEFAULT '',
+    suffix_id                SMALLINT     NOT NULL DEFAULT 0,
+    role_id                  SMALLINT     NOT NULL DEFAULT 0,
+
+    user_name                VARCHAR(100) NOT NULL DEFAULT '',
+    normalized_user_name     VARCHAR(100) NOT NULL DEFAULT '',
+    email                    VARCHAR(80)  NOT NULL DEFAULT '',
+    email_confirmed          BOOLEAN      NOT NULL DEFAULT false,
+    phone_number             VARCHAR(30)  NOT NULL DEFAULT '',
+    phone_number_confirmed   BOOLEAN      NOT NULL DEFAULT false,
+    password_hash            VARCHAR(255) NOT NULL DEFAULT '',
+
+    date_of_birth            DATE         NOT NULL DEFAULT '1900-01-01',
+    sex                 SMALLINT     NOT NULL DEFAULT 0,
+    marital_status           SMALLINT     NOT NULL DEFAULT 0,
+
+    street_address           VARCHAR(250) NOT NULL DEFAULT '',
+    city_id                  INT          NOT NULL DEFAULT 0,
+    zip_code                 VARCHAR(30)  NOT NULL DEFAULT '',
+
+    two_factor_enabled       BOOLEAN      NOT NULL DEFAULT false,
+    access_failed_count      SMALLINT     NOT NULL DEFAULT 0,
+    lockout_enabled          BOOLEAN      NOT NULL DEFAULT false,
+    lockout_end              TIMESTAMP,
+
+    security_stamp           CHAR(36)     NOT NULL DEFAULT '',
+    concurrency_stamp        TIMESTAMP,
+
+    creator_id               SMALLINT     NOT NULL DEFAULT 0,
+    created_date             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id                SMALLINT,
+    edited_date              TIMESTAMP,
+
+    is_deleted               BOOLEAN      NOT NULL DEFAULT false
+);
+
+-- login attempt
+CREATE TABLE login_attempts
+(
+    attempt_id              SERIAL          PRIMARY KEY,
+    attempt_time            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    user_id                 SMALLINT        NOT NULL DEFAULT 0,
+    ipv4_address            VARCHAR(50)     NOT NULL DEFAULT '',
+    ipv6_address            VARCHAR(60)     NOT NULL DEFAULT '',
+    user_agent              VARCHAR(255)    NOT NULL DEFAULT '',
+    is_success              BOOLEAN         NOT NULL DEFAULT false,
+    notes                   VARCHAR(255)    NOT NULL DEFAULT ''
 );
 
 -- settings
@@ -109,52 +148,38 @@ CREATE TABLE emails (
 
 -- phones
 CREATE TABLE phones (
-    phone_id BIGSERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL DEFAULT 0,
-    phone_type INTEGER NOT NULL DEFAULT 0,
-    phone_number VARCHAR(60) NOT NULL DEFAULT '',
-    phone_ext SMALLINT NOT NULL DEFAULT 0,
-    is_primary BOOLEAN NOT NULL DEFAULT false,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP
+    phone_id            BIGSERIAL   PRIMARY KEY,
+    user_id             INTEGER     NOT NULL    DEFAULT 0,
+    phone_type          INTEGER     NOT NULL    DEFAULT 0,
+    phone_number        VARCHAR(60) NOT NULL    DEFAULT '',
+    phone_ext           SMALLINT    NOT NULL    DEFAULT 0,
+    is_primary          BOOLEAN     NOT NULL    DEFAULT false,
+    creator_id          SMALLINT    NOT NULL    DEFAULT 0,
+    created_date        TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP
 );
 
 -- faxes
 CREATE TABLE faxes (
-    fax_id BIGSERIAL PRIMARY KEY,
-    user_id SMALLINT NOT NULL DEFAULT 0,
-    fax_type SMALLINT NOT NULL DEFAULT 0,
-    fax_number VARCHAR(60) NOT NULL DEFAULT '',
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP
-);
-
--- logins
-CREATE TABLE logins (
-    login_name VARCHAR(80) NOT NULL PRIMARY KEY,
-    login_password VARCHAR(255) NOT NULL DEFAULT '',
-    user_id SMALLINT NOT NULL DEFAULT 0,
-    failed_count SMALLINT NOT NULL DEFAULT 0,
-    is_locked BOOLEAN NOT NULL DEFAULT false,
-    locked_expired TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT NOT NULL DEFAULT 0,
-    edited_date TIMESTAMP
+    fax_id          BIGSERIAL   PRIMARY KEY,
+    user_id         SMALLINT    NOT NULL DEFAULT 0,
+    fax_type        SMALLINT    NOT NULL DEFAULT 0,
+    fax_number      VARCHAR(60) NOT NULL DEFAULT '',
+    creator_id      SMALLINT    NOT NULL DEFAULT 0,
+    created_date    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id       SMALLINT,
+    edited_date     TIMESTAMP
 );
 
 -- auths
 CREATE TABLE auths (
-    token CHAR(36) PRIMARY KEY,
-    user_id SMALLINT NOT NULL DEFAULT 0,
-    token_expired_date TIMESTAMP NOT NULL,
-    ipv4_address VARCHAR(50) NOT NULL DEFAULT '',
-    ipv6_address BYTEA,
-    user_agent VARCHAR(250) NOT NULL DEFAULT ''
+    token               CHAR(36)        PRIMARY KEY,
+    user_id             SMALLINT        NOT NULL DEFAULT 0,
+    token_expired_date  TIMESTAMP       NOT NULL,
+    ipv4_address        VARCHAR(50)     NOT NULL DEFAULT '',
+    ipv6_address        BYTEA,
+    user_agent          VARCHAR(250)    NOT NULL DEFAULT ''
 );
 
 -- units
@@ -170,7 +195,7 @@ CREATE TABLE units (
 -- categories
 CREATE TABLE categories (
     category_id SMALLSERIAL PRIMARY KEY,
-    categriry_name VARCHAR(100) NOT NULL DEFAULT '',
+    categiry_name VARCHAR(100) NOT NULL DEFAULT '',
     creator_id SMALLINT NOT NULL DEFAULT 0,
     created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     editor_id SMALLINT,

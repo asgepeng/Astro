@@ -33,21 +33,19 @@ public class Program
         db.ChangeUsernameAndPassword("astroboy", "Orogin@k-66171");
 
         // 5. Jalankan DDL dan DML
-        sql_ddl = global::Astro.DbInitialializer.Properties.Resources.npgsql_ddl;
+        sql_ddl = global::Astro.DbInitialializer.Properties.Resources.ddl;
         await db.ExecuteNonQueryAsync(sql_ddl);
         await db.ExecuteNonQueryAsync(global::Astro.DbInitialializer.Properties.Resources.dml);
-        var password = Astro.Security.Password.HashPassword("Power123...");
+        var password = Astro.Models.Password.HashPassword("Power123...");
         var parameters = new NpgsqlParameter[]
         {
-            new NpgsqlParameter("@username", "administrator"),
             new NpgsqlParameter("@password", password),
             new NpgsqlParameter("@userid", 1)
         };
         var commandText = """
-            INSERT INTO logins
-            (login_name, login_password, user_id)
-            VALUES
-            (@username, @password, @userid)
+            UPDATE users
+            SET password_hash = @password
+            WHERE user_id = @userid;
             """;
         await db.ExecuteNonQueryAsync(commandText, parameters);
         Console.WriteLine("Create database succeeded.");

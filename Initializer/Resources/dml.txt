@@ -1,5 +1,5 @@
 INSERT INTO roles (role_name) VALUES ('superadmin');
-INSERT INTO users (user_name, role_id) VALUES ('havas-media.com', 1);
+INSERT INTO users (user_firstname, user_lastname, user_name, role_id) VALUES ('havas-media.com', '', 'administrator', 1);
 INSERT INTO units (unit_name) VALUES
 ('pcs'),
 ('buah'),
@@ -876,3 +876,20 @@ INSERT INTO account_providers (provider_id, provider_name, provider_type) VALUES
 (9102, 'BRIZZI', 3),
 (9103, 'TapCash BNI', 3),
 (9104, 'Flazz BCA', 3);
+
+INSERT INTO sections
+(section_title)
+VALUES
+('File'),('Data'),('Transaction'),('Reports'),('Website'),('Tools'),('Help');
+INSERT INTO menus (section_id, menu_title)
+VALUES
+(1, 'Profile'),
+(1, 'Change Password'),
+(1, 'Logout'),
+(2, 'Products'),
+(2, 'Customers'),
+(2, 'Suppliers'),
+(2, 'Employees'),
+(2, 'Accounts'),
+(3, 'Purchase Reports'),
+(3, 'Sales Reports');

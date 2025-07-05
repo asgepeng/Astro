@@ -20,4 +20,8 @@
     <IsAotCompatible>True</IsAotCompatible>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
 </Project>
