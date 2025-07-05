@@ -89,6 +89,10 @@ namespace Astro.Models
         {
             return LockoutEnabled && LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;
         }
+        public string GetFullName()
+        {
+            return $"{FirstName} {LastName}".Trim();
+        }
 
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.User);
         public static User? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.User);

@@ -9,6 +9,7 @@ using Astro.Security;
 using Npgsql;
 using Alaska.Data;
 using System.Dynamic;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Astro.Server.Api
 {
@@ -69,8 +70,12 @@ namespace Astro.Server.Api
                 await CreateLoginHistory(user, LoginResult.CreateTokenFailed, db, context);
                 return Results.Ok(AuthResponse.Fail("Token generation failed. Please try again later."));
             }
-
-            var userInfo = new UserInfo(user.Id, user.FirstName + " " + user.LastName, new Role { Id = user.RoleId, Name = "Superadmin" } );
+            var role = new Role()
+            {
+                Id = user.RoleId,
+                Name = await GetRoleNameAsync(user.RoleId, db)
+            };
+            var userInfo = new UserInfo(user.Id, user.GetFullName(), role );
             await CreateLoginHistory(user, LoginResult.Success, db, context);
             return Results.Ok(AuthResponse.Success(token, userInfo));
         }
@@ -290,6 +295,11 @@ namespace Astro.Server.Api
                 new NpgsqlParameter("notes", notes)
             };
             await db.ExecuteNonQueryAsync(commandText, parameters);
+        }
+        private static async Task<string> GetRoleNameAsync(short roleId, IDatabase db)
+        {
+            var result = await db.ExecuteScalarAsync("SELECT role_name FROM roles WHERE role_id = @roleId", new Npgsql.NpgsqlParameter("roleId", roleId));
+            return result as string ?? string.Empty;
         }
     }
 }
