@@ -61,11 +61,11 @@
             label2.TabIndex = 4;
             label2.Text = "Current Password *";
             // 
-            // textBox1
+            // newPasswordTextBox
             // 
             newPasswordTextBox.BackColor = Color.Lavender;
             newPasswordTextBox.Location = new Point(27, 243);
-            newPasswordTextBox.Name = "textBox1";
+            newPasswordTextBox.Name = "newPasswordTextBox";
             newPasswordTextBox.PasswordChar = '*';
             newPasswordTextBox.Size = new Size(280, 25);
             newPasswordTextBox.TabIndex = 1;
@@ -80,11 +80,11 @@
             label1.TabIndex = 6;
             label1.Text = "New Passsword *";
             // 
-            // textBox2
+            // confirmPasswordTextBox
             // 
             confirmPasswordTextBox.BackColor = Color.Lavender;
             confirmPasswordTextBox.Location = new Point(27, 291);
-            confirmPasswordTextBox.Name = "textBox2";
+            confirmPasswordTextBox.Name = "confirmPasswordTextBox";
             confirmPasswordTextBox.PasswordChar = '*';
             confirmPasswordTextBox.Size = new Size(280, 25);
             confirmPasswordTextBox.TabIndex = 2;
@@ -112,6 +112,7 @@
             button2.TabIndex = 4;
             button2.Text = "❌ Batal";
             button2.UseVisualStyleBackColor = false;
+            button2.Click += CloseForm;
             // 
             // button1
             // 

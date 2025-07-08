@@ -1,5 +1,5 @@
 ﻿using Astro.Models;
-using Astro.ViewModel;
+using Astro.ViewModels;
 using System.Text.Json.Serialization;
 
 [JsonSerializable(typeof(ProductViewModel))]
@@ -13,10 +13,13 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(List<Country>))]
 [JsonSerializable(typeof(List<Province>))]
 [JsonSerializable(typeof(List<City>))]
-[JsonSerializable(typeof(List<Menu>))]
 
+[JsonSerializable(typeof(AddressInfo))]
+[JsonSerializable(typeof(ListOption))]
+[JsonSerializable(typeof(Option))]
 [JsonSerializable(typeof(ChangePasswordRequest))]
 [JsonSerializable(typeof(ListSection))]
+[JsonSerializable(typeof(ListMenu))]
 [JsonSerializable(typeof(Menu))]
 [JsonSerializable(typeof(Section))]
 [JsonSerializable(typeof(UserInfo))]

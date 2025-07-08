@@ -178,7 +178,7 @@ namespace Astro.Winform.Classes
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Request failed: {ex.ToString()}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {

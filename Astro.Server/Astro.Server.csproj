@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Astro.Data\Astro.Data.csproj" />
     <ProjectReference Include="..\Astro.Objects\Astro.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Classes\" />
+  </ItemGroup>
 </Project>

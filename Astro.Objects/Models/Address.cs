@@ -14,4 +14,11 @@ namespace Astro.Models
         [JsonPropertyName("city")] public string City { get; set; } = "";
         [JsonPropertyName("stateOrProvince")] public string StateOrProvince { get; set; } = "";
     }
+    public class AddressInfo
+    {
+        [JsonPropertyName("street")] public string Street { get; set; } = string.Empty;
+        [JsonPropertyName("city")] public int City { get; set; } = 0;
+        [JsonPropertyName("state")] public short State { get; set; } = 0;
+        [JsonPropertyName("country")] public short Country { get; set; } = 0;
+    }
 }

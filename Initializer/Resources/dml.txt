@@ -891,5 +891,14 @@ VALUES
 (2, 'Suppliers'),
 (2, 'Employees'),
 (2, 'Accounts'),
-(3, 'Purchase Reports'),
-(3, 'Sales Reports');
+(3, 'Stock Opname'),
+(3, 'Purchases'),
+(3, 'Payments'),
+(3, 'Sales Orders'),
+(3, 'Invoice'),
+(3, 'Receipt');
+
+INSERT INTO role_to_menus
+	(role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
+SELECT 1 AS role_id, menu_id, true as allow_create, true as allow_read, true as allow_update, true as allow_delete
+FROM menus

@@ -8,10 +8,6 @@ using System.Threading.Tasks;
 
 namespace Astro.Models
 {
-    public class Menu
-    {
-        [JsonPropertyName("title")] public string Title { get; set; } = "";
-    }
     public class Section
     {
         [JsonPropertyName("title")] public string Title { get; set; } = "";

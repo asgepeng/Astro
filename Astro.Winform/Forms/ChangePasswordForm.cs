@@ -29,7 +29,7 @@ namespace Astro.Winform.Forms
                 return;
             }
             if (string.IsNullOrEmpty(newPasswordTextBox.Text))
-            {                 
+            {
                 MessageBox.Show("New Password cannot be empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 newPasswordTextBox.Focus();
                 return;
@@ -57,6 +57,11 @@ namespace Astro.Winform.Forms
                     this.Close();
                 }
             }
+        }
+
+        private void CloseForm(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

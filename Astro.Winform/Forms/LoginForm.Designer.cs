@@ -81,7 +81,7 @@
             button1.BackColor = SystemColors.HotTrack;
             button1.FlatAppearance.BorderSize = 0;
             button1.FlatStyle = FlatStyle.Flat;
-            button1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button1.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold);
             button1.ForeColor = Color.White;
             button1.Location = new Point(178, 325);
             button1.Name = "button1";
@@ -96,7 +96,7 @@
             button2.BackColor = Color.Red;
             button2.FlatAppearance.BorderSize = 0;
             button2.FlatStyle = FlatStyle.Flat;
-            button2.Font = new Font("Segoe UI Emoji", 9.75F);
+            button2.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold);
             button2.ForeColor = Color.White;
             button2.Location = new Point(35, 325);
             button2.Name = "button2";
@@ -147,6 +147,7 @@
             MinimizeBox = false;
             Name = "LoginForm";
             StartPosition = FormStartPosition.CenterScreen;
+            Load += LoginForm_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();

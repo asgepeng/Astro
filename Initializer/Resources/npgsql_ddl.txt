@@ -1,50 +1,50 @@
 -- countries
 CREATE TABLE countries (
-    country_id SMALLINT PRIMARY KEY,
-    country_name VARCHAR(100) NOT NULL DEFAULT '',
-    country_a2code CHAR(2) NOT NULL DEFAULT '',
-    country_a3code CHAR(3) NOT NULL DEFAULT '',
-    country_phone_code INTEGER NOT NULL DEFAULT 0
+    country_id          SMALLINT        PRIMARY KEY,
+    country_name        VARCHAR(100)    NOT NULL DEFAULT '',
+    country_a2code      CHAR(2)         NOT NULL DEFAULT '',
+    country_a3code      CHAR(3)         NOT NULL DEFAULT '',
+    country_phone_code  INTEGER         NOT NULL DEFAULT 0
 );
 
 -- provinces
 CREATE TABLE states (
-    state_id SMALLINT PRIMARY KEY,
-    state_name VARCHAR(100) NOT NULL DEFAULT '',
-    country_id SMALLINT NOT NULL DEFAULT 0
+    state_id            SMALLINT        PRIMARY KEY,
+    state_name          VARCHAR(100)    NOT NULL DEFAULT '',
+    country_id          SMALLINT        NOT NULL DEFAULT 0
 );
 
 -- cities
 CREATE TABLE cities (
-    city_id INTEGER PRIMARY KEY,
-    city_name VARCHAR(200) NOT NULL DEFAULT '',
-    state_id INTEGER NOT NULL DEFAULT 0
+    city_id             INTEGER         PRIMARY KEY,
+    city_name           VARCHAR(200)    NOT NULL DEFAULT '',
+    state_id            INTEGER         NOT NULL DEFAULT 0
 );
 
 -- roles
 CREATE TABLE roles (
-    role_id SMALLSERIAL PRIMARY KEY,
-    role_name VARCHAR(150) NOT NULL DEFAULT '',
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP
+    role_id             SMALLSERIAL     PRIMARY KEY,
+    role_name           VARCHAR(150)    NOT NULL DEFAULT '',
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP
 );
 
 -- sections
 CREATE TABLE sections (
-    section_id SMALLSERIAL PRIMARY KEY,
-    section_title VARCHAR(100) NOT NULL DEFAULT '',
-    is_disabled BOOLEAN NOT NULL DEFAULT false
+    section_id          SMALLSERIAL     PRIMARY KEY,
+    section_title       VARCHAR(100)    NOT NULL DEFAULT '',
+    is_disabled         BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- menus
 CREATE TABLE menus (
-    menu_id SMALLSERIAL PRIMARY KEY,
-    section_id SMALLINT NOT NULL DEFAULT 0,
-    menu_title VARCHAR(100) NOT NULL DEFAULT '',
-    menu_tooltip_text VARCHAR(250) NOT NULL DEFAULT '',
-    is_disabled BOOLEAN NOT NULL DEFAULT false
+    menu_id             SMALLSERIAL     PRIMARY KEY,
+    section_id          SMALLINT        NOT NULL DEFAULT 0,
+    menu_title          VARCHAR(100)    NOT NULL DEFAULT '',
+    menu_tooltip_text   VARCHAR(250)    NOT NULL DEFAULT '',
+    is_disabled         BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- roletomenus
@@ -60,44 +60,48 @@ CREATE TABLE role_to_menus (
 
 -- users
 CREATE TABLE users (
-    user_id                  SMALLSERIAL PRIMARY KEY,
+    user_id                 SMALLSERIAL PRIMARY KEY,
 
-    prefix_id                SMALLINT     NOT NULL DEFAULT 0,
-    user_firstname           VARCHAR(100) NOT NULL DEFAULT '',
-    user_lastname            VARCHAR(100) NOT NULL DEFAULT '',
-    suffix_id                SMALLINT     NOT NULL DEFAULT 0,
-    role_id                  SMALLINT     NOT NULL DEFAULT 0,
+    prefix_id               SMALLINT     NOT NULL DEFAULT 0,
+    user_firstname          VARCHAR(100) NOT NULL DEFAULT '',
+    user_lastname           VARCHAR(100) NOT NULL DEFAULT '',
+    suffix_id               SMALLINT     NOT NULL DEFAULT 0,
+    role_id                 SMALLINT     NOT NULL DEFAULT 0,
 
-    user_name                VARCHAR(100) NOT NULL DEFAULT '',
-    normalized_user_name     VARCHAR(100) NOT NULL DEFAULT '',
-    email                    VARCHAR(80)  NOT NULL DEFAULT '',
-    email_confirmed          BOOLEAN      NOT NULL DEFAULT false,
-    phone_number             VARCHAR(30)  NOT NULL DEFAULT '',
-    phone_number_confirmed   BOOLEAN      NOT NULL DEFAULT false,
-    password_hash            VARCHAR(255) NOT NULL DEFAULT '',
+    user_name               VARCHAR(100) NOT NULL DEFAULT '',
+    normalized_user_name    VARCHAR(100) NOT NULL DEFAULT '',
+    email                   VARCHAR(80)  NOT NULL DEFAULT '',
+    email_confirmed         BOOLEAN      NOT NULL DEFAULT false,
+    phone_number            VARCHAR(30)  NOT NULL DEFAULT '',
+    phone_number_confirmed  BOOLEAN      NOT NULL DEFAULT false,
+    password_hash           VARCHAR(255) NOT NULL DEFAULT '',
 
-    date_of_birth            DATE         NOT NULL DEFAULT '1900-01-01',
-    sex                 SMALLINT     NOT NULL DEFAULT 0,
-    marital_status           SMALLINT     NOT NULL DEFAULT 0,
+    date_of_birth           DATE         NOT NULL DEFAULT '1900-01-01',
+    sex                     SMALLINT     NOT NULL DEFAULT 0,
+    marital_status          SMALLINT     NOT NULL DEFAULT 0,
 
-    street_address           VARCHAR(250) NOT NULL DEFAULT '',
-    city_id                  INT          NOT NULL DEFAULT 0,
-    zip_code                 VARCHAR(30)  NOT NULL DEFAULT '',
+    street_address          VARCHAR(250) NOT NULL DEFAULT '',
+    city_id                 INT          NOT NULL DEFAULT 0,
+    state_id                SMALLINT     NOT NULL DEFAULT 0,
+    country_id              SMALLINT     NOT NULL DEFAULT 0,
+    zip_code                VARCHAR(30)  NOT NULL DEFAULT '',
 
-    two_factor_enabled       BOOLEAN      NOT NULL DEFAULT false,
-    access_failed_count      SMALLINT     NOT NULL DEFAULT 0,
-    lockout_enabled          BOOLEAN      NOT NULL DEFAULT false,
-    lockout_end              TIMESTAMP,
+    two_factor_enabled      BOOLEAN      NOT NULL DEFAULT false,
+    access_failed_count     SMALLINT     NOT NULL DEFAULT 0,
+    lockout_enabled         BOOLEAN      NOT NULL DEFAULT false,
+    lockout_end             TIMESTAMP,
 
-    security_stamp           CHAR(36)     NOT NULL DEFAULT '',
-    concurrency_stamp        TIMESTAMP,
+    security_stamp          CHAR(36)     NOT NULL DEFAULT '',
+    concurrency_stamp       TIMESTAMP,
+    use_password_expiration BOOLEAN NOT NULL DEFAULT false,
+    password_expiration_date TIMESTAMP,
 
-    creator_id               SMALLINT     NOT NULL DEFAULT 0,
-    created_date             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id                SMALLINT,
-    edited_date              TIMESTAMP,
+    creator_id              SMALLINT     NOT NULL DEFAULT 0,
+    created_date            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id               SMALLINT,
+    edited_date             TIMESTAMP,
 
-    is_deleted               BOOLEAN      NOT NULL DEFAULT false
+    is_deleted              BOOLEAN      NOT NULL DEFAULT false
 );
 
 -- login attempt

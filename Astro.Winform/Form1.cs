@@ -1,3 +1,5 @@
+using Astro.Models;
+using Astro.ViewModels;
 using Astro.Winform.Classes;
 using Astro.Winform.Forms;
 using PointOfSale.Drawing;
@@ -6,87 +8,35 @@ namespace PointOfSale
 {
     public partial class MainForm : Form
     {
-        private NavigationView navigator;
-        private TopNavigationView topNavigator;
         private VirtualControlCollection VirtualControls { get; } = new VirtualControlCollection();
         public MainForm()
         {
             InitializeComponent();
-            this.DoubleBuffered = true;
-            this.SetStyle(ControlStyles.UserPaint |
-                          ControlStyles.AllPaintingInWmPaint |
-                          ControlStyles.OptimizedDoubleBuffer, true);
-            this.UpdateStyles();
-
-            //Top Navigator
-            this.topNavigator = new TopNavigationView();
-
-            //Navigator
-            this.navigator = new NavigationView();
-            this.navigator.Items.Add("Dashboard", global::Astro.Winform.Properties.Resources.db);
-            this.navigator.Items.Add("Master Data", global::Astro.Winform.Properties.Resources.data);
-            this.navigator.Items.Add("Pengaturan", global::Astro.Winform.Properties.Resources.settings);
-            this.navigator.SelectedIndex = 0;
-
-            this.VirtualControls.Add(topNavigator);
-            this.VirtualControls.Add(navigator);
 
             My.Application.ApiUrl = "http://localhost:5002";
-            this.Load += new EventHandler(this.FormLoadHandler);
         }
-        private void FormLoadHandler(object? sender, EventArgs e)
-        {
-            this.WindowState = FormWindowState.Maximized;
-        }
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            foreach (var item in this.VirtualControls)
-            {
-                item.Draw(e.Graphics);
-            }
-        }
-        protected override void OnResize(EventArgs e)
-        {
-            if (navigator != null) navigator.MainFormResize(this.ClientSize);
-            if (topNavigator != null) topNavigator.MainFormResize(this.ClientSize);
-            base.OnResize(e);
-        }
-        protected override void OnResizeEnd(EventArgs e)
-        {
-
-        }
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            var anyHovered = navigator.GetHoveredItem(e.Location);
-            if (anyHovered != null)
-            {
-                if (anyHovered.Hovered)
-                {
-                    this.toolTipGlobal.ToolTipTitle = anyHovered.Text;
-                    this.toolTipGlobal.Show(anyHovered.Text, this, new Point(anyHovered.Bounds.X + anyHovered.Bounds.Width + 20, anyHovered.Bounds.Y + 30));
-                }
-                this.Invalidate(this.navigator.Bounds);
-            }
-            if (!navigator.Items.AnyHoveredItem())
-            {
-                this.toolTipGlobal.Hide(this);
-            }
-        }
-        protected override void OnMouseClick(MouseEventArgs e)
-        {
-            if (navigator.SelectedChanged(e.Location))
-            {
-                this.Invalidate(navigator.Bounds);
-            }
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             var form = new LoginForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
-                var changePassword = new ChangePasswordForm();
-                changePassword.ShowDialog();
+                var json = await HttpClientSingleton.GetAsync("/auth/permissions");
+                var listMenu = ListMenu.Create(json);
+                if (listMenu != null)
+                {
+                    foreach (var item in listMenu)
+                    {
+                        var parent = new ToolStripMenuItem() { Text = item.Title };
+                        this.ms.Items.Add(parent);
+                        foreach (var submenu in item.Items)
+                        {
+                            var child = new ToolStripMenuItem() { Text = submenu.Title };
+                            child.Tag = submenu.Id;
+                            child.Click += this.HandleMenuClicked;
+                            parent.DropDownItems.Add(child);
+                        }
+                    }
+                }
                 this.WindowState = FormWindowState.Maximized;
                 if (My.Application.User != null)
                 {
@@ -103,6 +53,82 @@ namespace PointOfSale
         {
             if (My.Application.ApiToken.Trim() != "") await HttpClientSingleton.SignOutAsync();
             HttpClientSingleton.Dispose();
+        }
+        private async void HandleMenuClicked(object? sender, EventArgs e)
+        {
+            if (sender is null) return;
+
+            var menuItem = (ToolStripMenuItem)sender;
+            if (menuItem.Tag is null) return;
+
+            var menuId = (short)menuItem.Tag;
+            switch (menuId)
+            {
+                case 1:
+                    var data = Array.Empty<byte>();
+                    using (var json = await HttpClientSingleton.GetStreamAsync("/data/users/" + My.Application.User?.Id.ToString()))
+                    {
+                        MessageBox.Show(json.Length.ToString());
+                        using (var reader = new BinaryReader(json))
+                        {
+                            data = reader.ReadBytes((int)json.Length);
+                        }
+                    }
+                    var str = System.Text.Encoding.UTF8.GetString(data);
+                    MessageBox.Show(str);
+                    break;
+                case 2:
+                    var dialog = new ChangePasswordForm();
+                    dialog.ShowDialog();
+                    break;
+                case 3:
+                    this.Close();
+                    break;
+                case 4:
+                    OpenOrCreateListingForm(ListingData.Users);
+                    break;
+                case 5:
+                    OpenOrCreateListingForm(ListingData.Roles);
+                    break;
+            }
+        }
+        private void OpenOrCreateListingForm(ListingData type)
+        {
+            foreach (Form form in this.MdiChildren)
+            {
+                if (form is ListingForm lform)
+                {
+                    if (lform.ListingType == type)
+                    {
+                        lform.Activate();
+                        return;
+                    }
+                }
+            }
+            var newForm = new ListingForm(type);
+            newForm.MdiParent = this;
+            newForm.Show();
+            newForm.WindowState = FormWindowState.Maximized;
+        }
+        private async void HandleMdiChildActivate(object sender, EventArgs e)
+        {
+            var activeForm = this.ActiveMdiChild;
+            if (activeForm != null && activeForm is ListingForm lform)
+            {
+                this.navigator.BindingSource = lform.BindingSource;
+                await lform.LoadDataAsync();
+                return;
+            }
+            this.navigator.BindingSource = null;
+        }
+
+        private async void HandleNewButtonClicked(object sender, EventArgs e)
+        {
+            var activeForm = this.ActiveMdiChild;
+            if (activeForm != null && activeForm is ListingForm  lform)
+            {
+                await lform.AddRecordAsync();
+            }
         }
     }
 }

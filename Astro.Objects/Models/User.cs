@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using Astro.Utils;
+using System.Data.Common;
 using System.Security.Principal;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -32,7 +33,16 @@ namespace Astro.Models
             LockoutEnd = reader.IsDBNull(19) ? null : reader.GetDateTime(19);
             //SecurityStamp = reader.GetGuid(20);
             ConcurrencyStamp = reader.IsDBNull(21) ? null : reader.GetDateTime(21);
-            _passwordStored = reader.GetString(22);
+            UsePasswordExpiration = reader.GetBoolean(22);
+            PasswordExpirationDate = reader.IsDBNull(23) ? null : reader.GetDateTime(23);
+            _passwordStored = reader.GetString(24);
+        }
+        internal User(object[] data)
+        {
+            Id = (short)data[0];
+            FirstName = (string)data[1];
+            LastName = (string)data[2];
+            
         }
         [JsonConstructor] public User() { }
         [JsonPropertyName("id")]
@@ -45,8 +55,12 @@ namespace Astro.Models
         public short RoleId { get; set; }
         [JsonPropertyName("userName")]
         public string UserName { get; set; } = string.Empty;
+        [JsonPropertyName("usePasswordExpiration")]
+        public bool UsePasswordExpiration { get; set; } = false;
+        [JsonPropertyName("passwordExpirationDate")]
+        public DateTime? PasswordExpirationDate { get; set; }
         [JsonPropertyName("normalizedUserName")]
-        public string NormalizedUserName { get; set; } = string.Empty;
+        public string NormalizedUserName { get; } = string.Empty;
         [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
         [JsonPropertyName("emailConfirmed")]
@@ -65,6 +79,10 @@ namespace Astro.Models
         public string StreetAddress { get; set; } = string.Empty;
         [JsonPropertyName("cityId")]
         public int CityId { get; set; }
+        [JsonPropertyName("stateId")]
+        public int StateId { get; set; }
+        [JsonPropertyName("countryId")]
+        public int CountryId { get; set; }
         [JsonPropertyName("zipCode")]
         public string ZipCode { get; set; } = string.Empty;
         [JsonPropertyName("twoFactorEnabled")]
@@ -89,6 +107,14 @@ namespace Astro.Models
         {
             return LockoutEnabled && LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;
         }
+        public bool IsPasswordExpired()
+        {
+            return UsePasswordExpiration && PasswordExpirationDate.HasValue && PasswordExpirationDate.Value < DateTime.UtcNow;
+        }
+        public bool HasExceededFailedAttempts(int threshold = 3)
+        {
+            return AccessFailedCount >= threshold;
+        }
         public string GetFullName()
         {
             return $"{FirstName} {LastName}".Trim();
@@ -97,6 +123,7 @@ namespace Astro.Models
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.User);
         public static User? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.User);
         public static User Create(DbDataReader reader) => new User(reader);
+        public static User Create(object?[] values) => new User(values);
     }
 
     public class Password

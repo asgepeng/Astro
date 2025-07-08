@@ -44,5 +44,8 @@ var app = builder.Build();
 app.UseStaticFiles();
 
 app.MapAuthEndPoints();
+app.MapUserEndPoints();
+app.MapRoleEndPoints();
+app.MapRegionEndPoints();
 
 app.Run();

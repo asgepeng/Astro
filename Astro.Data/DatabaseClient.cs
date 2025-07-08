@@ -251,6 +251,12 @@ namespace Astro.Data
             if (obj is null) return null;
             return Convert.ToInt32(obj);
         }
+        public async Task<short?> ExecuteScalarInt16Async(string commandText, params DbParameter[] parameters)
+        {
+            var obj = await ExecuteScalarAsync(commandText, parameters);
+            if (obj is null) return null;
+            return Convert.ToInt16(obj);
+        }
         //FUNCTION
         private Stylesheet GenerateStylesheet()
         {

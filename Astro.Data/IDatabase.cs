@@ -12,6 +12,7 @@ namespace Astro.Data
         Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
         Task<object?> ExecuteScalarAsync(string commandText, params DbParameter[] parameters);
         Task<int?> ExecuteScalarIntegerAsync(string commandText, params DbParameter[] parameters);
+        Task<short?> ExecuteScalarInt16Async(string commandText, params DbParameter[] parameters);
         Task<bool> AnyRecordsAsync(string commandText, params DbParameter[] parameters);
         Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters);
 

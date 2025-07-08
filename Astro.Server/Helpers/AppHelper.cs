@@ -20,6 +20,13 @@ namespace Alaska.Data
             int.TryParse(userID, out int id);
             return id;
         }
+        internal static int GetRoleID(HttpContext context)
+        {
+            var claimsPrincipal = context.User;
+            string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            int.TryParse(userID, out int roleId);
+            return roleId;
+        }
         internal static (int userId, int roleId) ExtractPrincipal(HttpContext context)
         {
             var claimsPrincipal = context.User;
@@ -54,7 +61,14 @@ namespace Alaska.Data
             }
             return token is null ? "" : token;
         }
-
+        internal static string GetUserAgent(HttpRequest request)
+        {
+            return request.Headers.TryGetValue("User-Agent", out var userAgent) ? userAgent.ToString() : string.Empty;
+        }
+        internal static bool IsWinformApp(HttpRequest request)
+        {
+            return GetUserAgent(request) == "astro.winform.app";
+        }
     }
 
     public static class ExcelHelper

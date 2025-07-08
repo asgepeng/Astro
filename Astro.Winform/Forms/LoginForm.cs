@@ -62,5 +62,12 @@ namespace Astro.Winform.Forms
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
+
+        private void LoginForm_Load(object sender, EventArgs e)
+        {
+            this.usernameTextBox.Text = "administrator";
+            this.passwordTextBox.Text = "Power123...";
+            this.button1.PerformClick();
+        }
     }
 }

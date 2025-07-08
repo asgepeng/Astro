@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Astro.ViewModel
+namespace Astro.ViewModels
 {
     public class ContactViewModel
     {

@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Astro;
 using Astro.Models;
-using Astro.ViewModel;
+using Astro.ViewModels;
 
-namespace Astro.ViewModel
+namespace Astro.ViewModels
 {
     public class ProductViewModel
     {
