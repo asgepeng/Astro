@@ -1,4 +1,5 @@
 ﻿using Astro.DataTables;
+using Astro.Winform.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,14 +23,19 @@ namespace Astro.Winform.Forms
             this.ListingType = type;
             InitializeGridColumns();
         }
-        private Form CreatePopupDialog()
+        private async Task<Form> CreatePopupDialog(short id = 0)
         {
+            var objectBuilder = new ObjectBuilder();
             switch (this.ListingType)
             {
                 case ListingData.Users:
-                    return new UserForm();
+                    var userForm = new UserForm();
+                    userForm.UserView = await objectBuilder.CreateUserViewModel(id);
+                    return userForm;
                 case ListingData.Roles:
-                    return new RoleForm();
+                    var roleForm = new RoleForm();
+                    roleForm.Role = await objectBuilder.CreateRoleViewModel(id);
+                    return roleForm;
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -42,7 +48,7 @@ namespace Astro.Winform.Forms
         }
         internal async Task AddRecordAsync()
         {
-            var form = CreatePopupDialog();
+            var form = await CreatePopupDialog();
             if (form != null)
             {
                 if (form.ShowDialog() == DialogResult.OK)
@@ -53,7 +59,7 @@ namespace Astro.Winform.Forms
         }
         internal async Task EditAsync()
         {
-            var form = CreatePopupDialog();
+            var form = await CreatePopupDialog();
             if (form != null)
             {
                 if (form.ShowDialog() == DialogResult.OK)
@@ -102,6 +108,18 @@ namespace Astro.Winform.Forms
                         new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
                     break;
+            }
+        }
+
+        private async void HandleCellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || BindingSource.Current is null) return;
+
+            var id = (short)((DataRowView)this.BindingSource.Current)[0];
+            var dialog = await CreatePopupDialog(id);
+            if (dialog.ShowDialog()== DialogResult.OK)
+            {
+                await this.LoadDataAsync();
             }
         }
     }

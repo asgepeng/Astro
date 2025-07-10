@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Astro.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -19,6 +20,10 @@ namespace Astro.Utils
             writer = new BinaryWriter(ms);
         }
         public void WriteBoolean(bool value)
+        {
+            writer.Write(value);
+        }
+        public void WriteInt16(short value)
         {
             writer.Write(value);
         }
@@ -112,6 +117,54 @@ namespace Astro.Utils
             int length = reader.ReadInt32();
             byte[] byteString = reader.ReadBytes(length);
             return Encoding.UTF8.GetString(byteString);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    reader.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    public class ListOptionBuilder : IDisposable
+    {
+        private bool disposedValue;
+        private readonly BinaryReader reader;
+        public ListOptionBuilder(Stream stream) => reader = new BinaryReader(stream);
+        public ListOption ToListOption(Type idType)
+        {
+            var list = new ListOption();
+            while (Read())
+            {
+                var option = new Option
+                {
+                    Id = idType == typeof(System.Int32) ? ReadInt32() : ReadInt16(),
+                    Text = ReadString()
+                };
+                list.Add(option);
+            }
+            return list;
+        }
+        private bool Read() => reader.BaseStream.Position < reader.BaseStream.Length;
+        private short ReadInt16() => reader.ReadInt16();
+        private int ReadInt32() => reader.ReadInt32();
+        private string ReadString()
+        {
+            var length = ReadInt32();
+            var bytes = reader.ReadBytes(length);
+            return System.Text.Encoding.UTF8.GetString(bytes);
         }
         protected virtual void Dispose(bool disposing)
         {

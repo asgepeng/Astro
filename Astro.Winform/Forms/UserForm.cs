@@ -60,7 +60,7 @@ namespace Astro.Winform.Forms
                 {
                     var country = this.UserView.Countries[i];
                     this.countryComboBox.Items.Add(country);
-                    if (country.Id == this.UserView.AddressInfo.Country) this.countryComboBox.SelectedIndex = i;
+                    if (country.Id == this.UserView.User.CountryId) this.countryComboBox.SelectedIndex = i;
                 }
                 countryComboBox.DisplayMember = "Text";
                 countryComboBox.ValueMember = "Id";
@@ -68,7 +68,7 @@ namespace Astro.Winform.Forms
                 for (int i = 0; i < this.UserView.States.Count; i++)
                 {
                     stateComboBox.Items.Add(this.UserView.States[i]);
-                    if (this.UserView.States[i].Id == this.UserView.AddressInfo.State) this.stateComboBox.SelectedIndex = i;
+                    if (this.UserView.States[i].Id == this.UserView.User.StateId) this.stateComboBox.SelectedIndex = i;
                 }
                 stateComboBox.DisplayMember = "Text";
                 stateComboBox.ValueMember = "Id";
@@ -114,7 +114,8 @@ namespace Astro.Winform.Forms
         {
             if (this.UserView is null) return;
             if (this.roleComboBox.SelectedItem is null) return;
-            if (this.cityComboBox.SelectedItem is null) return;
+
+            if (this.cityComboBox.SelectedItem is null || this.stateComboBox.SelectedItem is null || this.countryComboBox.SelectedItem is null) return;
 
             var user = this.UserView.User;
             user.FirstName = this.firstnameTextBox.Text.Trim();
@@ -126,20 +127,39 @@ namespace Astro.Winform.Forms
             user.LockoutEnabled = this.lockoutEnableCheckBox.Checked;
             user.StreetAddress = this.streetAddressTextBox.Text.Trim();
             user.CityId = (int)((Option)this.cityComboBox.SelectedItem).Id;
+            user.StateId = (short)((Option)this.stateComboBox.SelectedItem).Id;
+            user.CountryId = (short)((Option)this.countryComboBox.SelectedItem).Id;
             user.ZipCode = this.zipCodeTextBox.Text.Trim();
             user.MaritalStatus = (short)this.maritalComboBox.SelectedIndex;
             user.DateOfBirth = this.dobTextBox.Value;
             user.Sex = (short)this.sexComboBox.SelectedIndex;
 
-            var json = await HttpClientSingleton.PutAsync("/data/users", user.ToString());
-            var commonResult = CommonResult.Create(json);
-            if (commonResult != null)
+            if (user.Id > 0)
             {
-                if (commonResult.Success)
+                var json = await HttpClientSingleton.PutAsync("/data/users", user.ToString());
+                var commonResult = CommonResult.Create(json);
+                if (commonResult != null)
                 {
-                    MessageBox.Show(commonResult.Message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    if (commonResult.Success)
+                    {
+                        MessageBox.Show(commonResult.Message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+            else
+            {
+                var json = await HttpClientSingleton.PostAsync("/data/users", user.ToString());
+                var commonResult = CommonResult.Create(json);
+                if (commonResult != null)
+                {
+                    if (commonResult.Success)
+                    {
+                        MessageBox.Show(commonResult.Message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
                 }
             }
         }

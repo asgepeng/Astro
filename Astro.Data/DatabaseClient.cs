@@ -70,7 +70,7 @@ namespace Astro.Data
                 }
                 catch (Exception ex)
                 {
-                    File.WriteAllText(AppContext.BaseDirectory + "db.executeNonQuery.txt", ex.ToString());
+                    File.WriteAllText(AppContext.BaseDirectory + "db.executeNonQuery.txt", commandText + "\r\n\r\n" +  ex.ToString());
                     return false; 
                 }
             }

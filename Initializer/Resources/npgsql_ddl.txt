@@ -91,7 +91,7 @@ CREATE TABLE users (
     lockout_enabled         BOOLEAN      NOT NULL DEFAULT false,
     lockout_end             TIMESTAMP,
 
-    security_stamp          CHAR(36)     NOT NULL DEFAULT '',
+    security_stamp          UUID,
     concurrency_stamp       TIMESTAMP,
     use_password_expiration BOOLEAN NOT NULL DEFAULT false,
     password_expiration_date TIMESTAMP,

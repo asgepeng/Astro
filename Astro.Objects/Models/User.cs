@@ -37,6 +37,35 @@ namespace Astro.Models
             PasswordExpirationDate = reader.IsDBNull(23) ? null : reader.GetDateTime(23);
             _passwordStored = reader.GetString(24);
         }
+        private User(BinaryObjectReader reader)
+        {
+            Id = reader.ReadInt16();
+            FirstName = reader.ReadString();
+            LastName = reader.ReadString();
+            RoleId = reader.ReadInt16();
+            UserName = reader.ReadString();
+            NormalizedUserName = reader.ReadString();
+            Email = reader.ReadString();
+            EmailConfirmed = reader.ReadBoolean();
+            PhoneNumber = reader.ReadString();
+            PhoneNumberConfirmed = reader.ReadBoolean();
+            DateOfBirth = reader.ReadDateTime();
+            Sex = reader.ReadInt16();
+            MaritalStatus = reader.ReadInt16();
+            StreetAddress = reader.ReadString();
+            CityId = reader.ReadInt32();
+            StateId = reader.ReadInt16();
+            CountryId = reader.ReadInt16();
+            ZipCode = reader.ReadString();
+            TwoFactorEnabled = reader.ReadBoolean();
+            AccessFailedCount = reader.ReadInt16();
+            LockoutEnabled = reader.ReadBoolean();
+            LockoutEnd = reader.ReadNullableDateTime();           
+            SecurityStamp = reader.ReadGuid();
+            ConcurrencyStamp = reader.ReadNullableDateTime();
+            UsePasswordExpiration = reader.ReadBoolean();
+            PasswordExpirationDate = reader.ReadNullableDateTime();
+        }
         internal User(object[] data)
         {
             Id = (short)data[0];
@@ -70,7 +99,7 @@ namespace Astro.Models
         [JsonPropertyName("phoneNumberConfirmed")]
         public bool PhoneNumberConfirmed { get; set; }
         [JsonPropertyName("dateOfBirth")]
-        public DateTime DateOfBirth { get; set; }
+        public DateTime DateOfBirth { get; set; } = DateTime.Today;
         [JsonPropertyName("sex")]
         public short Sex { get; set; }
         [JsonPropertyName("maritalStatus")]
@@ -94,7 +123,7 @@ namespace Astro.Models
         [JsonPropertyName("lockoutEnd")]
         public DateTime? LockoutEnd { get; set; }
         [JsonPropertyName("securityStamp")]
-        public Guid SecurityStamp { get; set; } = Guid.NewGuid();
+        public Guid? SecurityStamp { get; set; }
         [JsonPropertyName("concurrencyStamp")]
         public DateTime? ConcurrencyStamp { get; set; }
         public bool VerifyPassword(string password)
@@ -123,7 +152,7 @@ namespace Astro.Models
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.User);
         public static User? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.User);
         public static User Create(DbDataReader reader) => new User(reader);
-        public static User Create(object?[] values) => new User(values);
+        public static User Create(BinaryObjectReader reader) => new User(reader);
     }
 
     public class Password

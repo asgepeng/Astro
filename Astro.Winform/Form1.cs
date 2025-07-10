@@ -1,7 +1,9 @@
 using Astro.Models;
+using Astro.Utils;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
 using Astro.Winform.Forms;
+using Astro.Winform.Helpers;
 using PointOfSale.Drawing;
 
 namespace PointOfSale
@@ -65,17 +67,11 @@ namespace PointOfSale
             switch (menuId)
             {
                 case 1:
-                    var data = Array.Empty<byte>();
-                    using (var json = await HttpClientSingleton.GetStreamAsync("/data/users/" + My.Application.User?.Id.ToString()))
-                    {
-                        MessageBox.Show(json.Length.ToString());
-                        using (var reader = new BinaryReader(json))
-                        {
-                            data = reader.ReadBytes((int)json.Length);
-                        }
-                    }
-                    var str = System.Text.Encoding.UTF8.GetString(data);
-                    MessageBox.Show(str);
+                    var objectBuilder = new ObjectBuilder();
+                    var uvm = await objectBuilder.CreateUserViewModel(My.Application.User is null ? (short)0 : My.Application.User.Id); 
+                    var userDialog = new UserForm();
+                    userDialog.UserView = uvm;
+                    userDialog.ShowDialog();
                     break;
                 case 2:
                     var dialog = new ChangePasswordForm();

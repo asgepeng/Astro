@@ -1,15 +1,10 @@
 ﻿using Alaska.Data;
 using Astro.Data;
 using Astro.Models;
-using Astro.ViewModels;
+using Astro.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Astro.Server.Api
 {
@@ -50,14 +45,61 @@ namespace Astro.Server.Api
             }
             return Results.Ok();
         }
-        internal static async Task<IResult> GetByIdAsync(IDatabase db, short id)
+        internal static async Task<IResult> GetByIdAsync(IDatabase db, short id, HttpContext context)
         {
-            Role? role = null;
+            var isWinformApp = AppHelpers.IsWinformApp(context.Request);
             var commandText = """
                 select role_id, role_name
                 from roles
                 where role_id = @id;
                 """;
+            if (isWinformApp)
+            {
+                using (var builder = new BinaryObjectWriter())
+                {
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        builder.WriteBoolean(reader.HasRows);
+                        if (await reader.ReadAsync())
+                        {
+                            builder.WriteInt16(reader.GetInt16(0));
+                            builder.WriteString(reader.GetString(1));
+                        }
+                    }, commandText, new NpgsqlParameter("id", id));
+                    commandText = """
+                        select
+                            m.menu_id,
+                            m.menu_title,
+                            coalesce(rtm.allow_create, false) as allow_create,
+                            coalesce(rtm.allow_read,   false) as allow_read,
+                            coalesce(rtm.allow_update, false) as allow_update,
+                            coalesce(rtm.allow_delete, false) as allow_delete
+                        from menus as m
+                        left join role_to_menus as rtm
+                            on m.menu_id = rtm.menu_id and rtm.role_id = @id                        
+                        """;
+                    var iCount = 0;
+                    var iPos = builder.ReserveInt32(iCount);
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            builder.WriteInt16(reader.GetInt16(0));
+                            builder.WriteString(reader.GetString(1));
+                            builder.WriteBoolean(reader.GetBoolean(2));
+                            builder.WriteBoolean(reader.GetBoolean(3));
+                            builder.WriteBoolean(reader.GetBoolean(4));
+                            builder.WriteBoolean(reader.GetBoolean(5));
+                            iCount++;
+                        }
+                    }, commandText, new NpgsqlParameter("id", id));
+
+                    builder.WriteInt32(iCount, iPos);
+                    return Results.File(builder.ToArray(), "application/octet-stream");
+                }
+            }
+
+            Role? role = null;
             await db.ExecuteReaderAsync(async reader =>
             {
                 if (await reader.ReadAsync())
@@ -100,15 +142,15 @@ namespace Astro.Server.Api
             var commandText = """
                 insert into roles
                     (role_name, creator_id)
-                values (@rolename, @creator);
+                values (@rolename, @creator)
                 returning role_id
                 """;
             var roleId = await db.ExecuteScalarInt16Async(commandText, new NpgsqlParameter("rolename", role.Name), new NpgsqlParameter("creator", AppHelpers.GetUserID(context)));
-            if (roleId == null) return Results.Problem("Failed to create role.");
+            if (roleId == null) return Results.Ok(CommonResult.Fail("Failed to create role."));
 
             commandText = """
                 insert into role_to_menus
-                     (role_id, menu_id, allow_create, allow_read, allow_edit, allow_delete)
+                     (role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
                 values 
                 """;
             var rows = new List<string>();
@@ -118,10 +160,10 @@ namespace Astro.Server.Api
                 cells[0] = roleId.ToString()!;
                 cells[1] = item.Id.ToString();
                 cells[2] = item.AllowCreate ? "true": "false";
-                cells[3] = item.AllowCreate ? "true" : "false";
+                cells[3] = item.AllowRead ? "true" : "false";
                 cells[4] = item.AllowEdit ? "true" : "false";
                 cells[5] = item.AllowDelete ? "true" : "false";
-                rows.Add("(" + string.Join(",", cells));
+                rows.Add("(" + string.Join(",", cells) + ")");
             }
             commandText += string.Join(",", rows) + ";";
             var success = await db.ExecuteNonQueryAsync(commandText);
