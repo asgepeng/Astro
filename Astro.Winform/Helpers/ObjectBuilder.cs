@@ -89,7 +89,7 @@ namespace Astro.Winform.Helpers
                     role.Permissions.Add(new Permission()
                     {
                         Id = r.ReadInt16(),
-                        Name = r.ReadString(),
+                        Name = "☰ " +  r.ReadString(),
                         AllowCreate = r.ReadBoolean(),
                         AllowRead = r.ReadBoolean(),
                         AllowEdit = r.ReadBoolean(),

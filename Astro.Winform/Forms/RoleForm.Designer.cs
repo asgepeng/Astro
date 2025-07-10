@@ -30,9 +30,9 @@
         {
             components = new System.ComponentModel.Container();
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            button1 = new Button();
+            saveButton = new Button();
             label1 = new Label();
-            textBox1 = new TextBox();
+            rolenameTextBox = new TextBox();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             dataGridView1 = new DataGridView();
@@ -49,15 +49,15 @@
             ((System.ComponentModel.ISupportInitialize)permissionBindingSource).BeginInit();
             SuspendLayout();
             // 
-            // button1
+            // saveButton
             // 
-            button1.Location = new Point(12, 475);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 23);
-            button1.TabIndex = 0;
-            button1.Text = "button1";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            saveButton.Location = new Point(12, 475);
+            saveButton.Name = "saveButton";
+            saveButton.Size = new Size(75, 23);
+            saveButton.TabIndex = 0;
+            saveButton.Text = "button1";
+            saveButton.UseVisualStyleBackColor = true;
+            saveButton.Click += HandleSaveButtonClicked;
             // 
             // label1
             // 
@@ -68,12 +68,12 @@
             label1.TabIndex = 1;
             label1.Text = "Role Name";
             // 
-            // textBox1
+            // rolenameTextBox
             // 
-            textBox1.Location = new Point(132, 12);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(387, 25);
-            textBox1.TabIndex = 2;
+            rolenameTextBox.Location = new Point(132, 12);
+            rolenameTextBox.Name = "rolenameTextBox";
+            rolenameTextBox.Size = new Size(387, 25);
+            rolenameTextBox.TabIndex = 2;
             // 
             // tabControl1
             // 
@@ -101,14 +101,20 @@
             // 
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.AllowUserToDeleteRows = false;
+            dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.BackgroundColor = Color.White;
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.BorderStyle = BorderStyle.Fixed3D;
+            dataGridView1.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { nameDataGridViewTextBoxColumn, allowCreateDataGridViewCheckBoxColumn, allowReadDataGridViewCheckBoxColumn, allowEditDataGridViewCheckBoxColumn, allowDeleteDataGridViewCheckBoxColumn });
             dataGridView1.DataSource = permissionBindingSource;
             dataGridView1.Dock = DockStyle.Fill;
+            dataGridView1.GridColor = Color.FromArgb(230, 230, 230);
             dataGridView1.Location = new Point(3, 3);
             dataGridView1.Name = "dataGridView1";
+            dataGridView1.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dataGridView1.RowHeadersVisible = false;
             dataGridView1.Size = new Size(762, 376);
             dataGridView1.TabIndex = 0;
             // 
@@ -166,14 +172,14 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 510);
             Controls.Add(tabControl1);
-            Controls.Add(textBox1);
+            Controls.Add(rolenameTextBox);
             Controls.Add(label1);
-            Controls.Add(button1);
+            Controls.Add(saveButton);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "RoleForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "RoleForm";
-            Load += RoleForm_Load;
+            Load += HandleFormLoad;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
@@ -184,9 +190,9 @@
 
         #endregion
 
-        private Button button1;
+        private Button saveButton;
         private Label label1;
-        private TextBox textBox1;
+        private TextBox rolenameTextBox;
         private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;

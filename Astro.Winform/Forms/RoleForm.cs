@@ -21,28 +21,27 @@ namespace Astro.Winform.Forms
         }
         public Role? Role { get; set; }
 
-        private void RoleForm_Load(object sender, EventArgs e)
+        private void HandleFormLoad(object sender, EventArgs e)
         {
             if (Role != null)
             {
-                this.textBox1.Text = Role.Name;
+                this.rolenameTextBox.Text = Role.Name;
                 this.permissionBindingSource.DataSource = Role.Permissions;
+                this.saveButton.Text = Role.Id > 0 ? "Update" : "Create";
             }
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async void HandleSaveButtonClicked(object sender, EventArgs e)
         {
             if (this.Role is null) return;
 
-            this.Role.Name = this.textBox1.Text.Trim();
-            MessageBox.Show(this.Role.ToString());
-            var json = await HttpClientSingleton.PostAsync("/data/roles", this.Role.ToString());
+            this.Role.Name = this.rolenameTextBox.Text.Trim();
+            var json = this.Role.Id > 0 ? await HttpClientSingleton.PutAsync("/data/roles", this.Role.ToString()) :await HttpClientSingleton.PostAsync("/data/roles", this.Role.ToString());
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)
             {
                 if (commonResult.Success)
                 {
-                    MessageBox.Show(commonResult.Message);
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }

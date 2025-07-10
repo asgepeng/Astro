@@ -5,6 +5,7 @@ using Astro.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Npgsql;
+using System.Text;
 
 namespace Astro.Server.Api
 {
@@ -113,9 +114,10 @@ namespace Astro.Server.Api
             }, commandText, new NpgsqlParameter("id", id));
             if (role is null) return Results.NotFound(CommonResult.Fail("role not found."));
             commandText = """
-                select rtm.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_edit, rtm.allow_delete
+                select
+                    rtm.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_edit, rtm.allow_delete
                 from role_to_menus as rtm
-                inner join menus as m on rtm.menu_id = m.menu_id
+                    inner join menus as m on rtm.menu_id = m.menu_id
                 where rtm.role_id = @id;
                 """;
 
@@ -169,29 +171,51 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText);
             return success ? Results.Ok(CommonResult.Ok("Role created successfully.")) : Results.Problem("Failed to create role permissions.");
         }
-        internal static async Task<IResult> UpdateAsync(Role role, IDatabase db, string json)
+        internal static async Task<IResult> UpdateAsync(Role role, IDatabase db, HttpContext context)
         {
-            var commandText = """
+            var sb = new StringBuilder();
+            sb.Append(""""
                 update roles
-                set role_name = @rolename
+                set 
+                    role_name = @rolename, 
+                    editor_id = @editor, 
+                    edited_date = current_timestamp
                 where role_id = @id;
-                """;
-            foreach (var item in role.Permissions)
-            {
-                commandText += $"""
-                    update role_to_menus
-                    set allow_create = {(item.AllowCreate ? "true": "false")},
-                        allow_read = {(item.AllowRead ? "true" : "false")},
-                        allow_edit = {(item.AllowEdit ? "true" : "false")},
-                        allow_delete = {(item.AllowDelete ? "true" : "false")}
-                    where role_id = @id and menu_id = {item.Id.ToString()};
-                    """;
-            }
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter[]
+                insert into role_to_menus
+                    (role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
+                values
+                """");
+            var parameters = new List<NpgsqlParameter>
             {
                 new NpgsqlParameter("rolename", role.Name),
-                new NpgsqlParameter("id", role.Id)
-            });
+                new NpgsqlParameter("id", role.Id),
+                new NpgsqlParameter("editor", AppHelpers.GetUserID(context))
+            };
+            for (int i = 0; i < role.Permissions.Count; i++)
+            {
+                var item = role.Permissions[i];
+
+                if (i > 0) sb.Append(",");
+                sb.Append("(@id,").Append(item.Id)
+                    .Append(",@c").Append(i)
+                    .Append(",@r").Append(i)
+                    .Append(",@u").Append(i)
+                    .Append(",@d").Append(i).AppendLine(")");
+
+                parameters.Add(new NpgsqlParameter("c" + i, item.AllowCreate));
+                parameters.Add(new NpgsqlParameter("r" + i, item.AllowRead));
+                parameters.Add(new NpgsqlParameter("u" + i, item.AllowEdit));
+                parameters.Add(new NpgsqlParameter("d" + i, item.AllowDelete));
+            }
+            sb.Append("""
+                on conflict (role_id, menu_id) 
+                do update 
+                set allow_create = excluded.allow_create, 
+                    allow_read = excluded.allow_read, 
+                    allow_update = excluded.allow_update, 
+                    allow_delete = excluded.allow_delete;
+                """);
+            var success = await db.ExecuteNonQueryAsync(sb.ToString(), parameters.ToArray());
             return success ? Results.Ok(CommonResult.Ok("Role updated successfully.")) : Results.Problem("Failed to update role permissions.");
         }
         internal static async Task<IResult> DeleteAsync(IDatabase db, short id)
