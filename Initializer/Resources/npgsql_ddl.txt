@@ -199,7 +199,7 @@ CREATE TABLE units (
 -- categories
 CREATE TABLE categories (
     category_id SMALLSERIAL PRIMARY KEY,
-    categiry_name VARCHAR(100) NOT NULL DEFAULT '',
+    category_name VARCHAR(100) NOT NULL DEFAULT '',
     creator_id SMALLINT NOT NULL DEFAULT 0,
     created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     editor_id SMALLINT,
@@ -209,25 +209,26 @@ CREATE TABLE categories (
 
 -- products
 CREATE TABLE products (
-    product_id SERIAL PRIMARY KEY,
-    product_name VARCHAR(100) NOT NULL DEFAULT '',
-    product_description VARCHAR(8000) NOT NULL DEFAULT '',
-    product_sku VARCHAR(40) NOT NULL DEFAULT '',
-    category_id SMALLINT NOT NULL DEFAULT 0,
-    product_type INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT false,
-    stock BIGINT NOT NULL DEFAULT 0,
-    min_stock SMALLINT NOT NULL DEFAULT 0,
-    max_stock SMALLINT NOT NULL DEFAULT 0,
-    unit_id SMALLINT NOT NULL DEFAULT 0,
-    price BIGINT NOT NULL DEFAULT 0,
-    cost_average BIGINT NOT NULL DEFAULT 0,
-    images VARCHAR(250) NOT NULL DEFAULT '',
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    product_id          SMALLSERIAL     PRIMARY KEY,
+    product_name        VARCHAR(100)    NOT NULL    DEFAULT '',
+    product_description VARCHAR(8000)   NOT NULL    DEFAULT '',
+    product_sku         VARCHAR(40)     NOT NULL    DEFAULT '',
+    category_id         SMALLINT        NOT NULL    DEFAULT 0,
+    product_type        INTEGER         NOT NULL    DEFAULT 0,
+    is_active           BOOLEAN         NOT NULL    DEFAULT false,
+    stock               INT NOT         NULL        DEFAULT 0,
+    min_stock           SMALLINT        NOT NULL    DEFAULT 0,
+    max_stock           SMALLINT        NOT NULL    DEFAULT 0,
+    unit_id             SMALLINT        NOT NULL    DEFAULT 0,
+    price               BIGINT          NOT NULL    DEFAULT 0,
+    cost_average        BIGINT          NOT NULL    DEFAULT 0,
+    images              VARCHAR(250)    NOT NULL    DEFAULT '',
+    manufacturer_id     SMALLINT        NOT NULL    DEFAULT 0,
+    creator_id          SMALLINT        NOT NULL    DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP,
+    is_deleted          BOOLEAN         NOT NULL    DEFAULT false
 );
 
 -- contactgroups

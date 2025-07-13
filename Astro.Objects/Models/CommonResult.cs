@@ -21,7 +21,7 @@ namespace Astro.Models
         public static CommonResult Ok(string message = "") => new CommonResult(true, message);
         public static CommonResult Fail(string message = "") => new CommonResult(false, message);
 
-        public static CommonResult? Create(string json) => JsonSerializer.Deserialize<CommonResult>(json, AppJsonSerializerContext.Default.CommonResult);
+        public static CommonResult? Create(string json) => string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<CommonResult>(json, AppJsonSerializerContext.Default.CommonResult);
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.CommonResult);
     }
 }

@@ -44,6 +44,9 @@
             spr2 = new ToolStripSeparator();
             nextRowButton = new ToolStripButton();
             lastRecordButton = new ToolStripButton();
+            spr3 = new ToolStripSeparator();
+            categortButton = new ToolStripButton();
+            unitButton = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -73,14 +76,14 @@
             // navigator
             // 
             navigator.AddNewItem = null;
-            navigator.BackColor = SystemColors.InactiveBorder;
+            navigator.BackColor = SystemColors.ControlLightLight;
             navigator.CountItem = countLabel;
             navigator.DeleteItem = null;
             navigator.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton });
+            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -126,6 +129,7 @@
             deleteButton.Name = "deleteButton";
             deleteButton.Size = new Size(28, 28);
             deleteButton.Text = "Delete Record";
+            deleteButton.Click += HandleDeleteButtonClicked;
             // 
             // spr1
             // 
@@ -179,6 +183,31 @@
             lastRecordButton.Size = new Size(28, 28);
             lastRecordButton.Text = "Last Record";
             // 
+            // spr3
+            // 
+            spr3.Name = "spr3";
+            spr3.Size = new Size(6, 31);
+            // 
+            // categortButton
+            // 
+            categortButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            categortButton.Image = Astro.Winform.Properties.Resources.data;
+            categortButton.ImageTransparentColor = Color.Magenta;
+            categortButton.Name = "categortButton";
+            categortButton.Size = new Size(28, 28);
+            categortButton.Text = "Category";
+            categortButton.Click += HandleCategoryButtonClicked;
+            // 
+            // unitButton
+            // 
+            unitButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            unitButton.Image = Astro.Winform.Properties.Resources.db;
+            unitButton.ImageTransparentColor = Color.Magenta;
+            unitButton.Name = "unitButton";
+            unitButton.Size = new Size(28, 28);
+            unitButton.Text = "Units";
+            unitButton.Click += unitButton_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -218,5 +247,8 @@
         private ToolStripButton deleteButton;
         private ToolStripSeparator spr1;
         private ToolStripSeparator spr2;
+        private ToolStripSeparator spr3;
+        private ToolStripButton categortButton;
+        private ToolStripButton unitButton;
     }
 }

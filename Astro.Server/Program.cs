@@ -47,5 +47,8 @@ app.MapAuthEndPoints();
 app.MapUserEndPoints();
 app.MapRoleEndPoints();
 app.MapRegionEndPoints();
+app.MapProductEndPoints();
+app.MapCategoryEndPoints();
+app.MapUnitEndPoints();
 
 app.Run();

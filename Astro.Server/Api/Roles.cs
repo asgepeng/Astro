@@ -29,22 +29,53 @@ namespace Astro.Server.Api
                 """;
             if (isWinformApp)
             {
-                using (var builder = new BinaryBuilder())
+                var data = Array.Empty<byte>();
+                using (var writer = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                     {
                         while (await reader.ReadAsync())
                         {
-                            builder.WriteInt16(reader.GetInt16(0));
-                            builder.WriteString(reader.GetString(1));
-                            builder.WriteString(reader.GetString(2));
-                            builder.WriteDateTime(reader.GetDateTime(3));
+                            writer.WriteInt16(reader.GetInt16(0));
+                            writer.WriteString(reader.GetString(1));
+                            writer.WriteString(reader.GetString(2));
+                            writer.WriteDateTime(reader.GetDateTime(3));
                         }
                     }, commandText);
-                    return Results.File(builder.ToArray(), "application/octet-stream");
+                    data = writer.ToArray();
                 }
+                return Results.File(data.ToArray(), "application/octet-stream");
             }
-            return Results.Ok();
+            else
+            {
+                var sb = new StringBuilder();
+                sb.Append("<table class=\"table table-striped table-bordered\">\n")
+                  .Append("<thead>\n")
+                  .Append("<tr>\n")
+                  .Append("<th>Role ID</th>\n")
+                  .Append("<th>Role Name</th>\n")
+                  .Append("<th>Creator</th>\n")
+                  .Append("<th>Created Date</th>\n")
+                  .Append("</tr>\n")
+                  .Append("</thead>\n")
+                  .Append("<tbody>\n");
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        sb.Append("<tr>");
+                        sb.Append("<td>").Append(reader.GetInt16(0)).Append("</td>");
+                        sb.Append("<td>").Append(reader.GetString(1)).Append("</td>");
+                        sb.Append("<td>").Append(reader.GetString(2)).Append("</td>");
+                        sb.Append("<td>").Append(reader.GetDateTime(3).ToString("yyyy-MM-dd HH:mm:ss")).Append("</td>");
+                        sb.Append("<td><a href=\"/roles/").Append(reader.GetInt16(0)).Append("\">Edit</a></td>");
+                        sb.Append("<td><a href=\"/roles/delete/").Append(reader.GetInt16(0)).Append("\">Delete</a></td>");
+                        sb.Append("</tr>");
+                    }
+                }, commandText);
+                sb.Append("</tbody></table>");
+                return Results.Content(sb.ToString(), "text/html");
+            }
         }
         internal static async Task<IResult> GetByIdAsync(IDatabase db, short id, HttpContext context)
         {
@@ -56,7 +87,7 @@ namespace Astro.Server.Api
                 """;
             if (isWinformApp)
             {
-                using (var builder = new BinaryObjectWriter())
+                using (var builder = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                     {
@@ -80,7 +111,7 @@ namespace Astro.Server.Api
                             on m.menu_id = rtm.menu_id and rtm.role_id = @id                        
                         """;
                     var iCount = 0;
-                    var iPos = builder.ReserveInt32(iCount);
+                    var iPos = builder.ReserveInt32();
                     await db.ExecuteReaderAsync(async reader =>
                     {
                         while (await reader.ReadAsync())

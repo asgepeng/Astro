@@ -1,28 +1,31 @@
-﻿using Astro.Helpers;
+﻿using Astro.DataTables;
 using Astro.Winform.Classes;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Astro.DataTables
+namespace Astro.Winform.Tables
 {
-    internal class UserDataTable : AstroDataTable
+    internal class ProductDataTable : AstroDataTable
     {
-        internal UserDataTable()
+        internal ProductDataTable()
         {
             Columns.Add("id", typeof(short)).Unique = true;
-            Columns.Add("fullname", typeof(string));
-            Columns.Add("email", typeof(string));
-            Columns.Add("role_name", typeof(string));
+            Columns.Add("name", typeof(string));
+            Columns.Add("sku", typeof(string));
+            Columns.Add("category", typeof(string));
+            Columns.Add("stock", typeof(int));
+            Columns.Add("unit", typeof(string));
+            Columns.Add("price", typeof(long));
             Columns.Add("creator", typeof(string));
             Columns.Add("created_date", typeof(DateTime));
         }
-        internal async override Task LoadAsync()
+        internal override async Task LoadAsync()
         {
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/users"))
+            if (this.Rows.Count > 0) this.Rows.Clear();
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/products"))
             using (var reader = new IO.Reader(stream))
             {
                 while (reader.Read())
@@ -33,8 +36,11 @@ namespace Astro.DataTables
                         reader.ReadString(),
                         reader.ReadString(),
                         reader.ReadString(),
+                        reader.ReadInt32(),
                         reader.ReadString(),
-                        reader.ReadDateTimeOrDBNull()
+                        reader.ReadInt64(),
+                        reader.ReadString(),
+                        reader.ReadDateTime()
                     };
                     Rows.Add(values);
                 }

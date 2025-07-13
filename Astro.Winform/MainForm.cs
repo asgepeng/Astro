@@ -32,8 +32,7 @@ namespace PointOfSale
                         this.ms.Items.Add(parent);
                         foreach (var submenu in item.Items)
                         {
-                            var child = new ToolStripMenuItem() { Text = submenu.Title };
-                            child.Tag = submenu.Id;
+                            var child = new ToolStripMenuItem() { Text = submenu.Title, Tag = submenu.Id };
                             child.Click += this.HandleMenuClicked;
                             parent.DropDownItems.Add(child);
                         }
@@ -68,7 +67,7 @@ namespace PointOfSale
             {
                 case 1:
                     var objectBuilder = new ObjectBuilder();
-                    var uvm = await objectBuilder.CreateUserViewModel(My.Application.User is null ? (short)0 : My.Application.User.Id); 
+                    var uvm = await objectBuilder.CreateUserViewModel(My.Application.User is null ? (short)0 : My.Application.User.Id);
                     var userDialog = new UserForm();
                     userDialog.UserView = uvm;
                     userDialog.ShowDialog();
@@ -85,6 +84,9 @@ namespace PointOfSale
                     break;
                 case 5:
                     OpenOrCreateListingForm(ListingData.Roles);
+                    break;
+                case 6:
+                    OpenOrCreateListingForm(ListingData.Products);
                     break;
             }
         }
@@ -121,10 +123,31 @@ namespace PointOfSale
         private async void HandleNewButtonClicked(object sender, EventArgs e)
         {
             var activeForm = this.ActiveMdiChild;
-            if (activeForm != null && activeForm is ListingForm  lform)
+            if (activeForm != null && activeForm is ListingForm lform)
             {
                 await lform.AddRecordAsync();
             }
+        }
+
+        private async void HandleDeleteButtonClicked(object sender, EventArgs e)
+        {
+            var activeForm = this.ActiveMdiChild;
+            if (activeForm != null && activeForm is ListingForm lform)
+            {
+                await lform.DeleteAsync();
+            }
+        }
+
+        private void HandleCategoryButtonClicked(object sender, EventArgs e)
+        {
+            var form = new ListCategoryForm();
+            form.ShowDialog();
+        }
+
+        private void unitButton_Click(object sender, EventArgs e)
+        {
+            var form = new ListUnitForm();
+            form.ShowDialog();
         }
     }
 }

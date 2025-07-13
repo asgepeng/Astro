@@ -19,7 +19,7 @@ namespace Astro.Server.Middlewares
         {
 
             string token = AppHelpers.GetToken(context.Request);
-            string userAgent = context.Request.Headers["User-Agent"].ToString();
+            string userAgent = context.Request.Headers.UserAgent.ToString();
             string ipv4 = AppHelpers.GetIpAddress(context.Request);
 
             ClaimsPrincipal? principal = null;

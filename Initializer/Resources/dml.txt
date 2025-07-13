@@ -884,6 +884,8 @@ VALUES
 INSERT INTO menus (section_id, menu_title)
 VALUES
 (1, 'Profile'),
+(1, 'User Management'),
+(1, 'Role Management'),
 (1, 'Change Password'),
 (1, 'Logout'),
 (2, 'Products'),
@@ -901,4 +903,98 @@ VALUES
 INSERT INTO role_to_menus
 	(role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
 SELECT 1 AS role_id, menu_id, true as allow_create, true as allow_read, true as allow_update, true as allow_delete
-FROM menus
+FROM menus;
+
+INSERT INTO categories (category_name, creator_id)
+VALUES
+-- Elektronik & Gadget
+('Komputer dan Tablet', 1),
+('Laptop dan Aksesoris', 1),
+('Smartphone dan Gadget', 1),
+('Televisi dan Audio', 1),
+('Kamera dan Aksesoris Fotografi', 1),
+('Peralatan Elektronik Rumah Tangga', 1),
+('Peralatan Gaming', 1),
+('Peralatan Jaringan dan Networking', 1),
+('Software dan Lisensi', 1),
+
+-- Kantor & Sekolah
+('Alat Tulis Kantor', 1),
+('Perlengkapan Sekolah', 1),
+('Furniture Kantor', 1),
+('Peralatan Presentasi', 1),
+('Printer dan Scanner', 1),
+('Kertas dan Bahan Cetak', 1),
+
+-- Rumah Tangga & Dapur
+('Perlengkapan Dapur', 1),
+('Peralatan Masak', 1),
+('Peralatan Kebersihan Rumah', 1),
+('Furniture Rumah', 1),
+('Dekorasi Rumah', 1),
+('Pencahayaan dan Lampu', 1),
+('Peralatan Kamar Mandi', 1),
+('Kasur dan Tempat Tidur', 1),
+
+-- Makanan & Minuman
+('Makanan', 1),
+('Minuman', 1),
+('Makanan Beku', 1),
+('Makanan Instan', 1),
+('Cemilan', 1),
+('Bumbu dan Rempah', 1),
+
+-- Kesehatan & Kecantikan
+('Produk Kesehatan', 1),
+('Perangkat Kecantikan', 1),
+('Perawatan Kulit', 1),
+('Perawatan Rambut', 1),
+('Perawatan Pribadi', 1),
+('Obat-obatan dan Vitamin', 1),
+
+-- Fashion
+('Pakaian Pria', 1),
+('Pakaian Wanita', 1),
+('Pakaian Anak', 1),
+('Sepatu dan Sandal', 1),
+('Tas dan Dompet', 1),
+('Perhiasan dan Jam Tangan', 1),
+('Aksesoris Fashion', 1),
+('Pakaian Dalam', 1),
+
+-- Bayi & Anak
+('Perlengkapan Bayi', 1),
+('Mainan Anak', 1),
+('Popok dan Perawatan Bayi', 1),
+('Peralatan Makan Bayi', 1),
+
+-- Otomotif
+('Sparepart dan Aksesoris Mobil', 1),
+('Sparepart dan Aksesoris Motor', 1),
+('Pelumas dan Cairan Kendaraan', 1),
+('Peralatan Cuci Kendaraan', 1),
+
+-- Olahraga & Outdoor
+('Peralatan Olahraga', 1),
+('Pakaian Olahraga', 1),
+('Camping dan Outdoor', 1),
+('Peralatan Memancing', 1),
+('Sepeda dan Aksesoris', 1),
+
+-- Hobi & Hiburan
+('Buku dan Majalah', 1),
+('Musik dan Alat Musik', 1),
+('Film dan DVD', 1),
+('Permainan Konsol', 1),
+('Hobi dan Koleksi', 1),
+
+-- Taman & Pertukangan
+('Peralatan Pertukangan', 1),
+('Peralatan Taman', 1),
+('Tanaman dan Bibit', 1),
+
+-- Lain-lain
+('Voucher dan Gift Card', 1),
+('Souvenir dan Hadiah', 1),
+('Produk Daur Ulang', 1);
+

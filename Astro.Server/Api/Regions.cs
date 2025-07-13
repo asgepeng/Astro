@@ -27,7 +27,7 @@ namespace Astro.Server.Api
                 """;
             if (isWinformApp)
             {
-                using (var builder = new BinaryBuilder())
+                using (var builder = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                     {
@@ -66,7 +66,7 @@ namespace Astro.Server.Api
                 """;
             if (isWinformApp)
             {
-                using (var builder = new BinaryBuilder())
+                using (var builder = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                      {
@@ -105,7 +105,7 @@ namespace Astro.Server.Api
             var isWinformApp = AppHelpers.IsWinformApp(context.Request);
             if (isWinformApp)
             {
-                using (var builder = new BinaryBuilder())
+                using (var builder = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                     {

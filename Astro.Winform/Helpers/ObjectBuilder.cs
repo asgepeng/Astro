@@ -16,7 +16,7 @@ namespace Astro.Winform.Helpers
         {
             UserViewModel? uvm = null;
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/users/" + userId.ToString()))
-            using (var reader = new BinaryObjectReader(stream))
+            using (var reader = new IO.Reader(stream))
             {
                 var userExists = reader.ReadBoolean();
                 if (userExists)
@@ -75,7 +75,7 @@ namespace Astro.Winform.Helpers
         {
             var role = new Role();
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/roles/" + roleId.ToString()))
-            using (var r = new BinaryObjectReader(stream))
+            using (var r = new IO.Reader(stream))
             {
                 var roleExists = r.ReadBoolean();
                 if (roleExists)
@@ -99,6 +99,41 @@ namespace Astro.Winform.Helpers
                 }
             }
             return role;
+        }
+        public async Task<ProductViewModel> CreateProductViewModel(short productId)
+        {
+            var model = new ProductViewModel();
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/products/" + productId.ToString()))
+            using (var reader = new IO.Reader(stream))
+            {
+                var productExist = reader.ReadBoolean();
+                if (productExist)
+                {
+                    model.Product = Product.Create(reader);
+                }
+
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    model.Categories.Add(new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    });
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    model.Units.Add(new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    });
+                    iCount--;
+                }
+            }
+            return model;
         }
     }
 }

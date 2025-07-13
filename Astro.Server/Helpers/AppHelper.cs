@@ -13,11 +13,11 @@ namespace Alaska.Data
 {
     internal static class AppHelpers
     {
-        internal static int GetUserID(HttpContext context)
+        internal static short GetUserID(HttpContext context)
         {
             var claimsPrincipal = context.User;
             string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Actor)?.Value;
-            int.TryParse(userID, out int id);
+            short.TryParse(userID, out short id);
             return id;
         }
         internal static int GetRoleID(HttpContext context)
@@ -26,15 +26,6 @@ namespace Alaska.Data
             string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
             int.TryParse(userID, out int roleId);
             return roleId;
-        }
-        internal static (int userId, int roleId) ExtractPrincipal(HttpContext context)
-        {
-            var claimsPrincipal = context.User;
-            string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Actor)?.Value;
-            string? roleID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            int.TryParse(userID, out int iUserID);
-            int.TryParse(roleID, out int iRoleID);
-            return (iUserID, iRoleID);
         }
         internal static string GetIpAddress(HttpRequest request)
         {
@@ -63,7 +54,7 @@ namespace Alaska.Data
         }
         internal static string GetUserAgent(HttpRequest request)
         {
-            return request.Headers.TryGetValue("User-Agent", out var userAgent) ? userAgent.ToString() : string.Empty;
+            return request.Headers.UserAgent.ToString();
         }
         internal static bool IsWinformApp(HttpRequest request)
         {

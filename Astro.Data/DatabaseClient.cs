@@ -21,6 +21,9 @@ namespace Astro.Data
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters);
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters);
      
+        public abstract DbParameter CreateParameter(string name, object value);
+        public abstract DbParameter CreateParameter(string name, DbType type, object value);
+
         public bool AnyRecords(string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
@@ -289,6 +292,20 @@ namespace Astro.Data
         {
             this.connectionString = connstring;
         }
+
+        public override DbParameter CreateParameter(string name, object value)
+        {
+            return new MySqlParameter(name, value);
+        }
+
+        public override DbParameter CreateParameter(string name, DbType type, object value)
+        {
+            return new MySqlParameter(name, type)
+            {
+                Value = value
+            };
+        }
+
         protected override (DbConnection, DbCommand) CreateConnection(string commandText, params DbParameter[] parameters)
         {
             var conn = new MySqlConnection(this.connectionString);
@@ -342,9 +359,32 @@ namespace Astro.Data
             builde.Password = password;
             this.connectionString = builde.ToString();
         }
+
+        public override DbParameter CreateParameter(string name, object value)
+        {
+            return new NpgsqlParameter(name, value);
+        }
+
+        public override DbParameter CreateParameter(string name, DbType type, object value)
+        {
+            return new NpgsqlParameter(name, type)
+            {
+                Value = value
+            };
+        }
     }
     public sealed class SqlDatabase : DatabaseClient
     {
+        public override DbParameter CreateParameter(string name, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DbParameter CreateParameter(string name, DbType type, object value)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters)
         {
             throw new NotImplementedException();

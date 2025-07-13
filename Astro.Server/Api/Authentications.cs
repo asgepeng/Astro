@@ -276,7 +276,7 @@ namespace Astro.Server.Api
         {
             var token = Guid.NewGuid().ToString();
             var ipv4 = AppHelpers.GetIpAddress(context.Request);
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
+            var userAgent = context.Request.Headers.UserAgent.ToString();
             var commandText = """
                 UPDATE users
                 SET
@@ -322,7 +322,7 @@ namespace Astro.Server.Api
                 }
             };
             var notes = getDescription(loginResult);
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
+            var userAgent = context.Request.Headers.UserAgent.ToString();
             var userId = user is null ? 0 : user.Id;
             var parameters = new NpgsqlParameter[]
             {

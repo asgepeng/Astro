@@ -19,16 +19,16 @@ namespace Astro.DataTables
         }
         internal async override Task LoadAsync()
         {
-            using (var reader = new BinaryReader(await HttpClientSingleton.GetStreamAsync("/data/roles")))
+            using (var reader = new IO.Reader(await HttpClientSingleton.GetStreamAsync("/data/roles")))
             {
-                while (AnyRows(reader))
+                while (reader.Read())
                 {
                     var values = new object[]
                     {
-                        ReadInt16(reader),
-                        ReadString(reader),
-                        ReadString(reader),
-                        ReadDateTime(reader)
+                        reader.ReadInt16(),
+                        reader.ReadString(),
+                        reader.ReadString(),
+                        reader.ReadDateTime()
                     };
                     Rows.Add(values);
                 }

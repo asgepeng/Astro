@@ -37,21 +37,21 @@ namespace Astro.Server.Api
             if (winFormApp)
             {
                 var data = Array.Empty<byte>();
-                using (var builder = new BinaryBuilder())
+                using (var writer = new IO.Writer())
                 {
                     await db.ExecuteReaderAsync(async (DbDataReader reader) =>
                     {
                         while (await reader.ReadAsync())
                         {
-                            builder.WriteInt16(reader.GetInt16(0)); // user_id
-                            builder.WriteString(reader.GetString(1)); // fullname
-                            builder.WriteString(reader.GetString(2)); // email
-                            builder.WriteString(reader.GetString(3)); // role_name
-                            builder.WriteString(reader.GetString(4)); // creator
-                            builder.WriteDateTime(reader.GetDateTime(5)); // created_date
+                            writer.WriteInt16(reader.GetInt16(0)); // user_id
+                            writer.WriteString(reader.GetString(1)); // fullname
+                            writer.WriteString(reader.GetString(2)); // email
+                            writer.WriteString(reader.GetString(3)); // role_name
+                            writer.WriteString(reader.GetString(4)); // creator
+                            writer.WriteDateTime(reader.GetDateTime(5)); // created_date
                         }
                     }, commandText);
-                    data = builder.ToArray();
+                    data = writer.ToArray();
                 }
                 return Results.File(data, "application/octet-stream");
             }
@@ -116,18 +116,19 @@ namespace Astro.Server.Api
             var isWinformApp = AppHelpers.IsWinformApp(context.Request);
             if (isWinformApp)
             {
-                using (var builder = new BinaryObjectWriter())
+                using (var builder = new IO.Writer())
                 {
                     var addressInfo = new AddressInfo();
+                    
                     await db.ExecuteReaderAsync(async (DbDataReader reader) =>
                     {
+                        builder.WriteBoolean(reader.HasRows);
                         if (await reader.ReadAsync())
                         {
                             addressInfo.City = reader.GetInt32(14); // city_id
                             addressInfo.State = reader.GetInt16(15); // state_id
                             addressInfo.Country = reader.GetInt16(16); // country_id
-
-                            builder.WriteBoolean(true);
+                           
                             builder.WriteInt16(reader.GetInt16(0)); // user_id
                             builder.WriteString(reader.GetString(1)); // user_firstname
                             builder.WriteString(reader.GetString(2)); // user_lastname
@@ -155,10 +156,6 @@ namespace Astro.Server.Api
                             builder.WriteBoolean(reader.GetBoolean(24)); // use_password_expiration
                             builder.WriteDateTime(reader.IsDBNull(25) ? null : reader.GetDateTime(25)); // password_expiration_date (nullable)
                         }
-                        else
-                        {
-                            builder.WriteBoolean(false); // User not found
-                        }
                     }, commandText, new NpgsqlParameter("userId", id));
 
                     commandText = """
@@ -167,7 +164,7 @@ namespace Astro.Server.Api
                         order by role_name
                         """;
                     int iCount = 0;
-                    var iPos = builder.ReserveInt32(iCount);  //siapkan buffer untuk panjang data roles
+                    var iPos = builder.ReserveInt32();  //siapkan buffer untuk panjang data roles
                     await db.ExecuteReaderAsync(async reader =>
                     {
                         while (await reader.ReadAsync())
@@ -178,9 +175,9 @@ namespace Astro.Server.Api
                         }
                     }, commandText);
                     builder.WriteInt32(iCount, iPos);
-                    
+
                     iCount = 0;
-                    iPos = builder.ReserveInt32(iCount);  //siapkan buffer untuk panjang data countries
+                    iPos = builder.ReserveInt32();  //siapkan buffer untuk panjang data countries
                     commandText = """
                         SELECT country_id, country_name
                         from countries
@@ -205,7 +202,7 @@ namespace Astro.Server.Api
                             where country_id = @countryId
                             """;
                         iCount = 0;
-                        iPos = builder.ReserveInt32(iCount);  //siapkan buffer untuk panjang data states
+                        iPos = builder.ReserveInt32();  //siapkan buffer untuk panjang data states
                         await db.ExecuteReaderAsync(async reader =>
                         {
                             while (await reader.ReadAsync())
@@ -222,7 +219,7 @@ namespace Astro.Server.Api
                             where state_id = @stateId
                             """;
                         iCount = 0;
-                        iPos = builder.ReserveInt32(iCount);  //siapkan buffer untuk panjang data cities
+                        iPos = builder.ReserveInt32();  //siapkan buffer untuk panjang data cities
                         await db.ExecuteReaderAsync(async reader =>
                         {
                             while (await reader.ReadAsync())
@@ -510,7 +507,7 @@ namespace Astro.Server.Api
                 FROM roles
                 ORDER BY role_name
                 """;
-            using (var builder = new BinaryBuilder())
+            using (var builder = new IO.Writer())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
