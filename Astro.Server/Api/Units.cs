@@ -26,6 +26,7 @@ namespace Astro.Server.Api
                 select u.unit_id, u.unit_name, u.created_date, concat(c.user_firstname, ' ', c.user_lastname) as created_by
                 from units as u
                 inner join users as c on u.creator_id = c.user_id
+                order by u.unit_name
                 """;
                 var data = Array.Empty<byte>();
                 using (var writer = new IO.Writer())
@@ -96,7 +97,7 @@ namespace Astro.Server.Api
                 set unit_name = @name
                 where unit_id = @id
                 """;
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter(commandText, unit.Name.Trim()), new NpgsqlParameter("@id", unit.Id));
+            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter("name", unit.Name.Trim()), new NpgsqlParameter("@id", unit.Id));
             return success ? Results.Ok(CommonResult.Ok("Unit updated successfully.")) 
                            : Results.Ok(CommonResult.Fail("Failed to update unit. Please try again."));
         }

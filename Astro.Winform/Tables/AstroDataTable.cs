@@ -39,5 +39,17 @@ namespace Astro.DataTables
         }
         protected static bool AnyRows(BinaryReader reader) => reader.BaseStream.Position < reader.BaseStream.Length;
         internal abstract Task LoadAsync();
+        internal List<string> GetStringColumns()
+        {
+            var stringColumns = new List<string>();
+            foreach (DataColumn column in this.Columns)
+            {
+                if (column.DataType == typeof(string))
+                {
+                    stringColumns.Add(column.ColumnName);
+                }
+            }
+            return stringColumns;
+        }
     }
 }

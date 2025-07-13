@@ -1,4 +1,5 @@
 ﻿using Astro.Models;
+using Astro.Text;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
 using System;
@@ -32,9 +33,9 @@ namespace Astro.Winform.Forms
                     this.skuTextBox.Text = this.Model.Product.Sku;
                     this.nameTextBox.Text = this.Model.Product.Name;
                     this.descriptionTextBox.Text = this.Model.Product.Description;
-                    this.stockTextBox.Text = this.Model.Product.Stock.ToString();
-                    this.basicpriceTextBox.Text = this.Model.Product.CostAverage.ToString();
-                    this.priceTextBox.Text = this.Model.Product.Price.ToString();
+                    this.stockTextBox.Text = this.Model.Product.Stock.ToString("N0");
+                    this.basicpriceTextBox.Text = this.Model.Product.CostAverage.ToDecimalFormat();
+                    this.priceTextBox.Text = this.Model.Product.Price.ToDecimalFormat();
                     this.minstockTextBox.Text = this.Model.Product.MinStock.ToString();
                     this.maxstockTextBox.Text = this.Model.Product.MaxStock.ToString();
                     this.categoryComboBox.SelectedItem = this.Model.Categories.FirstOrDefault(c => c.Id == this.Model.Product.Category);
@@ -85,10 +86,8 @@ namespace Astro.Winform.Forms
             product.Unit = (short)((Option)this.unitComboBox.SelectedItem).Id;
             int.TryParse(stockTextBox.Text, out int productStock);
             product.Stock = productStock;
-            long.TryParse(priceTextBox.Text, out long productPrice);
-            product.Price = productPrice;
-            long.TryParse(basicpriceTextBox.Text, out long productBasicPrice);
-            product.CostAverage = productBasicPrice;
+            product.Price = priceTextBox.Text.ToInt64();
+            product.CostAverage = basicpriceTextBox.Text.ToInt64();
             short.TryParse(minstockTextBox.Text, out short minStock);
             short.TryParse(maxstockTextBox.Text, out short maxStock);
             product.MinStock = minStock;
@@ -108,6 +107,16 @@ namespace Astro.Winform.Forms
                     MessageBox.Show(commonResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+        private void BasicPriceTextBoxEnter(object sender, EventArgs e)
+        {
+            var tb = (TextBox)sender;
+            tb.Text = tb.Text.ToInt64().ToString();
+        }
+        private void BasicPriceTextBoxLeave(object sender, EventArgs e)
+        {
+            var tb = (TextBox)sender;
+            tb.Text = tb.Text.ToInt64().ToDecimalFormat();
         }
     }
 }

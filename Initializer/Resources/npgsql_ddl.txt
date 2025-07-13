@@ -223,7 +223,7 @@ CREATE TABLE products (
     price               BIGINT          NOT NULL    DEFAULT 0,
     cost_average        BIGINT          NOT NULL    DEFAULT 0,
     images              VARCHAR(250)    NOT NULL    DEFAULT '',
-    manufacturer_id     SMALLINT        NOT NULL    DEFAULT 0,
+    manufacture_id      SMALLINT        NOT NULL    DEFAULT 0,
     creator_id          SMALLINT        NOT NULL    DEFAULT 0,
     created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     editor_id           SMALLINT,

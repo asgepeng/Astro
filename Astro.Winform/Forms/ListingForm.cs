@@ -20,6 +20,8 @@ namespace Astro.Winform.Forms
     {
         internal BindingSource BindingSource { get; } = new BindingSource();
         internal ListingData ListingType { get; } = ListingData.Users;
+        private List<string> filters = new List<string>();
+
         internal ListingForm(ListingData type)
         {
             InitializeComponent();
@@ -47,11 +49,34 @@ namespace Astro.Winform.Forms
                     throw new NotSupportedException("Unsupported listing data type.");
             }
         }
+        internal string Filter { get; private set; } = string.Empty;
+        internal void ApplyFilter(string filterValue)
+        {
+            if (string.IsNullOrWhiteSpace(filterValue))
+            {
+                this.Filter = string.Empty;
+                this.BindingSource.RemoveFilter();
+                return;
+            }
+            var search = filterValue.Replace("'", "''");
+            var sb = new StringBuilder();
+            for (int i=0; i < this.filters.Count; i++)
+            {
+                if (i > 0) sb.Append(" OR ");
+                sb.Append(filters[i]).Append(" LIKE '%").Append(search).Append("%'");
+            }
+            this.Filter = filterValue;
+            this.BindingSource.Filter = sb.ToString();
+        }
         internal async Task LoadDataAsync()
         {
             var table = GetDataTable();
             await table.LoadAsync();
             this.BindingSource.DataSource = table;
+            if (this.filters.Count == 0)
+            {
+                this.filters = table.GetStringColumns();
+            }
         }
         internal async Task AddRecordAsync()
         {
@@ -132,7 +157,7 @@ namespace Astro.Winform.Forms
                         new DataTableColumnInfo("Id", "id", 50, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Name", "fullname", 320, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Email Address", "email", 250, DataGridViewContentAlignment.MiddleLeft, ""),
-                        new DataTableColumnInfo("Role Name", "role_name", 120),
+                        new DataTableColumnInfo("Role", "role_name", 120),
                         new DataTableColumnInfo("Created By", "creator", 150),
                         new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
@@ -162,17 +187,22 @@ namespace Astro.Winform.Forms
                     break;
             }
         }
-
+        private bool flagDoubleClickHandled = false;
         private async void HandleCellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || BindingSource.Current is null) return;
+            if (flagDoubleClickHandled) return;
 
+            flagDoubleClickHandled = true;
+            this.Cursor = Cursors.WaitCursor;
             var id = (short)((DataRowView)this.BindingSource.Current)[0];
             var dialog = await CreatePopupDialog(id);
             if (dialog.ShowDialog()== DialogResult.OK)
             {
                 await this.LoadDataAsync();
             }
+            this.Cursor = Cursors.Default;
+            flagDoubleClickHandled = false;
         }
     }
     internal enum ListingData

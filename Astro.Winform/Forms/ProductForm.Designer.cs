@@ -222,9 +222,9 @@
             button6.FlatAppearance.BorderSize = 0;
             button6.FlatStyle = FlatStyle.Flat;
             button6.ForeColor = Color.White;
-            button6.Location = new Point(293, 513);
+            button6.Location = new Point(248, 517);
             button6.Name = "button6";
-            button6.Size = new Size(173, 36);
+            button6.Size = new Size(173, 32);
             button6.TabIndex = 11;
             button6.Text = "Kategori Produk";
             button6.UseVisualStyleBackColor = false;
@@ -235,11 +235,11 @@
             loginButton.FlatAppearance.BorderSize = 0;
             loginButton.FlatStyle = FlatStyle.Flat;
             loginButton.ForeColor = Color.White;
-            loginButton.Location = new Point(13, 513);
+            loginButton.Location = new Point(13, 517);
             loginButton.Name = "loginButton";
-            loginButton.Size = new Size(148, 36);
+            loginButton.Size = new Size(103, 32);
             loginButton.TabIndex = 9;
-            loginButton.Text = "Simpan";
+            loginButton.Text = "💾 Simpan";
             loginButton.UseVisualStyleBackColor = false;
             loginButton.Click += loginButton_Click;
             // 
@@ -268,6 +268,8 @@
             basicpriceTextBox.Size = new Size(120, 25);
             basicpriceTextBox.TabIndex = 100;
             basicpriceTextBox.TabStop = false;
+            basicpriceTextBox.Enter += BasicPriceTextBoxEnter;
+            basicpriceTextBox.Leave += BasicPriceTextBoxLeave;
             // 
             // label3
             // 
@@ -285,6 +287,8 @@
             priceTextBox.Name = "priceTextBox";
             priceTextBox.Size = new Size(120, 25);
             priceTextBox.TabIndex = 6;
+            priceTextBox.Enter += BasicPriceTextBoxEnter;
+            priceTextBox.Leave += BasicPriceTextBoxLeave;
             // 
             // label2
             // 
@@ -342,9 +346,9 @@
             button5.FlatAppearance.BorderSize = 0;
             button5.FlatStyle = FlatStyle.Flat;
             button5.ForeColor = Color.White;
-            button5.Location = new Point(167, 513);
+            button5.Location = new Point(122, 517);
             button5.Name = "button5";
-            button5.Size = new Size(120, 36);
+            button5.Size = new Size(120, 32);
             button5.TabIndex = 10;
             button5.Text = "Tutup";
             button5.UseVisualStyleBackColor = false;

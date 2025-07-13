@@ -41,7 +41,7 @@ namespace Astro.Winform.Forms
                     var values = new object[]
                     {
                         reader.ReadInt16(),
-                        "📑 " + reader.ReadString(),
+                        "📦 " + reader.ReadString(),
                         reader.ReadDateTime(),
                         reader.ReadString()
                     };

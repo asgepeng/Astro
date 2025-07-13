@@ -1,5 +1,4 @@
 using Astro.Models;
-using Astro.Utils;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
 using Astro.Winform.Forms;
@@ -14,8 +13,6 @@ namespace PointOfSale
         public MainForm()
         {
             InitializeComponent();
-
-            My.Application.ApiUrl = "http://localhost:5002";
         }
         private async void MainForm_Load(object sender, EventArgs e)
         {
@@ -73,17 +70,17 @@ namespace PointOfSale
                     userDialog.ShowDialog();
                     break;
                 case 2:
+                    OpenOrCreateListingForm(ListingData.Users);
+                    break;
+                case 3:
+                    OpenOrCreateListingForm(ListingData.Roles);
+                    break;
+                case 4:
                     var dialog = new ChangePasswordForm();
                     dialog.ShowDialog();
                     break;
-                case 3:
-                    this.Close();
-                    break;
-                case 4:
-                    OpenOrCreateListingForm(ListingData.Users);
-                    break;
                 case 5:
-                    OpenOrCreateListingForm(ListingData.Roles);
+                    this.Close();
                     break;
                 case 6:
                     OpenOrCreateListingForm(ListingData.Products);
@@ -114,6 +111,7 @@ namespace PointOfSale
             if (activeForm != null && activeForm is ListingForm lform)
             {
                 this.navigator.BindingSource = lform.BindingSource;
+                this.searchTextBox.Text = lform.Filter;
                 await lform.LoadDataAsync();
                 return;
             }
@@ -148,6 +146,20 @@ namespace PointOfSale
         {
             var form = new ListUnitForm();
             form.ShowDialog();
+        }
+
+        private void ApplyFilter(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+            {
+                var activeForm = this.ActiveMdiChild;
+                if (activeForm is null) return;
+
+                if (activeForm is ListingForm lform)
+                {
+                    lform.ApplyFilter(this.searchTextBox.Text);
+                }
+            }
         }
     }
 }

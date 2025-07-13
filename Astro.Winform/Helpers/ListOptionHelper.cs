@@ -1,14 +1,5 @@
 ﻿using Astro.Models;
 using Astro.Winform.Classes;
-using Astro.Utils;
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Net.Quic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Astro.Winform.Helpers
 {
@@ -16,36 +7,71 @@ namespace Astro.Winform.Helpers
     {
         internal static async Task<ListOption> GetCountryOptionsAsync()
         {
+            var list = new ListOption();
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/regions/countries"))
-            using (var builder = new ListOptionBuilder(stream))
+            using (var reader = new IO.Reader(stream))
             {
-                return builder.ToListOption(typeof(short));
+                while (reader.Read())
+                {
+                    list.Add(new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    });
+                }
             }
+            return list;
         }
         internal static async Task<ListOption> GetStateOptionsAsync(short countryId)
         {
+            var list = new ListOption();
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/regions/states/" + countryId.ToString()))
-            using (var builder = new ListOptionBuilder(stream))
+            using (var reader = new IO.Reader(stream))
             {
-                var type = typeof(short);
-                return builder.ToListOption(type);
+                while (reader.Read())
+                {
+                    list.Add(new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    });
+                }
             }
+            return list;
         }
         internal static async Task<ListOption> GetCityOptionsAsync(short stateId)
         {
+            var list = new ListOption();
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/regions/cities/" + stateId.ToString()))
-            using (var builder = new ListOptionBuilder(stream))
+            using (var reader = new IO.Reader(stream))
             {
-                return builder.ToListOption(typeof(int));
+                while (reader.Read())
+                {
+                    list.Add(new Option()
+                    {
+                        Id = reader.ReadInt32(),
+                        Text = reader.ReadString()
+                    });
+                }
             }
+            return list;
         }
         internal static async Task<ListOption> GetRoleOptionsAsync()
         {
+            var list = new ListOption();
             using (var stream = await HttpClientSingleton.GetStreamAsync("/data/users/role-options"))
-            using (var builder = new ListOptionBuilder(stream))
+            using (var reader = new IO.Reader(stream))
             {
-                return builder.ToListOption(typeof(short));
+                while (reader.Read())
+                {
+                    list.Add(new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    });
+                }
             }
+            return list;
         }
     }
 }

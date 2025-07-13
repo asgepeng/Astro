@@ -11,6 +11,23 @@ namespace PointOfSale
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+            try
+            {
+                var hostConfigPath = AppContext.BaseDirectory + "host.ini";
+                if (File.Exists(hostConfigPath))
+                {
+                    var hostConfig = File.ReadAllText(hostConfigPath);
+                    My.Application.ApiUrl = hostConfig.Trim();
+                }
+                else
+                {
+                    My.Application.ApiUrl = "http://localhost:5002";
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error starting application", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             Application.Run(new MainForm());
         }
     }

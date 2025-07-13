@@ -47,6 +47,8 @@
             spr3 = new ToolStripSeparator();
             categortButton = new ToolStripButton();
             unitButton = new ToolStripButton();
+            searchTextBox = new ToolStripTextBox();
+            searchLabel = new ToolStripLabel();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -83,7 +85,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton });
+            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, searchTextBox, searchLabel });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -208,6 +210,24 @@
             unitButton.Text = "Units";
             unitButton.Click += unitButton_Click;
             // 
+            // searchTextBox
+            // 
+            searchTextBox.Alignment = ToolStripItemAlignment.Right;
+            searchTextBox.BackColor = Color.FromArgb(224, 224, 224);
+            searchTextBox.BorderStyle = BorderStyle.FixedSingle;
+            searchTextBox.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            searchTextBox.MaxLength = 50;
+            searchTextBox.Name = "searchTextBox";
+            searchTextBox.Size = new Size(100, 31);
+            searchTextBox.KeyDown += ApplyFilter;
+            // 
+            // searchLabel
+            // 
+            searchLabel.Alignment = ToolStripItemAlignment.Right;
+            searchLabel.Name = "searchLabel";
+            searchLabel.Size = new Size(69, 28);
+            searchLabel.Text = "🔍 Search";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -250,5 +270,7 @@
         private ToolStripSeparator spr3;
         private ToolStripButton categortButton;
         private ToolStripButton unitButton;
+        private ToolStripTextBox searchTextBox;
+        private ToolStripLabel searchLabel;
     }
 }

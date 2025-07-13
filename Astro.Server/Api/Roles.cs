@@ -1,7 +1,6 @@
 ﻿using Alaska.Data;
 using Astro.Data;
 using Astro.Models;
-using Astro.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Npgsql;
