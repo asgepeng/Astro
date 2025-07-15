@@ -1,9 +1,11 @@
-﻿using Alaska.Data;
-using Astro.Data;
+﻿using Astro.Data;
+using Astro.Helpers;
 using Astro.Models;
+using Astro.Server.Binaries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Npgsql;
+using System.Data;
+using System.Data.Common;
 using System.Text;
 
 namespace Astro.Server.Api
@@ -20,33 +22,15 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var isWinformApp = AppHelpers.IsWinformApp(context.Request);
-            var commandText = """
-                select r.role_id, r.role_name, case when r.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, r.created_date
-                FROM roles as r
-                left join users as c on r.creator_id = c.user_id
-                """;
-            if (isWinformApp)
-            {
-                var data = Array.Empty<byte>();
-                using (var writer = new IO.Writer())
-                {
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            writer.WriteInt16(reader.GetInt16(0));
-                            writer.WriteString(reader.GetString(1));
-                            writer.WriteString(reader.GetString(2));
-                            writer.WriteDateTime(reader.GetDateTime(3));
-                        }
-                    }, commandText);
-                    data = writer.ToArray();
-                }
-                return Results.File(data.ToArray(), "application/octet-stream");
-            }
+            var isWinformApp = Application.IsWinformApp(context.Request);
+            if (isWinformApp) return Results.File(await db.GetRoleDataTable(), "application/octet-stream");
             else
             {
+                var commandText = """
+                    select r.role_id, r.role_name, case when r.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, r.created_date
+                    FROM roles as r
+                    left join users as c on r.creator_id = c.user_id
+                    """;
                 var sb = new StringBuilder();
                 sb.Append("<table class=\"table table-striped table-bordered\">\n")
                   .Append("<thead>\n")
@@ -78,59 +62,15 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetByIdAsync(IDatabase db, short id, HttpContext context)
         {
-            var isWinformApp = AppHelpers.IsWinformApp(context.Request);
+            var isWinformApp = Application.IsWinformApp(context.Request);
+            if (isWinformApp) return Results.File(await db.GetRole(id), "application/octet-stream");
+
+            Role? role = null;
             var commandText = """
                 select role_id, role_name
                 from roles
                 where role_id = @id;
                 """;
-            if (isWinformApp)
-            {
-                using (var builder = new IO.Writer())
-                {
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        builder.WriteBoolean(reader.HasRows);
-                        if (await reader.ReadAsync())
-                        {
-                            builder.WriteInt16(reader.GetInt16(0));
-                            builder.WriteString(reader.GetString(1));
-                        }
-                    }, commandText, new NpgsqlParameter("id", id));
-                    commandText = """
-                        select
-                            m.menu_id,
-                            m.menu_title,
-                            coalesce(rtm.allow_create, false) as allow_create,
-                            coalesce(rtm.allow_read,   false) as allow_read,
-                            coalesce(rtm.allow_update, false) as allow_update,
-                            coalesce(rtm.allow_delete, false) as allow_delete
-                        from menus as m
-                        left join role_to_menus as rtm
-                            on m.menu_id = rtm.menu_id and rtm.role_id = @id                        
-                        """;
-                    var iCount = 0;
-                    var iPos = builder.ReserveInt32();
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            builder.WriteInt16(reader.GetInt16(0));
-                            builder.WriteString(reader.GetString(1));
-                            builder.WriteBoolean(reader.GetBoolean(2));
-                            builder.WriteBoolean(reader.GetBoolean(3));
-                            builder.WriteBoolean(reader.GetBoolean(4));
-                            builder.WriteBoolean(reader.GetBoolean(5));
-                            iCount++;
-                        }
-                    }, commandText, new NpgsqlParameter("id", id));
-
-                    builder.WriteInt32(iCount, iPos);
-                    return Results.File(builder.ToArray(), "application/octet-stream");
-                }
-            }
-
-            Role? role = null;
             await db.ExecuteReaderAsync(async reader =>
             {
                 if (await reader.ReadAsync())
@@ -141,7 +81,7 @@ namespace Astro.Server.Api
                         Name = reader.GetString(1)
                     };
                 }
-            }, commandText, new NpgsqlParameter("id", id));
+            }, commandText, db.CreateParameter("id", id, DbType.Int16));
             if (role is null) return Results.NotFound(CommonResult.Fail("role not found."));
             commandText = """
                 select
@@ -166,7 +106,7 @@ namespace Astro.Server.Api
                     };
                     role.Permissions.Add(item);
                 }
-            }, commandText, new NpgsqlParameter("@id", role.Id));
+            }, commandText, db.CreateParameter("@id", role.Id, DbType.Int16));
             return role != null ? Results.Ok(role) : Results.NotFound();
         }
         internal static async Task<IResult> CreateAsync(Role role, IDatabase db, HttpContext context)
@@ -177,7 +117,12 @@ namespace Astro.Server.Api
                 values (@rolename, @creator)
                 returning role_id
                 """;
-            var roleId = await db.ExecuteScalarInt16Async(commandText, new NpgsqlParameter("rolename", role.Name), new NpgsqlParameter("creator", AppHelpers.GetUserID(context)));
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("rolename", role.Name, DbType.String),
+                db.CreateParameter("creator", Application.GetUserID(context), DbType.String)
+            };
+            var roleId = await db.ExecuteScalarInt16Async(commandText, parameters);
             if (roleId == null) return Results.Ok(CommonResult.Fail("Failed to create role."));
 
             commandText = """
@@ -215,11 +160,11 @@ namespace Astro.Server.Api
                     (role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
                 values
                 """");
-            var parameters = new List<NpgsqlParameter>
+            var parameters = new List<DbParameter>
             {
-                new NpgsqlParameter("rolename", role.Name),
-                new NpgsqlParameter("id", role.Id),
-                new NpgsqlParameter("editor", AppHelpers.GetUserID(context))
+                db.CreateParameter("rolename", role.Name, DbType.String),
+                db.CreateParameter("id", role.Id, DbType.Int16),
+                db.CreateParameter("editor", Application.GetUserID(context), DbType.Int16)
             };
             for (int i = 0; i < role.Permissions.Count; i++)
             {
@@ -232,10 +177,10 @@ namespace Astro.Server.Api
                     .Append(",@u").Append(i)
                     .Append(",@d").Append(i).AppendLine(")");
 
-                parameters.Add(new NpgsqlParameter("c" + i, item.AllowCreate));
-                parameters.Add(new NpgsqlParameter("r" + i, item.AllowRead));
-                parameters.Add(new NpgsqlParameter("u" + i, item.AllowEdit));
-                parameters.Add(new NpgsqlParameter("d" + i, item.AllowDelete));
+                parameters.Add(db.CreateParameter("c" + i, item.AllowCreate, DbType.Boolean));
+                parameters.Add(db.CreateParameter("r" + i, item.AllowRead, DbType.Boolean));
+                parameters.Add(db.CreateParameter("u" + i, item.AllowEdit, DbType.Boolean));
+                parameters.Add(db.CreateParameter("d" + i, item.AllowDelete, DbType.Boolean));
             }
             sb.Append("""
                 on conflict (role_id, menu_id) 
@@ -256,7 +201,7 @@ namespace Astro.Server.Api
                 delete from role_to_menus
                 where role_id = @id;
                 """;
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter("id", id));
+            var success = await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("id", id, DbType.Int16));
             return success ? Results.Ok(CommonResult.Ok("Role deleted successfully.")) : Results.Problem("Failed to delete role.");
         }
     }

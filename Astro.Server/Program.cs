@@ -51,4 +51,7 @@ app.MapProductEndPoints();
 app.MapCategoryEndPoints();
 app.MapUnitEndPoints();
 
+app.MapSupplierEndPoints();
+app.MapCustomerEndPoints();
+
 app.Run();

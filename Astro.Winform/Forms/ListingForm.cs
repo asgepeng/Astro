@@ -45,6 +45,18 @@ namespace Astro.Winform.Forms
                 case ListingData.Products:
                     var productForm = new ProductForm() { Model = await objectBuilder.CreateProductViewModel(id) };
                     return productForm;
+                case ListingData.Suppliers:
+                case ListingData.Customers:
+                    var text = ListingType == ListingData.Suppliers ? "Supplier" : "Customer";
+                    var supplierForm = new ContactForm() { Text = text };
+                    if (id > 0)
+                    {
+                        var jsonContact = await HttpClientSingleton.GetAsync(ListingType == ListingData.Suppliers ? $"/data/suppliers/{id}" : $"/data/customers/{id}");
+                        var contact = Contact.Create(jsonContact);
+                        if (contact != null) supplierForm.Contact = contact;
+                    }
+
+                    return supplierForm;
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -143,6 +155,9 @@ namespace Astro.Winform.Forms
                     return new RoleDataTable();
                 case ListingData.Products:
                     return new ProductDataTable();
+                case ListingData.Suppliers:
+                case ListingData.Customers:
+                    return new ContactDataTable() { ContactType = ListingType == ListingData.Suppliers ? (short)0 : (short)1 };
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -174,7 +189,7 @@ namespace Astro.Winform.Forms
                 case ListingData.Products:
                     GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
                     {
-                        new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
+                        //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Name", "name", 300),
                         new DataTableColumnInfo("SKU", "sku", 100),
                         new DataTableColumnInfo("Category", "category", 150),
@@ -183,6 +198,19 @@ namespace Astro.Winform.Forms
                         new DataTableColumnInfo("Price", "price", 120, DataGridViewContentAlignment.MiddleRight, "N0"),
                         new DataTableColumnInfo("Created By", "creator", 200),
                         new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
+                    }, this.BindingSource);
+                    break;
+                case ListingData.Suppliers:
+                case ListingData.Customers:
+                    var headerText = ListingType == ListingData.Suppliers ? "Supplier Name" : "Customer Name";
+                    GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
+                    {
+                        //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
+                        new DataTableColumnInfo(headerText, "name", 300),
+                        new DataTableColumnInfo("Address", "address", 300),
+                        new DataTableColumnInfo("Phone Number", "phone", 120),
+                        new DataTableColumnInfo("Created By", "creator", 180),
+                        new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
                     break;
             }
@@ -209,6 +237,8 @@ namespace Astro.Winform.Forms
     {
         Users = 0,
         Roles = 1,
-        Products = 2
+        Products = 2,
+        Suppliers = 3,
+        Customers = 4
     }
 }

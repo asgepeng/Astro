@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,9 @@ namespace Astro.Data
 {
     public interface IDatabase
     {
+        DbParameter CreateParameter(string name, object? value);
+        DbParameter CreateParameter(string name, object? value, DbType dbType);
+
         Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
         Task<object?> ExecuteScalarAsync(string commandText, params DbParameter[] parameters);
         Task<int?> ExecuteScalarIntegerAsync(string commandText, params DbParameter[] parameters);

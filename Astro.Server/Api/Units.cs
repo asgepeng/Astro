@@ -1,9 +1,11 @@
-﻿using Alaska.Data;
+﻿using Astro.Helpers;
 using Astro.Data;
 using Astro.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Npgsql;
+using System.Data;
+using System.Data.Common;
+using Astro.Server.Binaries;
 
 namespace Astro.Server.Api
 {
@@ -19,32 +21,8 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var isWinformApp = AppHelpers.IsWinformApp(context.Request);
-            if (isWinformApp)
-            {
-                var commandText = """
-                select u.unit_id, u.unit_name, u.created_date, concat(c.user_firstname, ' ', c.user_lastname) as created_by
-                from units as u
-                inner join users as c on u.creator_id = c.user_id
-                order by u.unit_name
-                """;
-                var data = Array.Empty<byte>();
-                using (var writer = new IO.Writer())
-                {
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            writer.WriteInt16(reader.GetInt16(0));
-                            writer.WriteString(reader.GetString(1));
-                            writer.WriteDateTime(reader.GetDateTime(2));
-                            writer.WriteString(reader.GetString(3));
-                        }
-                    }, commandText);
-                    data = writer.ToArray();
-                }
-                return Results.File(data, "application/octet-stream");
-            }
+            var isWinformApp = Application.IsWinformApp(context.Request);
+            if (isWinformApp) return Results.File(await db.GetUnitDataTable(), "application/octet-stream");
             else
             {
                 var list = new List<Unit>();
@@ -53,26 +31,8 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            var commandText = """
-                select unit_id, unit_name
-                from units
-                where unit_id = @id
-                """;
-            var data = Array.Empty<byte>();
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                using (var writer = new IO.Writer())
-                {
-                    writer.WriteBoolean(reader.HasRows);
-                    if (await reader.ReadAsync())
-                    {
-                        writer.WriteInt16(reader.GetInt16(0));
-                        writer.WriteString(reader.GetString(1));
-                    }
-                    data = writer.ToArray();
-                }
-            }, commandText, new NpgsqlParameter("id", id));
-            return Results.File(data, "application/octet-stream");
+            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetUnit(id), "application/octet-stream");
+            else return Results.Ok(CommonResult.Fail("This endpoint is not available for web applications."));
         }
         private static async Task<IResult> CreateAsync(Unit unit, IDatabase db, HttpContext context)
         {
@@ -81,10 +41,10 @@ namespace Astro.Server.Api
                 values (@name, @creatorId)
                 returning unit_id
                 """;
-            var parameters = new NpgsqlParameter[]
+            var parameters = new DbParameter[]
             {
-                new NpgsqlParameter("@name", unit.Name.Trim()),
-                new NpgsqlParameter("@creatorId", AppHelpers.GetUserID(context))
+                db.CreateParameter("@name", unit.Name.Trim(), DbType.String),
+                db.CreateParameter("@creatorId", Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Unit created successfully.")) 
@@ -97,14 +57,19 @@ namespace Astro.Server.Api
                 set unit_name = @name
                 where unit_id = @id
                 """;
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter("name", unit.Name.Trim()), new NpgsqlParameter("@id", unit.Id));
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("name", unit.Name.Trim(), DbType.String),
+                db.CreateParameter("id", unit.Id, DbType.Int16)
+            };
+            var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Unit updated successfully.")) 
                            : Results.Ok(CommonResult.Fail("Failed to update unit. Please try again."));
         }
         private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
         {
             var commandText = "delete from units where unit_id =@id";
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter("@id", id));
+            var success = await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("@id", id, DbType.Int16));
             return success ? Results.Ok(CommonResult.Ok("Unit deleted successfully.")) 
                            : Results.Ok(CommonResult.Fail("Failed to delete unit. Please try again."));
         }

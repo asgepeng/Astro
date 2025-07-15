@@ -21,9 +21,6 @@ namespace Astro.Data
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters);
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters);
      
-        public abstract DbParameter CreateParameter(string name, object value);
-        public abstract DbParameter CreateParameter(string name, DbType type, object value);
-
         public bool AnyRecords(string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
@@ -109,7 +106,7 @@ namespace Astro.Data
                 }
                 catch(Exception ex) 
                 {
-                    File.WriteAllText(AppContext.BaseDirectory + "db.executeReaderAsync.txt", ex.ToString());
+                    File.WriteAllText(AppContext.BaseDirectory + "db.executeReaderAsync.txt", commandText + "\n" + ex.ToString());
                 }
             }
         }
@@ -284,6 +281,9 @@ namespace Astro.Data
                 )
             );
         }
+
+        public abstract DbParameter CreateParameter(string name, object? value);
+        public abstract DbParameter CreateParameter(string name, object? value, DbType dbType);
     }
     public sealed class MySqlDatabase : DatabaseClient
     {
@@ -293,16 +293,16 @@ namespace Astro.Data
             this.connectionString = connstring;
         }
 
-        public override DbParameter CreateParameter(string name, object value)
+        public override DbParameter CreateParameter(string name, object? value)
         {
-            return new MySqlParameter(name, value);
+            return new MySqlParameter(name, value ?? DBNull.Value);
         }
 
-        public override DbParameter CreateParameter(string name, DbType type, object value)
+        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
         {
-            return new MySqlParameter(name, type)
+            return new MySqlParameter(name, dbType)
             {
-                Value = value
+                Value = value ?? DBNull.Value
             };
         }
 
@@ -360,27 +360,27 @@ namespace Astro.Data
             this.connectionString = builde.ToString();
         }
 
-        public override DbParameter CreateParameter(string name, object value)
+        public override DbParameter CreateParameter(string name, object? value)
         {
-            return new NpgsqlParameter(name, value);
+            return new NpgsqlParameter(name, value ?? DBNull.Value);
         }
 
-        public override DbParameter CreateParameter(string name, DbType type, object value)
+        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
         {
-            return new NpgsqlParameter(name, type)
+            return new NpgsqlParameter(name, dbType)
             {
-                Value = value
+                Value = value ?? DBNull.Value
             };
         }
     }
     public sealed class SqlDatabase : DatabaseClient
     {
-        public override DbParameter CreateParameter(string name, object value)
+        public override DbParameter CreateParameter(string name, object? value)
         {
             throw new NotImplementedException();
         }
 
-        public override DbParameter CreateParameter(string name, DbType type, object value)
+        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
         {
             throw new NotImplementedException();
         }

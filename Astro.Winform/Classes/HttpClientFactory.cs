@@ -232,12 +232,36 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
+                var responseContent= await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    return responseContent;
+                }
+                else
+                {
+                    // Coba parse sebagai ProblemDetails
+                    string errorMessage = responseContent;
+                    MessageBox.Show(errorMessage);
+                    try
+                    {
+                        var problem = ProblemDetails.Create(responseContent);
+                        if (!string.IsNullOrEmpty(problem?.Detail))
+                            errorMessage = problem.Detail;
+                        else if (!string.IsNullOrEmpty(problem?.Title))
+                            errorMessage = problem.Title;
+                    }
+                    catch
+                    {
+                        // Jika parsing gagal, biarkan isi raw JSON
+                    }
+
+                    MessageBox.Show(errorMessage, $"Error {(int)response.StatusCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return string.Empty;
+                }
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.HResult.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {

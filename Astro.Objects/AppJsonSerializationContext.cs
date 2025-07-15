@@ -7,6 +7,9 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(RoleViewModel))]
 [JsonSerializable(typeof(UserViewModel))]
 
+[JsonSerializable(typeof(List<Phone>))]
+[JsonSerializable(typeof(List<Email>))]
+[JsonSerializable(typeof(List<Address>))]
 [JsonSerializable(typeof(List<Unit>))]
 [JsonSerializable(typeof(List<Category>))]
 [JsonSerializable(typeof(List<Permission>))]
@@ -14,7 +17,8 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(List<Province>))]
 [JsonSerializable(typeof(List<City>))]
 
-[JsonSerializable(typeof(AddressInfo))]
+[JsonSerializable(typeof(ProblemDetails))]
+[JsonSerializable(typeof(Address))]
 [JsonSerializable(typeof(ListOption))]
 [JsonSerializable(typeof(Option))]
 [JsonSerializable(typeof(ChangePasswordRequest))]

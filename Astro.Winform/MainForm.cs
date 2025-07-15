@@ -85,6 +85,12 @@ namespace PointOfSale
                 case 6:
                     OpenOrCreateListingForm(ListingData.Products);
                     break;
+                case 7:
+                    OpenOrCreateListingForm(ListingData.Suppliers);
+                    break;
+                case 8:
+                    OpenOrCreateListingForm(ListingData.Customers);
+                    break;
             }
         }
         private void OpenOrCreateListingForm(ListingData type)

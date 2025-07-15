@@ -49,12 +49,12 @@ CREATE TABLE menus (
 
 -- roletomenus
 CREATE TABLE role_to_menus (
-    role_id INTEGER NOT NULL,
-    menu_id INTEGER NOT NULL,
-    allow_create BOOLEAN NOT NULL DEFAULT false,
-    allow_read BOOLEAN NOT NULL DEFAULT false,
-    allow_update BOOLEAN NOT NULL DEFAULT false,
-    allow_delete BOOLEAN NOT NULL DEFAULT false,
+    role_id             SMALLINT        NOT NULL,
+    menu_id             SMALLINT        NOT NULL,
+    allow_create        BOOLEAN         NOT NULL DEFAULT false,
+    allow_read          BOOLEAN         NOT NULL DEFAULT false,
+    allow_update        BOOLEAN         NOT NULL DEFAULT false,
+    allow_delete        BOOLEAN         NOT NULL DEFAULT false,
     PRIMARY KEY (role_id, menu_id)
 );
 
@@ -118,44 +118,36 @@ CREATE TABLE login_attempts
     notes                   VARCHAR(255)    NOT NULL DEFAULT ''
 );
 
--- settings
-CREATE TABLE settings (
-    setting_id SERIAL PRIMARY KEY,
-    setting_name VARCHAR(100) NOT NULL DEFAULT '',
-    contact_type SMALLINT NOT NULL DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT false
-);
-
 -- addresses
 CREATE TABLE addresses (
-    address_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL DEFAULT 0,
-    address_type SMALLINT NOT NULL DEFAULT 0,
-    street_address VARCHAR(250) NOT NULL DEFAULT '',
-    city_id INTEGER NOT NULL DEFAULT 0,
-    zip_code INTEGER NOT NULL DEFAULT 0,
-    is_primary BOOLEAN NOT NULL DEFAULT false
+    address_id          SERIAL          PRIMARY KEY,
+    owner_id            BIGINT          NOT NULL DEFAULT 0,
+    address_type        SMALLINT        NOT NULL DEFAULT 0,
+    street_address      VARCHAR(250)    NOT NULL DEFAULT '',
+    city_id             INTEGER         NOT NULL DEFAULT 0,
+    zip_code            VARCHAR(15)     NOT NULL DEFAULT '',
+    is_primary          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- emails
 CREATE TABLE emails (
-    email_id BIGSERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL DEFAULT 0,
-    email_address VARCHAR(60) NOT NULL DEFAULT '',
-    email_type SMALLINT NOT NULL DEFAULT 0,
-    is_primary BOOLEAN NOT NULL DEFAULT false,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP
+    email_id            SERIAL          PRIMARY KEY,
+    owner_id            SMALLINT        NOT NULL DEFAULT 0,
+    email_address       VARCHAR(60)     NOT NULL DEFAULT '',
+    email_type          SMALLINT        NOT NULL DEFAULT 0,
+    is_primary          BOOLEAN         NOT NULL DEFAULT false,
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP
 );
 
 -- phones
 CREATE TABLE phones (
-    phone_id            BIGSERIAL   PRIMARY KEY,
-    user_id             INTEGER     NOT NULL    DEFAULT 0,
-    phone_type          INTEGER     NOT NULL    DEFAULT 0,
-    phone_number        VARCHAR(60) NOT NULL    DEFAULT '',
+    phone_id            SERIAL      PRIMARY KEY,
+    owner_id            SMALLINT    NOT NULL    DEFAULT 0,
+    phone_type          SMALLINT    NOT NULL    DEFAULT 0,
+    phone_number        VARCHAR(50) NOT NULL    DEFAULT '',
     phone_ext           SMALLINT    NOT NULL    DEFAULT 0,
     is_primary          BOOLEAN     NOT NULL    DEFAULT false,
     creator_id          SMALLINT    NOT NULL    DEFAULT 0,
@@ -166,19 +158,19 @@ CREATE TABLE phones (
 
 -- faxes
 CREATE TABLE faxes (
-    fax_id          BIGSERIAL   PRIMARY KEY,
-    user_id         SMALLINT    NOT NULL DEFAULT 0,
-    fax_type        SMALLINT    NOT NULL DEFAULT 0,
-    fax_number      VARCHAR(60) NOT NULL DEFAULT '',
-    creator_id      SMALLINT    NOT NULL DEFAULT 0,
-    created_date    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id       SMALLINT,
-    edited_date     TIMESTAMP
+    fax_id              SERIAL      PRIMARY KEY,
+    owner_id            SMALLINT    NOT NULL DEFAULT 0,
+    fax_type            SMALLINT    NOT NULL DEFAULT 0,
+    fax_number          VARCHAR(60) NOT NULL DEFAULT '',
+    creator_id          SMALLINT    NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP
 );
 
 -- auths
 CREATE TABLE auths (
-    token               CHAR(36)        PRIMARY KEY,
+    token               UUID            PRIMARY KEY,
     user_id             SMALLINT        NOT NULL DEFAULT 0,
     token_expired_date  TIMESTAMP       NOT NULL,
     ipv4_address        VARCHAR(50)     NOT NULL DEFAULT '',
@@ -188,23 +180,23 @@ CREATE TABLE auths (
 
 -- units
 CREATE TABLE units (
-    unit_id SERIAL PRIMARY KEY,
-    unit_name VARCHAR(100) NOT NULL DEFAULT '',
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP
+    unit_id             SMALLSERIAL     PRIMARY KEY,
+    unit_name           VARCHAR(50)     NOT NULL    DEFAULT '',
+    creator_id          SMALLINT        NOT NULL    DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP
 );
 
 -- categories
 CREATE TABLE categories (
-    category_id SMALLSERIAL PRIMARY KEY,
-    category_name VARCHAR(100) NOT NULL DEFAULT '',
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    category_id         SMALLSERIAL     PRIMARY KEY,
+    category_name       VARCHAR(100)    NOT NULL DEFAULT '',
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP,
+    is_deleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- products
@@ -231,50 +223,36 @@ CREATE TABLE products (
     is_deleted          BOOLEAN         NOT NULL    DEFAULT false
 );
 
--- contactgroups
-CREATE TABLE contact_groups (
-    group_id SMALLSERIAL PRIMARY KEY,
-    group_name VARCHAR(100) NOT NULL DEFAULT '',
-    contact_type SMALLINT NOT NULL DEFAULT 0,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
-);
-
 -- contacts
 CREATE TABLE contacts (
-    contact_id SERIAL PRIMARY KEY,
-    contact_name VARCHAR(250) NOT NULL DEFAULT '',
-    contact_type SMALLINT NOT NULL DEFAULT 0,
-    group_id SMALLINT NOT NULL DEFAULT 0,
-    account_limit INTEGER NOT NULL DEFAULT 0,
-    account_due SMALLINT NOT NULL DEFAULT 0,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    contact_id          SERIAL          PRIMARY KEY,
+    contact_name        VARCHAR(250)    NOT NULL DEFAULT '',
+    title               VARCHAR(100)    NOT NULL DEFAULT '',
+    org_id              SMALLINT        NOT NULL DEFAULT 0,
+    contact_type        SMALLINT        NOT NULL DEFAULT 0,
+    group_id            SMALLINT        NOT NULL DEFAULT 0,
+    account_limit       INTEGER         NOT NULL DEFAULT 0,
+    account_due         SMALLINT        NOT NULL DEFAULT 0,
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editor_id           SMALLINT,
+    edited_date         TIMESTAMP,
+    is_deleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
--- contactaddresses
-CREATE TABLE contact_addresses (
-    address_id BIGSERIAL PRIMARY KEY,
-    contact_id SMALLINT NOT NULL DEFAULT 0,
-    street_address VARCHAR(250) NOT NULL DEFAULT '',
-    city_id INTEGER NOT NULL DEFAULT 0,
-    zip_code VARCHAR(15) NOT NULL DEFAULT '',
-    is_primary BOOLEAN NOT NULL DEFAULT false
-);
-
--- contactphones
-CREATE TABLE contact_phones (
-    phone_id BIGSERIAL PRIMARY KEY,
-    contact_id SMALLINT NOT NULL DEFAULT 0,
-    phone_number VARCHAR(25) NOT NULL DEFAULT '',
-    phone_type SMALLINT NOT NULL DEFAULT 0,
-    is_primary BOOLEAN NOT NULL DEFAULT false
+-- organizations
+CREATE TABLE organizations (
+	org_id              SMALLINT        PRIMARY KEY,
+	name                VARCHAR(250)    NOT NULL DEFAULT '',
+    type                SMALLINT        NOT NULL DEFAULT 0,
+    street_address      VARCHAR(250)    NOT NULL DEFAULT '',
+    city_id             INTEGER         NOT NULL DEFAULT 0,
+    zip_code            VARCHAR(15)     NOT NULL DEFAULT '',
+	creator_id          SMALLINT        NOT NULL DEFAULT 0,
+	created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	editor_id           SMALLINT,
+	edited_date         TIMESTAMP,
+	is_deleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- wsprices

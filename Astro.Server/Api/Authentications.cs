@@ -1,15 +1,12 @@
 ﻿using Astro.Data;
 using Astro.Models;
+using Astro.Helpers;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using MySql.Data.MySqlClient;
+
 using System.Data.Common;
-using Astro;
-using Astro.Security;
-using Npgsql;
-using Alaska.Data;
-using System.Dynamic;
-using System.Reflection.Metadata.Ecma335;
+using System.Data;
 
 namespace Astro.Server.Api
 {
@@ -83,17 +80,25 @@ namespace Astro.Server.Api
 
         internal static async Task<IResult> SignOutAsync(IDatabase db, HttpContext context)
         {
-            var token = AppHelpers.GetToken(context.Request).Trim();
-            var commandText = """
+            var token = Application.GetToken(context.Request).Trim();
+            if (Guid.TryParse(token, out Guid tokenGuid))
+            {
+                var commandText = """
                 DELETE FROM auths
                 WHERE token = @token
                 """;
-            await db.ExecuteNonQueryAsync(commandText, new Npgsql.NpgsqlParameter("token", token));
-            return Results.Ok();
+                await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("token", tokenGuid, DbType.Guid));
+                return Results.Ok();
+            }
+            else
+            {
+                return Results.BadRequest("Invalid token format");
+            }
+
         }
         internal static async Task<IResult> ChangePasswordAsync(ChangePasswordRequest request, IDatabase db, HttpContext context)
         {
-            var userId = (short)AppHelpers.GetUserID(context);
+            var userId = (short)Application.GetUserID(context);
             var user = await GetUserByIdAsync(userId, db);
             if (user is null) return Results.Ok(CommonResult.Fail("User not found"));
 
@@ -107,12 +112,17 @@ namespace Astro.Server.Api
                     concurrency_stamp = CURRENT_TIMESTAMP
                 WHERE user_id = @userId;
                 """;
-            var success = await db.ExecuteNonQueryAsync(commandText, new NpgsqlParameter("userId", user.Id), new NpgsqlParameter("newPassword", newPasswordHashed));
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("userId", user.Id),
+                db.CreateParameter("newPassword", newPasswordHashed)
+            };
+            var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success? Results.Ok(CommonResult.Ok("Password changed successfully")) : Results.Ok(CommonResult.Fail("Failed to change password"));
         }
         internal static async Task<IResult> GetPermissionsAsync(IDatabase db, HttpContext context)
         {
-            var roleId = AppHelpers.GetUserID(context);
+            var roleId = Application.GetUserID(context);
             var commandText = """
                 SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete
                 FROM role_to_menus rtm INNER JOIN
@@ -140,7 +150,7 @@ namespace Astro.Server.Api
                         Title = reader.GetString(3)
                     });
                 }
-            },commandText, new NpgsqlParameter("roleId", roleId));
+            },commandText, db.CreateParameter("roleId", roleId));
             return Results.Ok(listMenu);
         }
 
@@ -192,7 +202,7 @@ namespace Astro.Server.Api
                 {
                     user = User.Create(reader);
                 }
-            }, commandText, new NpgsqlParameter("login", login));
+            }, commandText, db.CreateParameter("login", login));
             return user;
         }
         private static async Task<User?> GetUserByIdAsync(short id, IDatabase db)
@@ -238,7 +248,7 @@ namespace Astro.Server.Api
                 {
                     user = User.Create(reader);
                 }
-            }, commandText, new NpgsqlParameter("userId", id));
+            }, commandText, db.CreateParameter("userId", id));
             return user;
         }
         private static async Task<bool> IncrementAccessFailedCountAsync(User user, IDatabase db)
@@ -252,7 +262,11 @@ namespace Astro.Server.Api
                     user_id = @userId
                 RETURNING access_failed_count, lockout_end;
                 """;
-
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("userId", user.Id, DbType.Int16),
+                db.CreateParameter("threshold", 3, DbType.Int32)
+            };
             await db.ExecuteReaderAsync(async (DbDataReader reader) =>
             {
                 if (await reader.ReadAsync())
@@ -268,14 +282,14 @@ namespace Astro.Server.Api
                     }
                 }
             },
-            commandText, new NpgsqlParameter("userId", NpgsqlTypes.NpgsqlDbType.Smallint) { Value = user.Id }, new NpgsqlParameter("threshold", 3));
+            commandText, parameters);
 
             return user.HasExceededFailedAttempts(3);
         }
         private static async Task<string> CreateTokenAsync(User user, IDatabase db, HttpContext context)
         {
-            var token = Guid.NewGuid().ToString();
-            var ipv4 = AppHelpers.GetIpAddress(context.Request);
+            var token = Guid.NewGuid();
+            var ipv4 = Application.GetIpAddress(context.Request);
             var userAgent = context.Request.Headers.UserAgent.ToString();
             var commandText = """
                 UPDATE users
@@ -289,16 +303,16 @@ namespace Astro.Server.Api
                 VALUES
                     (@token, @user_id, @token_expired_date, @ipv4_address, @user_agent)
                 """;
-            var parameters = new NpgsqlParameter[]
+            var parameters = new DbParameter[]
             {
-                new NpgsqlParameter("token", token),
-                new NpgsqlParameter("user_id", user.Id),
-                new NpgsqlParameter("token_expired_date", DateTime.Now.AddHours(9)),
-                new NpgsqlParameter("ipv4_address", ipv4),
-                new NpgsqlParameter("user_agent", userAgent)
+                db.CreateParameter("token", token, System.Data.DbType.Guid),
+                db.CreateParameter("user_id", user.Id),
+                db.CreateParameter("token_expired_date", DateTime.Now.AddHours(9)),
+                db.CreateParameter("ipv4_address", ipv4),
+                db.CreateParameter("user_agent", userAgent)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
-            return success ? token : string.Empty;
+            return success ? token.ToString() : string.Empty;
         }
         private static async Task CreateLoginHistory(User? user, LoginResult loginResult, IDatabase db, HttpContext context)
         {
@@ -324,19 +338,20 @@ namespace Astro.Server.Api
             var notes = getDescription(loginResult);
             var userAgent = context.Request.Headers.UserAgent.ToString();
             var userId = user is null ? 0 : user.Id;
-            var parameters = new NpgsqlParameter[]
+            var parameters = new DbParameter[]
             {
-                new NpgsqlParameter("userId", userId),
-                new NpgsqlParameter("ipv4", AppHelpers.GetIpAddress(context.Request)),
-                new NpgsqlParameter("success", loginResult == LoginResult.Success),
-                new NpgsqlParameter("userAgent", userAgent),
-                new NpgsqlParameter("notes", notes)
+                db.CreateParameter("userId", userId),
+                db.CreateParameter("ipv4", Application.GetIpAddress(context.Request)),
+                db.CreateParameter("success", loginResult == LoginResult.Success),
+                db.CreateParameter("userAgent", userAgent),
+                db.CreateParameter("notes", notes)
             };
+
             await db.ExecuteNonQueryAsync(commandText, parameters);
         }
         private static async Task<string> GetRoleNameAsync(short roleId, IDatabase db)
         {
-            var result = await db.ExecuteScalarAsync("SELECT role_name FROM roles WHERE role_id = @roleId", new Npgsql.NpgsqlParameter("roleId", roleId));
+            var result = await db.ExecuteScalarAsync("SELECT role_name FROM roles WHERE role_id = @roleId",db.CreateParameter("roleId", roleId));
             return result as string ?? string.Empty;
         }
         private static async Task<Role> GetRoleAsync(short roleId, IDatabase db)
@@ -354,7 +369,7 @@ namespace Astro.Server.Api
                     role.Id = reader.GetInt16(0);
                     role.Name = reader.GetString(1);
                 }
-            }, commandText, new NpgsqlParameter("roleId", roleId));
+            }, commandText, db.CreateParameter("roleId", roleId));
             return role;
         }
     }

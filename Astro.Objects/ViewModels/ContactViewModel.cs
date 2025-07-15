@@ -12,10 +12,8 @@ namespace Astro.ViewModels
     {
         [JsonConstructor] public ContactViewModel() { }
         [JsonPropertyName("contact")]
-        public Contact Contact { get; set; }
+        public Contact Contact { get; set; } = new Contact();
         [JsonPropertyName("addresses")]
         public List<Address> Addresses { get; } = new List<Address>();
-        [JsonPropertyName("phones")]
-        public List<PhoneInfo> Phones { get; } = new List<PhoneInfo>();
     }
 }

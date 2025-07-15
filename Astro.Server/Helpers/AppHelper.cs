@@ -9,9 +9,9 @@ using System.Globalization;
 using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Alaska.Data
+namespace Astro.Helpers
 {
-    internal static class AppHelpers
+    internal static class Application
     {
         internal static short GetUserID(HttpContext context)
         {
