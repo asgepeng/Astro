@@ -134,5 +134,158 @@ namespace Astro.Winform.Helpers
             }
             return model;
         }
+        public async Task<Contact> CreateSupplier(short contactId)
+        {
+            var contact = new Contact();
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/suppliers/" + contactId.ToString()))
+            using (var reader = new IO.Reader(stream))
+            {
+                var supplierExist = reader.ReadBoolean();
+                if (supplierExist)
+                {
+                    contact.Id = reader.ReadInt16();
+                    contact.Name = reader.ReadString();
+                }
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Addresses.Add(new Address()
+                    {
+                        Id = reader.ReadInt32(),
+                        StreetAddress = reader.ReadString(),
+                        City = new City()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        },
+                        StateOrProvince = new Province()
+                        {
+                            Id = reader.ReadInt16(),
+                            Name = reader.ReadString()
+                        },
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean(),
+                        ZipCode = reader.ReadString()
+                    });
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Phones.Add(new Phone()
+                    {
+                        Id = reader.ReadInt32(),
+                        Number = reader.ReadString(),
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean()
+                    });
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Emails.Add(new Email()
+                    {
+                        Id = reader.ReadInt32(),
+                        Address = reader.ReadString(),
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean()
+                    });
+                    iCount--;
+                }
+            }
+            return contact;
+        }
+        public async Task<Contact> CreateCustomer(short contactId)
+        {
+            var contact = new Contact();
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/customers/" + contactId.ToString()))
+            using (var reader = new IO.Reader(stream))
+            {
+                var supplierExist = reader.ReadBoolean();
+                if (supplierExist)
+                {
+                    contact.Id = reader.ReadInt16();
+                    contact.Name = reader.ReadString();
+                }
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Addresses.Add(new Address()
+                    {
+                        Id = reader.ReadInt32(),
+                        StreetAddress = reader.ReadString(),
+                        City = new City()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        },
+                        StateOrProvince = new Province()
+                        {
+                            Id = reader.ReadInt16(),
+                            Name = reader.ReadString()
+                        },
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean(),
+                        ZipCode = reader.ReadString()
+                    });
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Phones.Add(new Phone()
+                    {
+                        Id = reader.ReadInt32(),
+                        Number = reader.ReadString(),
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean()
+                    });
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    contact.Emails.Add(new Email()
+                    {
+                        Id = reader.ReadInt32(),
+                        Address = reader.ReadString(),
+                        Type = reader.ReadInt16(),
+                        IsPrimary = reader.ReadBoolean()
+                    });
+                    iCount--;
+                }
+            }
+            return contact;
+        }
+        public async Task<AccountViewModel> CreateAccountViewModel(short accountId)
+        {
+            var cvm = new AccountViewModel();
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/accounts/" + accountId.ToString()))
+            using (var reader = new IO.Reader(stream))
+            {
+                var accountExists = reader.ReadBoolean();
+                if (accountExists)
+                {
+                    cvm.Account.Id = reader.ReadInt16();
+                    cvm.Account.AccountName = reader.ReadString();
+                    cvm.Account.AccountNumber = reader.ReadString();
+                    cvm.Account.Provider = reader.ReadInt16();
+                    cvm.Account.AccountType = reader.ReadInt16();
+                }
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    cvm.Providers.Add(new AccountProvider()
+                    {
+                        Id = reader.ReadInt16(),
+                        Name = reader.ReadString(),
+                        Type = reader.ReadInt16()
+                    });
+                    iCount--;
+                }
+            }
+            return cvm;
+        }
     }
 }

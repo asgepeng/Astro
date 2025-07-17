@@ -1,6 +1,7 @@
 ﻿using Astro.Data;
 using Astro.Helpers;
 using Astro.Models;
+using Astro.Server.Binaries;
 using Astro.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -27,44 +28,13 @@ namespace Astro.Server.Api
 
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var commandText = """
-                select c.contact_id, c.contact_name, COALESCE(ca.street_address || ' ' || ct.city_name || ' ' || s.state_name || ', ' || ca.zip_code, '') AS address,
-                   	COALESCE(p.phone_number, '') as phone_number, concat(creator.user_firstname, ' ', creator.user_lastname) as creator, c.created_date
-                from contacts as c
-                    left join addresses as ca on c.contact_id = ca.owner_id and ca.is_primary = true
-                    left join cities as ct on ca.city_id = ct.city_id
-                    left join states as s on ct.state_id = s.state_id
-                    left join phones as p on c.contact_id = p.owner_id and p.is_primary = true
-                    inner join users as creator on c.creator_id = creator.user_id
-                where 
-                    c.is_deleted = false and c.contact_type = 0
-                """;
-            var isWinformApp = Application.IsWinformApp(context.Request);
-            if (isWinformApp)
-            {
-                var data = Array.Empty<byte>();
-                using (var writer = new IO.Writer())
-                {
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            writer.WriteInt16(reader.GetInt16(0));
-                            writer.WriteString(reader.GetString(1));
-                            writer.WriteString(reader.GetString(2));
-                            writer.WriteString(reader.GetString(3));
-                            writer.WriteString(reader.GetString(4));
-                            writer.WriteDateTime(reader.GetDateTime(5));
-                        }
-                    }, commandText);
-                    data = writer.ToArray();
-                }                
-                return Results.File(data, "application/octet-stream");
-            }
+            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetContactDataTable(0), "application/octet-stream");
             return Results.Ok();
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
+            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetContact(id));
+
             var model = new Contact();
             var commandText = """
                 select contact_id, contact_name

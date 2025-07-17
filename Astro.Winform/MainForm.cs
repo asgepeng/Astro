@@ -1,5 +1,5 @@
 using Astro.Models;
-using Astro.ViewModels;
+using Astro.IO;
 using Astro.Winform.Classes;
 using Astro.Winform.Forms;
 using Astro.Winform.Helpers;
@@ -19,22 +19,28 @@ namespace PointOfSale
             var form = new LoginForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
-                var json = await HttpClientSingleton.GetAsync("/auth/permissions");
-                var listMenu = ListMenu.Create(json);
-                if (listMenu != null)
+                using (var stream = await HttpClientSingleton.GetStreamAsync("/auth/permissions"))
+                using (var reader = new Reader(stream))
                 {
-                    foreach (var item in listMenu)
+                    var sectionLength = reader.ReadInt32();
+                    while (sectionLength > 0)
                     {
-                        var parent = new ToolStripMenuItem() { Text = item.Title };
+                        var parent = new ToolStripMenuItem() { Tag = reader.ReadInt16(), Text = reader.ReadString() };
                         this.ms.Items.Add(parent);
-                        foreach (var submenu in item.Items)
+                        int menuLength = reader.ReadInt32();
+                        while (menuLength > 0)
                         {
-                            var child = new ToolStripMenuItem() { Text = submenu.Title, Tag = submenu.Id };
+                            var child = new ToolStripMenuItem() { Tag = reader.ReadInt16(), Text = reader.ReadString() };
+                            reader.ReadInt32();
+
                             child.Click += this.HandleMenuClicked;
                             parent.DropDownItems.Add(child);
+                            menuLength--;
                         }
+                        sectionLength--;
                     }
                 }
+                
                 this.WindowState = FormWindowState.Maximized;
                 if (My.Application.User != null)
                 {
@@ -86,10 +92,13 @@ namespace PointOfSale
                     OpenOrCreateListingForm(ListingData.Products);
                     break;
                 case 7:
-                    OpenOrCreateListingForm(ListingData.Suppliers);
+                    OpenOrCreateListingForm(ListingData.Customers);
                     break;
                 case 8:
-                    OpenOrCreateListingForm(ListingData.Customers);
+                    OpenOrCreateListingForm(ListingData.Suppliers);
+                    break;
+                case 10:
+                    OpenOrCreateListingForm(ListingData.Accounts);
                     break;
             }
         }

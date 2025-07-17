@@ -20,11 +20,11 @@ namespace Astro.Helpers
             short.TryParse(userID, out short id);
             return id;
         }
-        internal static int GetRoleID(HttpContext context)
+        internal static short GetRoleID(HttpContext context)
         {
             var claimsPrincipal = context.User;
             string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            int.TryParse(userID, out int roleId);
+            short.TryParse(userID, out short roleId);
             return roleId;
         }
         internal static string GetIpAddress(HttpRequest request)

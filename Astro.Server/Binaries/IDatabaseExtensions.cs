@@ -1,18 +1,11 @@
 ﻿using Astro.Data;
 using Astro.Models;
-using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Astro.Server.Binaries
 {
-    internal static class BinaryBuilder
+    internal static class IDatabaseExtensions
     {
         //data objects
         internal static async Task<byte[]> GetUser(this IDatabase db, short id)
@@ -341,6 +334,225 @@ namespace Astro.Server.Binaries
             }, commandText, db.CreateParameter("id", id, DbType.Int16));
             return data;
         }
+        internal static async Task<byte[]> GetContact(this IDatabase db, short id)
+        {
+            var commandText = """
+                select contact_id, contact_name
+                from contacts
+                where contact_id = @contactId
+                and is_deleted = false
+                """;
+            using (var writer = new IO.Writer())
+            {
+                bool contactExists = false;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    contactExists = reader.HasRows;
+                    writer.WriteBoolean(contactExists);
+                    if (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                if (!contactExists) return writer.ToArray();
+
+                commandText = """
+                select a.address_id, a.street_address, a.city_id, c.city_name, c.state_id, s.state_name, a.address_type, a.is_primary, a.zip_code
+                from addresses as a
+                    inner join cities as c on a.city_id = c.city_id
+                    inner join states as s on c.state_id = s.state_id
+                where a.owner_id = @contactId
+                """;
+                var iPos = writer.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt32(reader.GetInt32(2));
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteInt16(reader.GetInt16(4));
+                        writer.WriteString(reader.GetString(5));
+                        writer.WriteInt16(reader.GetInt16(6));
+                        writer.WriteBoolean(reader.GetBoolean(7));
+                        writer.WriteString(reader.GetString(8));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                commandText = """
+                    select phone_id, phone_number, phone_type, is_primary
+                    from phones as p
+                    where owner_id = @contactId
+                    """;
+
+                iCount = 0;
+                iPos = writer.ReserveInt32();
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                        writer.WriteBoolean(reader.GetBoolean(3));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                iCount = 0;
+                iPos = writer.ReserveInt32();
+                commandText = """
+                    select email_id, email_address, email_type, is_primary
+                    from emails
+                    where owner_id = @contactId
+                    """;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                        writer.WriteBoolean(reader.GetBoolean(3));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                return writer.ToArray();
+            }
+        }
+        internal static async Task<byte[]> GetAccountProvider(this IDatabase db, short id)
+        {
+            var commandText = """
+                select provider_id, provider_name, provider_type
+                from providers
+                where provider_id = @id;
+                """;
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    writer.WriteBoolean(reader.HasRows);
+                    if (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                    }
+                }, commandText, db.CreateParameter("id", id));
+                data = writer.ToArray();
+            }
+            return data;
+        }
+        internal static async Task<byte[]> GetAccount(this IDatabase db, short id)
+        {
+            var commandText = """
+                select a.account_id, a.account_name, a.account_number, a.provider_id, p.provider_type
+                from accounts as a
+                inner join account_providers as p on a.provider_id = p.provider_id
+                where a.account_id = @id and a.is_deleted = false
+                """;
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    writer.WriteBoolean(reader.HasRows);
+                    if (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                        writer.WriteInt16(reader.GetInt16(3));
+                        writer.WriteInt16(reader.GetInt16(4));
+                    }
+                }, commandText, db.CreateParameter("id", id, DbType.Int16));
+
+                var iCount = 0;
+                var iPos = writer.ReserveInt32();
+                commandText = """
+                    select provider_id, provider_name, provider_type
+                    from account_providers
+                    """;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                        iCount++;
+                    }
+                }, commandText);
+                writer.WriteInt32(iCount, iPos);
+                data = writer.ToArray();
+            }
+            return data;
+        }
+        internal static async Task<byte[]> GetUserPermissions(this IDatabase db, short roleID)
+        {
+            var commandText = """
+                SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete
+                FROM role_to_menus rtm INNER JOIN
+                    menus m ON rtm.menu_id = m.menu_id INNER JOIN
+                    sections s ON m.section_id = s.section_id
+                WHERE m.is_disabled = false AND rtm.role_id = @roleId
+                ORDER BY s.section_id, m.menu_id
+                """;
+            var listMenu = new ListMenu();
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async (DbDataReader reader) =>
+                {
+                    var iSectionPos = writer.ReserveInt32();
+                    var iMenuPos = 0L;
+
+                    var iSectionCount = 0;
+                    var iMenuCount = 0;
+
+                    var currentSectionId = 0;
+
+                    while (await reader.ReadAsync())
+                    {
+                        var sectionId = reader.GetInt16(0);
+                        if (sectionId != currentSectionId)
+                        {
+                            currentSectionId = sectionId;
+                            if (iMenuPos > 0)
+                            {
+                                writer.WriteInt32(iMenuCount, iMenuPos);
+                                iMenuCount = 0;
+                            }
+                            writer.WriteInt16(sectionId);
+                            writer.WriteString(reader.GetString(1));
+
+                            iMenuPos = writer.ReserveInt32();
+                            iSectionCount++;
+                        }
+                        writer.WriteInt16(reader.GetInt16(2));
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteBoolean(reader.GetBoolean(4));
+                        writer.WriteBoolean(reader.GetBoolean(5));
+                        writer.WriteBoolean(reader.GetBoolean(6));
+                        writer.WriteBoolean(reader.GetBoolean(7));
+                        iMenuCount++;
+                    }
+                    writer.WriteInt32(iSectionCount, iSectionPos);
+
+                }, commandText, db.CreateParameter("roleId", roleID));
+                return writer.ToArray();
+            }
+        }
+
         //data tables
         internal static async Task<byte[]> GetUserDataTable(this IDatabase db)
         {
@@ -465,6 +677,93 @@ namespace Astro.Server.Binaries
                         writer.WriteString(reader.GetString(1));
                         writer.WriteDateTime(reader.GetDateTime(2));
                         writer.WriteString(reader.GetString(3));
+                    }
+                }, commandText);
+                data = writer.ToArray();
+            }
+            return data;
+        }
+        internal static async Task<byte[]> GetContactDataTable(this IDatabase db, short contactType)
+        {
+            var commandText = """
+                select c.contact_id, c.contact_name, COALESCE(ca.street_address || ' ' || ct.city_name || ' ' || s.state_name || ', ' || ca.zip_code, '') AS address,
+                   	COALESCE(p.phone_number, '') as phone_number, concat(creator.user_firstname, ' ', creator.user_lastname) as creator, c.created_date
+                from contacts as c
+                    left join addresses as ca on c.contact_id = ca.owner_id and ca.is_primary = true
+                    left join cities as ct on ca.city_id = ct.city_id
+                    left join states as s on ct.state_id = s.state_id
+                    left join phones as p on c.contact_id = p.owner_id and p.is_primary = true
+                    inner join users as creator on c.creator_id = creator.user_id
+                where 
+                    c.is_deleted = false and c.contact_type = @contactType
+                """;
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteString(reader.GetString(4));
+                        writer.WriteDateTime(reader.GetDateTime(5));
+                    }
+                }, commandText, db.CreateParameter("contactType", contactType));
+                data = writer.ToArray();
+            }
+            return data;
+        }
+        internal static async Task<byte[]> GetAccountProviderDataTable(this IDatabase db, short id)
+        {
+            var commandText = """
+                select provider_id, provider_name, case provider_type when 1 then 'Bank' when 2 then 'E_Wallet' when 3 then 'E-Money' else '-' end as provider_type
+                from account_providers
+                """;
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                    }
+                    data = writer.ToArray();
+                }, commandText);
+            }
+            return data;
+        }
+        internal static async Task<byte[]> GetAccountDataTable(this IDatabase db)
+        {
+            var commandText = """
+                select acc.account_id, acc.account_name, acc.account_number, 
+                case ap.provider_type when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as accounttype, 
+                ap.provider_name, concat(u.user_firstname, ' ', u.user_lastname) as creator, acc.created_date, acc.edited_date
+                from accounts AS acc
+                inner join account_providers AS ap on acc.provider_id = ap.provider_id
+                inner join users as u on acc.creator_id = u.user_id
+                where acc.is_deleted = false
+                """;
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteString(reader.GetString(4));
+                        writer.WriteString(reader.GetString(5));
+                        writer.WriteDateTime(reader.GetDateTime(6));
+                        writer.WriteDateTime(reader.IsDBNull(7) ? null : reader.GetDateTime(7));
                     }
                 }, commandText);
                 data = writer.ToArray();

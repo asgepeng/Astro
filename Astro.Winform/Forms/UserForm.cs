@@ -124,6 +124,7 @@ namespace Astro.Winform.Forms
             user.PhoneNumber = this.phoneTextBox.Text.Trim();
             user.RoleId = (short)((Option)this.roleComboBox.SelectedItem).Id;
             user.UsePasswordExpiration = this.useExpirationCheckBox.Checked;
+            user.PasswordExpirationDate = this.passwordExpirationDate.Value.ToUniversalTime();
             user.LockoutEnabled = this.lockoutEnableCheckBox.Checked;
             user.StreetAddress = this.streetAddressTextBox.Text.Trim();
             user.CityId = (int)((Option)this.cityComboBox.SelectedItem).Id;

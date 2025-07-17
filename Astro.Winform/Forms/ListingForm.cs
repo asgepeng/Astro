@@ -51,12 +51,17 @@ namespace Astro.Winform.Forms
                     var supplierForm = new ContactForm() { Text = text };
                     if (id > 0)
                     {
-                        var jsonContact = await HttpClientSingleton.GetAsync(ListingType == ListingData.Suppliers ? $"/data/suppliers/{id}" : $"/data/customers/{id}");
-                        var contact = Contact.Create(jsonContact);
+                        var contact = ListingType == ListingData.Suppliers ? await objectBuilder.CreateSupplier(id) : await objectBuilder.CreateCustomer(id);
                         if (contact != null) supplierForm.Contact = contact;
                     }
 
                     return supplierForm;
+                case ListingData.Accounts:
+                    var accountForm = new AccountForm()
+                    {
+                        Model = await objectBuilder.CreateAccountViewModel(id)
+                    };
+                    return accountForm;
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -131,6 +136,15 @@ namespace Astro.Winform.Forms
                 case ListingData.Products:
                     url = "/data/products/" + id.ToString();
                     break;
+                case ListingData.Suppliers:
+                    url = "/data/suppliers/" + id.ToString();
+                    break;
+                case ListingData.Customers:
+                    url = "/data/customers/" + id.ToString();
+                    break;
+                case ListingData.Accounts:
+                    url = "/data/accounts/" + id.ToString();
+                    break;
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -158,6 +172,8 @@ namespace Astro.Winform.Forms
                 case ListingData.Suppliers:
                 case ListingData.Customers:
                     return new ContactDataTable() { ContactType = ListingType == ListingData.Suppliers ? (short)0 : (short)1 };
+                case ListingData.Accounts:
+                    return new AccountDataTable();
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
@@ -213,6 +229,18 @@ namespace Astro.Winform.Forms
                         new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
                     break;
+                case ListingData.Accounts:
+                    GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
+                    {
+                        new DataTableColumnInfo("Account Name", "accountName", 200),
+                        new DataTableColumnInfo("Account Number", "accountNumber", 200),
+                        new DataTableColumnInfo("Account Type", "accountType", 120),
+                        new DataTableColumnInfo("Provider Name", "providerName", 180),
+                        new DataTableColumnInfo("Created By", "createdBy", 200),
+                        new DataTableColumnInfo("Created Date", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm"),
+                        new DataTableColumnInfo("Last Modified", "lastModified", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
+                    }, this.BindingSource);
+                    break;
             }
         }
         private bool flagDoubleClickHandled = false;
@@ -239,6 +267,7 @@ namespace Astro.Winform.Forms
         Roles = 1,
         Products = 2,
         Suppliers = 3,
-        Customers = 4
+        Customers = 4,
+        Accounts = 5
     }
 }

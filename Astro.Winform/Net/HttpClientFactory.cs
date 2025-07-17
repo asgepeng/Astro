@@ -1,4 +1,5 @@
 ﻿using Astro.Models;
+using Astro.Winform.Net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,32 +37,39 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.PostAsync(endpoint, content);
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                AuthResponse? authResult = AuthResponse.Create(json);
-                if (authResult != null)
+                if (response.IsSuccessStatusCode)
                 {
-                    if (authResult.IsAuthenticated())
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var reader = new IO.Reader(stream))
                     {
-                        if (authResult.AccessToken is null) throw new ArgumentException("token is null");
-
-                        My.Application.ApiToken = authResult.AccessToken;
-                        My.Application.User = authResult.UserInfo;
+                        My.Application.User = new UserInfo(reader.ReadInt16(), reader.ReadString(), new Role() { Id = reader.ReadInt16(), Name = reader.ReadString() });
+                        My.Application.ApiToken = reader.ReadString();
                         return true;
                     }
-
-                    if (!string.IsNullOrEmpty(authResult.Message)) MessageBox.Show(authResult.Message, "Access denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    else MessageBox.Show("Invalid username or password", "Access denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show("Request Failed 1: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                var statusCode = response.StatusCode;
+                switch (statusCode)
+                {
+                    case System.Net.HttpStatusCode.Unauthorized:
+                        MessageBox.Show("Invalid username or password", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case System.Net.HttpStatusCode.Forbidden:
+                        MessageBox.Show("Your password has expired. Please contact your system administrator to reset it.", "Password expired", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null)
+                        {
+                            MessageBox.Show(problem.Detail, "Internal Server Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        break;
+                }
+                return false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Request Failed 2: " + ex.Message, "Request failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Clipboard.SetText(ex.Message);
+                MessageBox.Show("Unknown error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return false;
         }
@@ -88,16 +96,19 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStreamAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
+                
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return Stream.Null;
         }
@@ -116,46 +127,21 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStreamAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unknown error: {ex.Message}", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return Stream.Null;
-        }
-        internal static async Task<byte[]> GetByteArrayAsync(string url)
-        {
-            if (My.Application.ApiToken == "")
-            {
-                MessageBox.Show("Anda belum login silakan menutup aplikasi dan membukanya kembali untuk login", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return Array.Empty<byte>();
-            }
-
-            var endpoint = CreateUri(url);
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, endpoint);
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
-
-            try
-            {
-                HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsByteArrayAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return Array.Empty<byte>();
         }
         internal static async Task<string> GetAsync(string url)
         {
@@ -173,16 +159,19 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.ToString()}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return string.Empty;
         }
@@ -203,16 +192,18 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+
+                var statusCode = response.StatusCode;
+                if (statusCode == System.Net.HttpStatusCode.InternalServerError)
+                {
+                    var problem = await response.GetProbemDetails();
+                    if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}");
+                MessageBox.Show($"Unkknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return string.Empty;
         }
@@ -232,40 +223,18 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
-                var responseContent= await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+                switch (response.StatusCode)
                 {
-                    return responseContent;
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
                 }
-                else
-                {
-                    // Coba parse sebagai ProblemDetails
-                    string errorMessage = responseContent;
-                    MessageBox.Show(errorMessage);
-                    try
-                    {
-                        var problem = ProblemDetails.Create(responseContent);
-                        if (!string.IsNullOrEmpty(problem?.Detail))
-                            errorMessage = problem.Detail;
-                        else if (!string.IsNullOrEmpty(problem?.Title))
-                            errorMessage = problem.Title;
-                    }
-                    catch
-                    {
-                        // Jika parsing gagal, biarkan isi raw JSON
-                    }
-
-                    MessageBox.Show(errorMessage, $"Error {(int)response.StatusCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return string.Empty;
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show(ex.HResult.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return string.Empty;
         }
@@ -284,17 +253,19 @@ namespace Astro.Winform.Classes
             try
             {
                 HttpResponseMessage response = await Instance.SendAsync(request);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
 
-                response.EnsureSuccessStatusCode();
-                return response.StatusCode == System.Net.HttpStatusCode.OK ? await response.Content.ReadAsStringAsync() : string.Empty;
-            }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Request failed: {ex.Message}", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return string.Empty;
         }

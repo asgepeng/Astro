@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 
 using System.Data.Common;
 using System.Data;
+using Astro.Server.Binaries;
 
 namespace Astro.Server.Api
 {
@@ -27,55 +28,69 @@ namespace Astro.Server.Api
         {
             if (string.IsNullOrEmpty(credential.Username) || string.IsNullOrEmpty(credential.Password))
             {
-                return Results.Ok(AuthResponse.Fail());
+                return Results.Unauthorized();
             }
 
             var user = await GetUserByLoginAsync(credential.Username, db);
             if (user is null)
             {
                 await CreateLoginHistory(null, LoginResult.NotFound, db, context);
-                return Results.Ok(AuthResponse.Fail());
+                return Results.Unauthorized();
             }
 
             if (user.IsLockedOut())
             {
                 await CreateLoginHistory(user, LoginResult.AccountLocked, db, context);
-                return Results.Ok(AuthResponse.Lockout(user.LockoutEnd));
-            }
-
-            if (user.IsPasswordExpired())
-            {
-                await CreateLoginHistory(user, LoginResult.PasswordExpired, db, context);
-                return Results.Ok(AuthResponse.Fail());
+                return Results.Unauthorized();
             }
             var credentialVerified = user.VerifyPassword(credential.Password);
             if (!credentialVerified)
             {
-                var loginResult = LoginResult.InvalidCredential;
-                var response = AuthResponse.Fail();
-                if (user.LockoutEnabled)
+                if (user.LockoutEnabled && await IncrementAccessFailedCountAsync(user, db))
                 {
-                    if (await IncrementAccessFailedCountAsync(user, db))
-                    {
-                        loginResult = LoginResult.AccountLocked;
-                        response.Message = "Your account has been temporarily locked due to multiple failed login attempts.";
-                    }
+                    await CreateLoginHistory(user, LoginResult.AccountLocked, db, context);
+                    return Results.Problem("Your account has been temporarily locked due to multiple failed login attempts.");
                 }
-                await CreateLoginHistory(user, loginResult, db, context);
-                return Results.Ok(response);
+                else
+                {
+                    await CreateLoginHistory(user, LoginResult.InvalidCredential, db, context);
+                    return Results.Unauthorized();
+                }
+            }
+            if (user.IsPasswordExpired())
+            {
+                await CreateLoginHistory(user, LoginResult.PasswordExpired, db, context);
+                return Results.Forbid();
             }
 
             var token = await CreateTokenAsync(user, db, context);
             if (string.IsNullOrEmpty(token))
             {
                 await CreateLoginHistory(user, LoginResult.CreateTokenFailed, db, context);
-                return Results.Ok(AuthResponse.Fail("Token generation failed. Please try again later."));
+                return Results.Problem("We were unable to generate your access token. Please contact your administrator for assistance");
             }
-            var role = await GetRoleAsync(user.RoleId, db);
-            var userInfo = new UserInfo(user.Id, user.GetFullName(), role );
 
-            await CreateLoginHistory(user, LoginResult.Success, db, context);
-            return Results.Ok(AuthResponse.Success(token, userInfo));
+            if (Application.IsWinformApp(context.Request))
+            {
+                using (var writer =new IO.Writer())
+                {
+                    writer.WriteInt16(user.Id);
+                    writer.WriteString((user.FirstName + " " + user.LastName).Trim());
+                    writer.WriteInt16(user.RoleId);
+                    writer.WriteString(await GetRoleNameAsync(user.RoleId, db));
+                    writer.WriteString(token);
+
+                    return Results.File(writer.ToArray(), "application/octet-stream");
+                }
+            }
+            else
+            {
+                var role = await GetRoleAsync(user.RoleId, db);
+                var userInfo = new UserInfo(user.Id, user.GetFullName(), role);
+
+                await CreateLoginHistory(user, LoginResult.Success, db, context);
+                return Results.Ok(AuthResponse.Success(token, userInfo));
+            }
         }
 
         internal static async Task<IResult> SignOutAsync(IDatabase db, HttpContext context)
@@ -122,7 +137,9 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetPermissionsAsync(IDatabase db, HttpContext context)
         {
-            var roleId = Application.GetUserID(context);
+            var roleId = Application.GetRoleID(context);
+            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
+
             var commandText = """
                 SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete
                 FROM role_to_menus rtm INNER JOIN
