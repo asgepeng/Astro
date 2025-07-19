@@ -34,6 +34,18 @@ namespace Astro.Winform.Forms
                 streetTextBox.Focus();
                 return;
             }
+            if (countryComboBox.SelectedItem is null)
+            {
+                MessageBox.Show("Country is not selected", "Country empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                countryComboBox.Focus();
+                return;
+            }
+            if (stateComboBox.SelectedItem is null)
+            {
+                MessageBox.Show("State is not selected", "State empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                stateComboBox.Focus();
+                return;
+            }
             if (cityComboBox.SelectedItem is null)
             {
                 MessageBox.Show("City cannot be empty.", "City", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -50,12 +62,26 @@ namespace Astro.Winform.Forms
             this.Address.Type = (short)typeComboBox.SelectedIndex;
             this.Address.StreetAddress = streetTextBox.Text.Trim();
             var selectedCity = (Option)this.cityComboBox.SelectedItem;
+            var selectedState = (Option)this.stateComboBox.SelectedItem;
+            var selectedCountry = (Option)this.countryComboBox.SelectedItem;
             this.Address.City = new City()
             {
                 Id = selectedCity.Id,
                 Name = selectedCity.Text
             };
+            this.Address.StateOrProvince = new Province()
+            {
+                Id = (short)selectedState.Id,
+                Name = selectedState.Text
+            };
+            this.Address.Country = new Country()
+            {
+                Id = (short)selectedCountry.Id,
+                Name = selectedCountry.Text
+            };
             this.Address.ZipCode = this.zipCodeTextBox.Text.Trim();
+            this.Address.IsPrimary = this.primaryCheckBox.Checked;
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -69,10 +95,27 @@ namespace Astro.Winform.Forms
             this.cityComboBox.DisplayMember = "Text";
             this.cityComboBox.ValueMember = "Id";
 
+            this.typeComboBox.SelectedIndex = this.Address.Type;
+            this.streetTextBox.Text = this.Address.StreetAddress;
+
             if (this.Address.StateOrProvince.Id == 0)
             {
                 this.countryComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
             }
+            else
+            {
+                this.countryComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
+                this.stateComboBox.DataSource = await ListOptionHelper.GetStateOptionsAsync(this.Address.Country.Id);
+                this.cityComboBox.DataSource = await ListOptionHelper.GetCityOptionsAsync(this.Address.StateOrProvince.Id);
+
+                this.countryComboBox.Text = this.Address.Country.Name;
+                this.stateComboBox.Text = this.Address.StateOrProvince.Name;
+                this.cityComboBox.Text = this.Address.City.Name;
+            }
+            this.zipCodeTextBox.Text = this.Address.ZipCode;
+            this.primaryCheckBox.Checked = this.Address.IsPrimary;
+            this.primaryCheckBox.Visible = !this.Address.IsPrimary;
+
             countryComboBox.SelectedIndexChanged += CountryChanged;
             stateComboBox.SelectedIndexChanged += StateChanged;
         }

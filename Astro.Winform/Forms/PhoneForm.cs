@@ -45,5 +45,13 @@ namespace Astro.Winform.Forms
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
+        private void PhoneForm_Load(object sender, EventArgs e)
+        {
+            this.typeComboBox.SelectedIndex = this.Phone.Type;
+            this.zipCodeTextBox.Text = this.Phone.Number;
+            this.checkBox1.Checked = this.Phone.IsPrimary;
+            this.checkBox1.Visible = !this.Phone.IsPrimary;
+        }
     }
 }

@@ -1,3 +1,5 @@
+using Astro.Winform.Forms;
+
 namespace PointOfSale
 {
     internal static class Program

@@ -358,10 +358,11 @@ namespace Astro.Server.Binaries
                 if (!contactExists) return writer.ToArray();
 
                 commandText = """
-                select a.address_id, a.street_address, a.city_id, c.city_name, c.state_id, s.state_name, a.address_type, a.is_primary, a.zip_code
+                select a.address_id, a.street_address, a.city_id, c.city_name, c.state_id, s.state_name, cn.country_id, cn.country_name, a.address_type, a.is_primary, a.zip_code
                 from addresses as a
                     inner join cities as c on a.city_id = c.city_id
                     inner join states as s on c.state_id = s.state_id
+                    inner join countries as cn on s.country_id = cn.country_id
                 where a.owner_id = @contactId
                 """;
                 var iPos = writer.ReserveInt32();
@@ -377,8 +378,10 @@ namespace Astro.Server.Binaries
                         writer.WriteInt16(reader.GetInt16(4));
                         writer.WriteString(reader.GetString(5));
                         writer.WriteInt16(reader.GetInt16(6));
-                        writer.WriteBoolean(reader.GetBoolean(7));
-                        writer.WriteString(reader.GetString(8));
+                        writer.WriteString(reader.GetString(7));
+                        writer.WriteInt16(reader.GetInt16(8));
+                        writer.WriteBoolean(reader.GetBoolean(9));
+                        writer.WriteString(reader.GetString(10));
                         iCount++;
                     }
                 }, commandText, db.CreateParameter("contactId", id, DbType.Int16));

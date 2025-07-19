@@ -185,7 +185,6 @@ namespace Astro.Winform.Forms
                 case ListingData.Users:
                     GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
                     {
-                        new DataTableColumnInfo("Id", "id", 50, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Name", "fullname", 320, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Email Address", "email", 250, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Role", "role_name", 120),
@@ -196,7 +195,6 @@ namespace Astro.Winform.Forms
                 case ListingData.Roles:
                     GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
                     {
-                        new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Role Name", "name", 300),
                         new DataTableColumnInfo("Created By", "creator", 200),
                         new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")

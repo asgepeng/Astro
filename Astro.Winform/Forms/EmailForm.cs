@@ -52,5 +52,13 @@ namespace Astro.Winform.Forms
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
+        private void EmailForm_Load(object sender, EventArgs e)
+        {
+            this.typeComboBox.SelectedIndex = this.Email.Type;
+            this.zipCodeTextBox.Text = this.Email.Address;
+            this.checkBox1.Checked = this.Email.IsPrimary;
+            this.checkBox1.Visible = !this.Email.IsPrimary;
+        }
     }
 }

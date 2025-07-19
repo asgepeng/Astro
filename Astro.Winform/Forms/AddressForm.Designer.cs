@@ -41,6 +41,7 @@
             label6 = new Label();
             zipCodeTextBox = new TextBox();
             button1 = new Button();
+            primaryCheckBox = new CheckBox();
             SuspendLayout();
             // 
             // label1
@@ -54,10 +55,9 @@
             // 
             // typeComboBox
             // 
-            typeComboBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             typeComboBox.FormattingEnabled = true;
-            typeComboBox.Items.AddRange(new object[] { "Home", "Office", "Billing", "Shpping", "Temporary", "Permanent", "Other" });
+            typeComboBox.Items.AddRange(new object[] { "Home", "Office" });
             typeComboBox.Location = new Point(12, 29);
             typeComboBox.Name = "typeComboBox";
             typeComboBox.Size = new Size(310, 25);
@@ -74,7 +74,6 @@
             // 
             // streetTextBox
             // 
-            streetTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             streetTextBox.Location = new Point(12, 77);
             streetTextBox.Multiline = true;
             streetTextBox.Name = "streetTextBox";
@@ -84,7 +83,6 @@
             // 
             // countryComboBox
             // 
-            countryComboBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             countryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             countryComboBox.FormattingEnabled = true;
             countryComboBox.Location = new Point(12, 160);
@@ -103,7 +101,6 @@
             // 
             // stateComboBox
             // 
-            stateComboBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             stateComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             stateComboBox.FormattingEnabled = true;
             stateComboBox.Location = new Point(12, 208);
@@ -122,7 +119,6 @@
             // 
             // cityComboBox
             // 
-            cityComboBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             cityComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             cityComboBox.FormattingEnabled = true;
             cityComboBox.Location = new Point(12, 256);
@@ -150,7 +146,6 @@
             // 
             // zipCodeTextBox
             // 
-            zipCodeTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             zipCodeTextBox.Location = new Point(12, 304);
             zipCodeTextBox.Name = "zipCodeTextBox";
             zipCodeTextBox.Size = new Size(310, 25);
@@ -158,19 +153,30 @@
             // 
             // button1
             // 
-            button1.Location = new Point(12, 361);
+            button1.Location = new Point(12, 362);
             button1.Name = "button1";
-            button1.Size = new Size(87, 30);
+            button1.Size = new Size(100, 30);
             button1.TabIndex = 13;
             button1.Text = "💾 Save";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
+            // primaryCheckBox
+            // 
+            primaryCheckBox.AutoSize = true;
+            primaryCheckBox.Location = new Point(12, 335);
+            primaryCheckBox.Name = "primaryCheckBox";
+            primaryCheckBox.Size = new Size(123, 21);
+            primaryCheckBox.TabIndex = 14;
+            primaryCheckBox.Text = "Primary Address";
+            primaryCheckBox.UseVisualStyleBackColor = true;
+            // 
             // AddressForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(334, 413);
+            ClientSize = new Size(334, 404);
+            Controls.Add(primaryCheckBox);
             Controls.Add(button1);
             Controls.Add(zipCodeTextBox);
             Controls.Add(label6);
@@ -211,5 +217,6 @@
         private Label label6;
         private TextBox zipCodeTextBox;
         private Button button1;
+        private CheckBox primaryCheckBox;
     }
 }

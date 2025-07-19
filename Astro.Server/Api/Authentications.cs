@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using System.Data.Common;
 using System.Data;
 using Astro.Server.Binaries;
+using Astro.Server.Memory;
 
 namespace Astro.Server.Api
 {
@@ -20,7 +21,7 @@ namespace Astro.Server.Api
         internal static void MapAuthEndPoints(this WebApplication app)
         {
             app.MapPost("/auth/login", SignInAsync);
-            app.MapPost("/auth/logout", SignOutAsync).RequireAuthorization();
+            app.MapPost("/auth/logout", SignOut).RequireAuthorization();
             app.MapPost("/auth/change-password", ChangePasswordAsync).RequireAuthorization();
             app.MapGet("/auth/permissions", GetPermissionsAsync).RequireAuthorization();
         }
@@ -63,7 +64,7 @@ namespace Astro.Server.Api
                 return Results.Forbid();
             }
 
-            var token = await CreateTokenAsync(user, db, context);
+            var token = RegisterNewToken(user, context);
             if (string.IsNullOrEmpty(token))
             {
                 await CreateLoginHistory(user, LoginResult.CreateTokenFailed, db, context);
@@ -93,23 +94,11 @@ namespace Astro.Server.Api
             }
         }
 
-        internal static async Task<IResult> SignOutAsync(IDatabase db, HttpContext context)
+        internal static IResult SignOut(IDatabase db, HttpContext context)
         {
             var token = Application.GetToken(context.Request).Trim();
-            if (Guid.TryParse(token, out Guid tokenGuid))
-            {
-                var commandText = """
-                DELETE FROM auths
-                WHERE token = @token
-                """;
-                await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("token", tokenGuid, DbType.Guid));
-                return Results.Ok();
-            }
-            else
-            {
-                return Results.BadRequest("Invalid token format");
-            }
-
+            TokenStore.Delete(token);
+            return Results.Ok();
         }
         internal static async Task<IResult> ChangePasswordAsync(ChangePasswordRequest request, IDatabase db, HttpContext context)
         {
@@ -303,33 +292,26 @@ namespace Astro.Server.Api
 
             return user.HasExceededFailedAttempts(3);
         }
-        private static async Task<string> CreateTokenAsync(User user, IDatabase db, HttpContext context)
+        private static string RegisterNewToken(User user, HttpContext context)
         {
-            var token = Guid.NewGuid();
+            var token = Guid.NewGuid().ToString();
             var ipv4 = Application.GetIpAddress(context.Request);
             var userAgent = context.Request.Headers.UserAgent.ToString();
-            var commandText = """
-                UPDATE users
-                SET
-                    access_failed_count = 0,
-                    lockout_end = NULL
-                WHERE
-                    user_id = @user_id;
-                INSERT INTO auths
-                    (token, user_id, token_expired_date, ipv4_address, user_agent)
-                VALUES
-                    (@token, @user_id, @token_expired_date, @ipv4_address, @user_agent)
-                """;
-            var parameters = new DbParameter[]
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
             {
-                db.CreateParameter("token", token, System.Data.DbType.Guid),
-                db.CreateParameter("user_id", user.Id),
-                db.CreateParameter("token_expired_date", DateTime.Now.AddHours(9)),
-                db.CreateParameter("ipv4_address", ipv4),
-                db.CreateParameter("user_agent", userAgent)
-            };
-            var success = await db.ExecuteNonQueryAsync(commandText, parameters);
-            return success ? token.ToString() : string.Empty;
+                writer.WriteDateTime(DateTime.Now.AddHours(9));
+                writer.WriteString(ipv4);
+                writer.WriteString(userAgent);
+
+                writer.WriteString(user.GetFullName().Trim());
+                writer.WriteInt16(user.Id);
+                writer.WriteInt16(user.RoleId);
+
+                data = writer.ToArray();
+            }
+            TokenStore.Set(token, data);
+            return token;
         }
         private static async Task CreateLoginHistory(User? user, LoginResult loginResult, IDatabase db, HttpContext context)
         {

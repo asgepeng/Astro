@@ -1,13 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Astro.Server.Middlewares;
 using Astro.Data;
 using Astro.Server;
-using Astro.Models;
-using System.Data.Common;
 using Astro.Server.Api;
-
+using Astro.Server.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IDatabase>(provider =>
@@ -54,5 +51,7 @@ app.MapUnitEndPoints();
 app.MapSupplierEndPoints();
 app.MapCustomerEndPoints();
 app.MapAccountEndPoints();
+
+app.MapHomeEndPoints();
 
 app.Run();

@@ -76,7 +76,7 @@
             // 
             typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             typeComboBox.FormattingEnabled = true;
-            typeComboBox.Items.AddRange(new object[] { "Home", "Office", "Mobile", "Whatsapp" });
+            typeComboBox.Items.AddRange(new object[] { "Office", "Personal" });
             typeComboBox.Location = new Point(12, 29);
             typeComboBox.Name = "typeComboBox";
             typeComboBox.Size = new Size(310, 23);
@@ -108,6 +108,7 @@
             Name = "EmailForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Email";
+            Load += EmailForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }

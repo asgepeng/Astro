@@ -58,7 +58,7 @@
             // 
             typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             typeComboBox.FormattingEnabled = true;
-            typeComboBox.Items.AddRange(new object[] { "Home", "Office", "Mobile", "Whatsapp" });
+            typeComboBox.Items.AddRange(new object[] { "Home", "Celluler", "Whatsapp" });
             typeComboBox.Location = new Point(12, 29);
             typeComboBox.Name = "typeComboBox";
             typeComboBox.Size = new Size(310, 25);
@@ -69,9 +69,9 @@
             label1.AutoSize = true;
             label1.Location = new Point(12, 9);
             label1.Name = "label1";
-            label1.Size = new Size(87, 17);
+            label1.Size = new Size(75, 17);
             label1.TabIndex = 13;
-            label1.Text = "Address Type";
+            label1.Text = "Phone Type";
             // 
             // textBox1
             // 
@@ -130,6 +130,7 @@
             ShowIcon = false;
             StartPosition = FormStartPosition.CenterParent;
             Text = "Add Phone";
+            Load += PhoneForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }

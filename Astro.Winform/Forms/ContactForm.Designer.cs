@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ContactForm));
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
+            deleteButton = new Button();
             listView1 = new ListView();
             columnHeader1 = new ColumnHeader();
             columnHeader2 = new ColumnHeader();
@@ -41,8 +42,8 @@
             textBox3 = new TextBox();
             label5 = new Label();
             textBox2 = new TextBox();
-            button3 = new Button();
-            button2 = new Button();
+            editButton = new Button();
+            addButton = new Button();
             label2 = new Label();
             label1 = new Label();
             textBox1 = new TextBox();
@@ -72,13 +73,14 @@
             // 
             // tabPage1
             // 
+            tabPage1.Controls.Add(deleteButton);
             tabPage1.Controls.Add(listView1);
             tabPage1.Controls.Add(label6);
             tabPage1.Controls.Add(textBox3);
             tabPage1.Controls.Add(label5);
             tabPage1.Controls.Add(textBox2);
-            tabPage1.Controls.Add(button3);
-            tabPage1.Controls.Add(button2);
+            tabPage1.Controls.Add(editButton);
+            tabPage1.Controls.Add(addButton);
             tabPage1.Controls.Add(label2);
             tabPage1.Controls.Add(label1);
             tabPage1.Controls.Add(textBox1);
@@ -87,8 +89,20 @@
             tabPage1.Padding = new Padding(3);
             tabPage1.Size = new Size(602, 473);
             tabPage1.TabIndex = 0;
-            tabPage1.Text = "ℹ️ Umum";
+            tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // deleteButton
+            // 
+            deleteButton.Enabled = false;
+            deleteButton.FlatAppearance.BorderSize = 0;
+            deleteButton.Location = new Point(553, 123);
+            deleteButton.Name = "deleteButton";
+            deleteButton.Size = new Size(30, 30);
+            deleteButton.TabIndex = 18;
+            deleteButton.Text = "❌";
+            deleteButton.UseVisualStyleBackColor = false;
+            deleteButton.Click += deleteButton_Click;
             // 
             // listView1
             // 
@@ -97,13 +111,15 @@
             listView1.GridLines = true;
             listView1.LabelWrap = false;
             listView1.LargeImageList = imageList1;
-            listView1.Location = new Point(137, 48);
+            listView1.Location = new Point(120, 51);
             listView1.Name = "listView1";
-            listView1.Size = new Size(410, 372);
+            listView1.Size = new Size(427, 369);
             listView1.TabIndex = 2;
             listView1.TileSize = new Size(380, 56);
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = View.Tile;
+            listView1.ItemActivate += listView1_ItemActivate;
+            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;
             // 
             // imageList1
             // 
@@ -111,14 +127,16 @@
             imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
             imageList1.TransparentColor = Color.Transparent;
             imageList1.Images.SetKeyName(0, "ihome.png");
-            imageList1.Images.SetKeyName(1, "iwhatsapp.png");
+            imageList1.Images.SetKeyName(1, "ioffice.png");
             imageList1.Images.SetKeyName(2, "iseluler.png");
-            imageList1.Images.SetKeyName(3, "email.png");
+            imageList1.Images.SetKeyName(3, "celluler.png");
+            imageList1.Images.SetKeyName(4, "iwhatsapp.png");
+            imageList1.Images.SetKeyName(5, "email.png");
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(349, 429);
+            label6.Location = new Point(375, 429);
             label6.Name = "label6";
             label6.Size = new Size(55, 17);
             label6.TabIndex = 17;
@@ -134,42 +152,46 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(7, 429);
+            label5.Location = new Point(40, 429);
             label5.Name = "label5";
-            label5.Size = new Size(55, 17);
+            label5.Size = new Size(74, 17);
             label5.TabIndex = 15;
-            label5.Text = "AR Limit";
+            label5.Text = "Credit Limit";
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(137, 426);
+            textBox2.Location = new Point(120, 426);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(126, 25);
             textBox2.TabIndex = 14;
             // 
-            // button3
+            // editButton
             // 
-            button3.Location = new Point(553, 84);
-            button3.Name = "button3";
-            button3.Size = new Size(30, 30);
-            button3.TabIndex = 9;
-            button3.Text = "✏️";
-            button3.UseVisualStyleBackColor = true;
+            editButton.Enabled = false;
+            editButton.FlatAppearance.BorderSize = 0;
+            editButton.Location = new Point(553, 87);
+            editButton.Name = "editButton";
+            editButton.Size = new Size(30, 30);
+            editButton.TabIndex = 9;
+            editButton.Text = "✏️";
+            editButton.UseVisualStyleBackColor = false;
+            editButton.Click += listView1_ItemActivate;
             // 
-            // button2
+            // addButton
             // 
-            button2.Location = new Point(553, 48);
-            button2.Name = "button2";
-            button2.Size = new Size(30, 30);
-            button2.TabIndex = 8;
-            button2.Text = "➕";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
+            addButton.FlatAppearance.BorderSize = 0;
+            addButton.Location = new Point(553, 51);
+            addButton.Name = "addButton";
+            addButton.Size = new Size(30, 30);
+            addButton.TabIndex = 8;
+            addButton.Text = "➕";
+            addButton.UseVisualStyleBackColor = false;
+            addButton.Click += button2_Click;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(7, 48);
+            label2.Location = new Point(62, 51);
             label2.Name = "label2";
             label2.Size = new Size(52, 17);
             label2.TabIndex = 4;
@@ -177,18 +199,18 @@
             // 
             // label1
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(7, 20);
+            label1.Location = new Point(6, 20);
             label1.Name = "label1";
-            label1.Size = new Size(95, 17);
+            label1.Size = new Size(108, 25);
             label1.TabIndex = 1;
-            label1.Text = "Supplier Name";
+            label1.Text = "Customer Name";
+            label1.TextAlign = ContentAlignment.MiddleRight;
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(137, 17);
+            textBox1.Location = new Point(120, 20);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(410, 25);
+            textBox1.Size = new Size(427, 25);
             textBox1.TabIndex = 0;
             // 
             // tabPage2
@@ -198,7 +220,7 @@
             tabPage2.Padding = new Padding(3);
             tabPage2.Size = new Size(602, 475);
             tabPage2.TabIndex = 1;
-            tabPage2.Text = "🕒 Riwayat Transaksi";
+            tabPage2.Text = "🕒 Transaction Histories";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabPage3
@@ -208,7 +230,7 @@
             tabPage3.Padding = new Padding(3);
             tabPage3.Size = new Size(602, 475);
             tabPage3.TabIndex = 2;
-            tabPage3.Text = "\U0001f9fe Hutang Dagang";
+            tabPage3.Text = "\U0001f9fe Account Payable";
             tabPage3.UseVisualStyleBackColor = true;
             // 
             // button1
@@ -239,14 +261,14 @@
             phoneToolStripMenuItem.Name = "phoneToolStripMenuItem";
             phoneToolStripMenuItem.Size = new Size(148, 22);
             phoneToolStripMenuItem.Text = "Phone";
-            phoneToolStripMenuItem.Click += button5_Click;
+            phoneToolStripMenuItem.Click += button7_Click;
             // 
             // emailToolStripMenuItem
             // 
             emailToolStripMenuItem.Name = "emailToolStripMenuItem";
             emailToolStripMenuItem.Size = new Size(148, 22);
             emailToolStripMenuItem.Text = "Email Address";
-            emailToolStripMenuItem.Click += button7_Click;
+            emailToolStripMenuItem.Click += button5_Click;
             // 
             // ContactForm
             // 
@@ -281,8 +303,8 @@
         private TabPage tabPage3;
         private Button button1;
         private Label label2;
-        private Button button3;
-        private Button button2;
+        private Button editButton;
+        private Button addButton;
         private Label label6;
         private TextBox textBox3;
         private Label label5;
@@ -295,5 +317,6 @@
         private ToolStripMenuItem addressToolStripMenuItem;
         private ToolStripMenuItem phoneToolStripMenuItem;
         private ToolStripMenuItem emailToolStripMenuItem;
+        private Button deleteButton;
     }
 }

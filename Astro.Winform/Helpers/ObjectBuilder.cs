@@ -163,6 +163,11 @@ namespace Astro.Winform.Helpers
                             Id = reader.ReadInt16(),
                             Name = reader.ReadString()
                         },
+                        Country = new Country()
+                        {
+                            Id = reader.ReadInt16(),
+                            Name = reader.ReadString()
+                        },
                         Type = reader.ReadInt16(),
                         IsPrimary = reader.ReadBoolean(),
                         ZipCode = reader.ReadString()
@@ -224,6 +229,11 @@ namespace Astro.Winform.Helpers
                         {
                             Id = reader.ReadInt16(),
                             Name = reader.ReadString()
+                        },
+                        Country = new Country()
+                        {
+                            Id = reader.ReadInt16(),
+                            Name =reader.ReadString()
                         },
                         Type = reader.ReadInt16(),
                         IsPrimary = reader.ReadBoolean(),

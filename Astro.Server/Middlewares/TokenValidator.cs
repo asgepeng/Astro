@@ -5,72 +5,55 @@ using System.Data.Common;
 
 using Astro.Data;
 using Astro.Helpers;
+using Astro.Server.Memory;
 
 namespace Astro.Server.Middlewares
 {
     public class TokenValidator
     {
-        private readonly IDatabase db;
-        public TokenValidator(IDatabase iDatabase)
+        public Task ValidateAsync(MessageReceivedContext context)
         {
-            db = iDatabase;
-        }
-        public async Task ValidateAsync(MessageReceivedContext context)
-        {
+            string requestToken = Application.GetToken(context.Request);
+            string requestUserAgent = context.Request.Headers.UserAgent.ToString();
+            string requestIpAddress = Application.GetIpAddress(context.Request);
 
-            string token = Application.GetToken(context.Request);
-            string userAgent = context.Request.Headers.UserAgent.ToString();
-            string ipv4 = Application.GetIpAddress(context.Request);
-
-            if (Guid.TryParse(token, out Guid key))
+            var LoginInfo = TokenStore.Get(requestToken);
+            if (LoginInfo is null)
             {
-                ClaimsPrincipal? principal = null;
-                if (!string.IsNullOrEmpty(token))
-                {
-                    var commandText = """
-                    SELECT u.user_id, u.user_name, u.role_id
-                    FROM auths AS a
-                        INNER JOIN users AS u ON a.user_id = u.user_id
-                    WHERE a.token = @token 
-                        AND a.user_agent = @user_agent 
-                        AND a.ipv4_address = @ipv4
-                    """;
-                    var parameters = new DbParameter[]
-                    {
-                        db.CreateParameter("token", key, DbType.Guid),
-                        db.CreateParameter("user_agent", userAgent),
-                        db.CreateParameter("ipv4", ipv4)
-                    };
+                TokenStore.Delete(requestToken);
 
-                    await db.ExecuteReaderAsync(async (DbDataReader reader) =>
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            var claims = new List<Claim>
-                            {
-                                new Claim(ClaimTypes.Actor, reader.GetInt16(0).ToString()),
-                                new Claim(ClaimTypes.Name, reader.GetString(1)),
-                                new Claim(ClaimTypes.Role, reader.GetInt16(2).ToString())
-                            };
-                            ClaimsIdentity identity = new ClaimsIdentity(claims, "Bearer");
-                            principal = new ClaimsPrincipal(identity);
-                        }
-                    }, commandText, parameters);
-                }
-                context.Principal = principal;
-                if (principal != null)
-                {
-                    context.Success();
-                }
-                else
-                {
-                    context.Fail("Unauthorized request");
-                }
+                context.Fail("Unauthorized request");
+                return Task.CompletedTask;
             }
-            else
+
+            using var stream = new MemoryStream(LoginInfo);
+            using var reader = new IO.Reader(stream);
+
+            var expiredDate = reader.ReadDateTime();
+            if (expiredDate < DateTime.Now)
             {
-                context.Fail("Invalid token format");
+                context.Fail("Expired token");
+                return Task.CompletedTask;
             }
+
+            if (!string.Equals(requestIpAddress, reader.ReadString(), StringComparison.Ordinal) ||
+                !string.Equals(requestUserAgent, reader.ReadString(), StringComparison.Ordinal))
+            {
+                context.Fail("IP Address or User Agent do not match");
+                return Task.CompletedTask;
+            }
+
+            var identity = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, reader.ReadString()),
+                new Claim(ClaimTypes.Actor, reader.ReadInt16().ToString()),
+                new Claim(ClaimTypes.Role, reader.ReadInt16().ToString())
+            }, "Bearer");
+
+            context.Principal = new ClaimsPrincipal(identity);
+            context.Success();
+
+            return Task.CompletedTask;
         }
     }
 }

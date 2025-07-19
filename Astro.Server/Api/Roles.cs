@@ -120,7 +120,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("rolename", role.Name, DbType.String),
-                db.CreateParameter("creator", Application.GetUserID(context), DbType.String)
+                db.CreateParameter("creator", Application.GetUserID(context), DbType.Int16)
             };
             var roleId = await db.ExecuteScalarInt16Async(commandText, parameters);
             if (roleId == null) return Results.Ok(CommonResult.Fail("Failed to create role."));
