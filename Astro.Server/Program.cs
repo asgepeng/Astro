@@ -5,6 +5,7 @@ using Astro.Data;
 using Astro.Server;
 using Astro.Server.Api;
 using Astro.Server.Web;
+using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IDatabase>(provider =>
@@ -35,6 +36,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddWindowsService();
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
@@ -52,6 +54,6 @@ app.MapSupplierEndPoints();
 app.MapCustomerEndPoints();
 app.MapAccountEndPoints();
 
-app.MapHomeEndPoints();
+app.MapControllers();
 
 app.Run();

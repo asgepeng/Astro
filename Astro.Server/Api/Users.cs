@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Text;
 using System.Data;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Api
 {
@@ -31,32 +32,9 @@ namespace Astro.Server.Api
             }
             else
             {
-                var commandText = """
-                    select u.user_id, concat(u.user_firstname, ' ', u.user_lastname) AS fullname, u.email, r.role_name,
-                    case when u.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, u.created_date
-                    from users as u
-                    inner join roles as r on u.role_id = r.role_id
-                    left join users AS c ON u.creator_id = c.user_id
-                    where u.is_deleted = false
-                    """;
-                var builder = new StringBuilder();
-                builder.Append("<table class=\"data-table\"><thead><tr><th>User ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Creator</th><th>Created Date</th></tr></thead><tbody>");
-                await db.ExecuteReaderAsync(async (DbDataReader reader) =>
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        builder.Append("<tr>");
-                        builder.AppendFormat("<td>{0}</td>", reader.GetInt16(0));
-                        builder.Append("<td>").Append(System.Web.HttpUtility.HtmlEncode(reader.GetString(1))).Append("</td>");
-                        builder.Append("<td>").Append(System.Web.HttpUtility.HtmlEncode(reader.GetString(2))).Append("</td>");
-                        builder.Append("<td>").Append(System.Web.HttpUtility.HtmlEncode(reader.GetString(3))).Append("</td>");
-                        builder.Append("<td>").Append(System.Web.HttpUtility.HtmlEncode(reader.GetString(4))).Append("</td>");
-                        builder.Append("<td>").Append(reader.GetDateTime(5).ToString("dd/MM/yyyy HH:mm")).Append("</td>");
-                        builder.Append("</tr>");
-                    }
-                }, commandText);
-                builder.Append("</tbody></table>");
-                return Results.Content(builder.ToString(), "text/html");
+                var sb = new StringBuilder();
+                await sb.AppendUserTableAsync(db);
+                return Results.Content(sb.ToString(), "text/html");
             }
         }
         internal static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)

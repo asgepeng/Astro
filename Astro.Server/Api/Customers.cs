@@ -2,6 +2,7 @@
 using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
 using Astro.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +30,10 @@ namespace Astro.Server.Api
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
             if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetContactDataTable(1), "application/octet-stream");
-            return Results.Ok();
+
+            var sb = new StringBuilder();
+            await sb.AppendContactTableAsync(db, 1);
+            return Results.Content(sb.ToString(), "text/html");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {

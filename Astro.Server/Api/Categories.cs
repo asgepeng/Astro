@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using System.Data.Common;
 using System.Data;
 using Astro.Server.Binaries;
+using System.Text;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Api
 {
@@ -33,7 +35,10 @@ namespace Astro.Server.Api
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
             if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetCategoryDataTable(), "application/octet-stream");
-            return Results.Ok();
+
+            var sb = new StringBuilder();
+            await sb.AppendCategoryTableAsync(db);
+            return Results.Content(sb.ToString(), "text/html");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {

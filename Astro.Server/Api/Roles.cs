@@ -2,6 +2,7 @@
 using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Data;
@@ -26,37 +27,8 @@ namespace Astro.Server.Api
             if (isWinformApp) return Results.File(await db.GetRoleDataTable(), "application/octet-stream");
             else
             {
-                var commandText = """
-                    select r.role_id, r.role_name, case when r.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, r.created_date
-                    FROM roles as r
-                    left join users as c on r.creator_id = c.user_id
-                    """;
                 var sb = new StringBuilder();
-                sb.Append("<table class=\"table table-striped table-bordered\">\n")
-                  .Append("<thead>\n")
-                  .Append("<tr>\n")
-                  .Append("<th>Role ID</th>\n")
-                  .Append("<th>Role Name</th>\n")
-                  .Append("<th>Creator</th>\n")
-                  .Append("<th>Created Date</th>\n")
-                  .Append("</tr>\n")
-                  .Append("</thead>\n")
-                  .Append("<tbody>\n");
-                await db.ExecuteReaderAsync(async reader =>
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        sb.Append("<tr>");
-                        sb.Append("<td>").Append(reader.GetInt16(0)).Append("</td>");
-                        sb.Append("<td>").Append(reader.GetString(1)).Append("</td>");
-                        sb.Append("<td>").Append(reader.GetString(2)).Append("</td>");
-                        sb.Append("<td>").Append(reader.GetDateTime(3).ToString("yyyy-MM-dd HH:mm:ss")).Append("</td>");
-                        sb.Append("<td><a href=\"/roles/").Append(reader.GetInt16(0)).Append("\">Edit</a></td>");
-                        sb.Append("<td><a href=\"/roles/delete/").Append(reader.GetInt16(0)).Append("\">Delete</a></td>");
-                        sb.Append("</tr>");
-                    }
-                }, commandText);
-                sb.Append("</tbody></table>");
+                await sb.AppendRoleTableAsync(db);
                 return Results.Content(sb.ToString(), "text/html");
             }
         }

@@ -7,6 +7,8 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Astro.Server.Api
 {
@@ -20,12 +22,28 @@ namespace Astro.Server.Api
             app.MapPut("/data/products", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/products/{id}", DeleteAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetAllAsync(
+            [FromQuery] int? pg,
+            [FromQuery] int? pgsize,
+            [FromQuery] int? order,
+            [FromQuery] int? sort,
+            [FromQuery] string? src,
+            IDatabase db, HttpContext context)
         {
+
             if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetProductDataTable(), "application/octet-stream");
             else
             {
+                var pagination = new Pagination()
+                {
+                    Page = pg.HasValue ? pg.Value : 1,
+                    PageSize = pgsize.HasValue ? pgsize.Value : 20,
+                    OrderBy = order.HasValue ? order.Value : 0,
+                    SortOrder = sort.HasValue ? sort.Value : 0,
+                    Search = src is null ? string.Empty : src.Trim()
+                };
                 var sb = new StringBuilder();
+                await sb.AppendProductTableAsync(db, pagination);
                 return Results.Content(sb.ToString(), "text/html");
             }
         }

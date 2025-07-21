@@ -616,6 +616,7 @@ namespace Astro.Server.Binaries
                 inner join units as unt on p.unit_id = unt.unit_id
                 inner join users as u on p.creator_id = u.user_id
                 where p.is_deleted = false
+                order by p.product_id
                 """;
             using (var writer = new IO.Writer())
             {
