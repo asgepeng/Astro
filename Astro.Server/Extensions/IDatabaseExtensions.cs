@@ -431,11 +431,11 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetAccountProvider(this IDatabase db, short id)
+        internal static async Task<byte[]> GetAccountProviderAsync(this IDatabase db, short id)
         {
             var commandText = """
                 select provider_id, provider_name, provider_type
-                from providers
+                from account_providers
                 where provider_id = @id;
                 """;
             var data = Array.Empty<byte>();
@@ -549,6 +549,7 @@ namespace Astro.Server.Binaries
                         writer.WriteBoolean(reader.GetBoolean(7));
                         iMenuCount++;
                     }
+                    writer.WriteInt32(iMenuCount, iMenuPos);
                     writer.WriteInt32(iSectionCount, iSectionPos);
 
                 }, commandText, db.CreateParameter("roleId", roleID));
@@ -720,10 +721,10 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetAccountProviderDataTable(this IDatabase db, short id)
+        internal static async Task<byte[]> GetAccountProviderTableAsync(this IDatabase db)
         {
             var commandText = """
-                select provider_id, provider_name, case provider_type when 1 then 'Bank' when 2 then 'E_Wallet' when 3 then 'E-Money' else '-' end as provider_type
+                select provider_id, provider_name, case provider_type when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as provider_type
                 from account_providers
                 """;
             var data = Array.Empty<byte>();

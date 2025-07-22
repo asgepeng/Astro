@@ -12,7 +12,7 @@ namespace Astro.Models
         [JsonPropertyName("page")]
         public int Page { get; set; } = 1;
         [JsonPropertyName("pageSize")]
-        public int PageSize { get; set; } = 20;
+        public int PageSize { get; set; } = 5;
         [JsonPropertyName("search")]
         public string Search { get; set; } = string.Empty;
         [JsonPropertyName("orderBy")]

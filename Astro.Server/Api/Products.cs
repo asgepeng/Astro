@@ -37,7 +37,7 @@ namespace Astro.Server.Api
                 var pagination = new Pagination()
                 {
                     Page = pg.HasValue ? pg.Value : 1,
-                    PageSize = pgsize.HasValue ? pgsize.Value : 20,
+                    PageSize = pgsize.HasValue ? pgsize.Value : 5,
                     OrderBy = order.HasValue ? order.Value : 0,
                     SortOrder = sort.HasValue ? sort.Value : 0,
                     Search = src is null ? string.Empty : src.Trim()

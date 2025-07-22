@@ -32,5 +32,7 @@ namespace Astro.Models
         public string Name { get; set; } = string.Empty;
         [JsonPropertyName("type")]
         public short Type { get; set; } = 0;
+
+        public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.AccountProvider);
     }
 }

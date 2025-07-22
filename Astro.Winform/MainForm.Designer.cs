@@ -49,6 +49,7 @@
             unitButton = new ToolStripButton();
             searchTextBox = new ToolStripTextBox();
             searchLabel = new ToolStripLabel();
+            apButton = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -85,7 +86,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, searchTextBox, searchLabel });
+            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -228,6 +229,16 @@
             searchLabel.Size = new Size(69, 28);
             searchLabel.Text = "🔍 Search";
             // 
+            // apButton
+            // 
+            apButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            apButton.Image = Astro.Winform.Properties.Resources.cashflow;
+            apButton.ImageTransparentColor = Color.Magenta;
+            apButton.Name = "apButton";
+            apButton.Size = new Size(28, 28);
+            apButton.Text = "Account Providers";
+            apButton.Click += OpenAccountProviderForm;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -272,5 +283,6 @@
         private ToolStripButton unitButton;
         private ToolStripTextBox searchTextBox;
         private ToolStripLabel searchLabel;
+        private ToolStripButton apButton;
     }
 }

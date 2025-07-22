@@ -1,14 +1,41 @@
 ﻿using Astro.Data;
 using Astro.Models;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Astro.Server.Extensions
 {
+    internal struct ColumnProperties
+    {
+        internal ColumnProperties(string header, string value)
+        {
+            Header = header;
+            Value = value;
+        }
+        internal string Header { get; }
+        internal string Value { get; }
+    }
+    internal static class Templates
+    {
+        internal static readonly ColumnProperties[] ProductColumns = new ColumnProperties[]
+        {
+            new ColumnProperties("ID", "p.product_id"),
+            new ColumnProperties("Product Name", "p.product_name"),
+            new ColumnProperties("SKU", "p.product_sku"),
+            new ColumnProperties("Category", "c.category_name"),
+            new ColumnProperties("Stock", "p.stock"),
+            new ColumnProperties("Unit", "unt.unit_name"),
+            new ColumnProperties("Price", "p.price"),
+            new ColumnProperties("Created By", "CONCAT(u.user_firstname, ' ', u.user_lastname)"),
+            new ColumnProperties("Created Date", "p.created_date")
+        };
+    }
     internal static class StringBuilderExtensions
     {
         internal static async Task AppendUserTableAsync(this StringBuilder sb, IDatabase db)
@@ -120,49 +147,16 @@ namespace Astro.Server.Extensions
         }
         internal static async Task AppendProductTableAsync(this StringBuilder sb, IDatabase db, Pagination pagination)
         {
-            var countCommandText = """
-                select count(*) as totalRecords
-                from products as p
-                    inner join categories as c on p.category_id = c.category_id
-                    inner join units as unt on p.unit_id = unt.unit_id
-                    inner join users as u on p.creator_id = u.user_id
-                where p.is_deleted = false
-                """;
-            var totalRecords = await db.ExecuteScalarIntegerAsync(countCommandText);
-            var columns = new string[]
+            sb.Append("<div class=\"responsive\"><table class=\"table\" page=\"").Append(pagination.Page)
+                .Append("\" page-size=\"").Append(pagination.PageSize)
+                .Append("\" order-column=\"").Append(pagination.OrderBy)
+                .Append("\" sort-order=\"").Append(pagination.SortOrder)
+                .Append("\" search=\"").Append(pagination.Search)
+                .Append("\"><thead><tr>");
+
+            for (int i = 0; i < Templates.ProductColumns.Length; i++)
             {
-                "ID", "Product Name", "SKU", "Category", "Stock", "Unit", "Price", "Created By", "Created Date"
-            };
-            var sortColumns = new string[]
-            {
-                "p.product_id","p.product_name", "p.product_sku", "c.category_name", "p.stock", "unt.unit_name", "p.price", "u.user_firstname", "p.created_date"
-            };
-            var commandText = $"""
-                select p.product_id, p.product_name, p.product_sku, c.category_name,  p.stock, unt.unit_name, p.price, 
-                   	concat(u.user_firstname, ' ', u.user_lastname) as creator, p.created_date
-                from products as p
-                    inner join categories as c on p.category_id = c.category_id
-                    inner join units as unt on p.unit_id = unt.unit_id
-                    inner join users as u on p.creator_id = u.user_id
-                where p.is_deleted = false
-                ORDER by {sortColumns[pagination.OrderBy]} {(pagination.SortOrder == 0 ? "ASC" : "DESC")}
-                LIMIT @pagesize OFFSET @offset
-                """;
-            var parameters = new DbParameter[]
-            {
-                db.CreateParameter("pagesize", pagination.PageSize, System.Data.DbType.Int32),
-                db.CreateParameter("offset", pagination.GetOffset(), System.Data.DbType.Int32)
-            };
-            
-            sb.Append($"""
-                <div class="responsive">
-                <table class="table table-pagination" page="{pagination.Page}" page-size="{pagination.PageSize}" order-column="{pagination.OrderBy}" sort-order="{pagination.SortOrder}" search="{pagination.Search}" >
-                <thead>
-                <tr>
-                """);
-            for (int i = 0; i < columns.Length; i++)
-            {
-                sb.Append("<th><span class=\"table-header\">").Append(columns[i]);
+                sb.Append("<th><span class=\"table-header\">").Append(Templates.ProductColumns[i].Header);
                 if (pagination.OrderBy == i)
                 {
                     sb.Append("&nbsp;&nbsp;<small>");
@@ -171,11 +165,46 @@ namespace Astro.Server.Extensions
                 }
                 sb.Append("</span></th>");
             }
-            sb.Append("""
-                </tr>
-                </thead>
-                <tbody>
+            sb.Append("</tr></thead><tbody>");
+
+            var sbSql = new StringBuilder();
+            sbSql.Append("""
+                from products as p
+                    inner join categories as c on p.category_id = c.category_id
+                    inner join units as unt on p.unit_id = unt.unit_id
+                    inner join users as u on p.creator_id = u.user_id
+                WHERE p.is_deleted = false 
                 """);
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
+            {
+                var searchKeyword = pagination.Search.SqlString();
+                sbSql.Append(" AND (p.product_name LIKE '%").Append(searchKeyword).Append("%' OR ");
+                sbSql.Append(" p.product_sku LIKE '%").Append(searchKeyword).Append("%' OR");
+                sbSql.Append(" c.category_name LIKE '%").Append(searchKeyword).Append("%' OR ");
+                sbSql.Append(" CONCAT(u.user_firstname, ' ', u.user_lastname) LIKE '%").Append(searchKeyword).Append("%')");
+            }
+            var totalRecords = await db.ExecuteScalarIntegerAsync("SELECT COUNT(p.product_id) AS total " + sbSql.ToString());
+
+            if (totalRecords == 0)
+            {
+                sb.Append("</tbody></table><strong>Total Records:</strong>0</div>");
+                return;
+            }
+
+            sbSql.Insert(0, """
+                select p.product_id, p.product_name, p.product_sku, c.category_name,  p.stock, unt.unit_name, p.price, 
+                   	concat(u.user_firstname, ' ', u.user_lastname) as creator, p.created_date 
+                """);
+            sbSql.Append(" ORDER BY ").Append(Templates.ProductColumns[pagination.OrderBy].Value)
+                .Append((pagination.SortOrder == 0 ? " ASC " : " DESC"))
+                .Append(" LIMIT @pagesize OFFSET @offset;");
+
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("pagesize", pagination.PageSize, System.Data.DbType.Int32),
+                db.CreateParameter("offset", pagination.GetOffset(), System.Data.DbType.Int32)
+            };
+            
             await db.ExecuteReaderAsync(async reader =>
             {
                 while (await reader.ReadAsync())
@@ -189,30 +218,39 @@ namespace Astro.Server.Extensions
                     sb.Append("<td>").Append(reader.GetString(5)).Append("</td>"); // unit_name
                     sb.Append("<td>").Append(reader.GetDecimal(6).ToString("N0")).Append("</td>"); // price
                     sb.Append("<td>").Append(reader.GetString(7)).Append("</td>"); // creator
-                    sb.Append("<td>").Append(reader.GetDateTime(8).ToString("yyyy-MM-dd HH:mm")).Append("</td>");
+                    sb.Append("<td>").Append(reader.GetDateTime(8).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)).Append("</td>");
                     sb.Append("</tr>");
                 }
-            }, commandText, parameters);
+            }, sbSql.ToString(), parameters);
             sb.Append("</tbody></table>");
             sb.Append("<span><strong>Total Records: </strong>");
             sb.Append(totalRecords.Value.ToString("N0")).Append("</span>");
             sb.Append("<nav aria-label=\"Page navigation\"><ul class=\"pagination\">");
 
-            int iPage = 1;
-            while (totalRecords > 0)
+            int batchSize = 5;
+            int totalPages = (int)Math.Ceiling((double)totalRecords / (double)pagination.PageSize);
+            int currentBatch = (int)Math.Ceiling((double)pagination.Page / (double)batchSize);
+            int startPage = (currentBatch - 1) * batchSize + 1;
+            int endPage = Math.Min(startPage + batchSize - 1, totalPages);
+            if (startPage > batchSize)
             {
-                totalRecords -= pagination.PageSize;
+                sb.Append("<li class=\"page-item\"><button class=\"page-link\">Previous</button></li>");
+            }
+            for (int i = startPage; i <= endPage; i++)
+            {
                 sb.Append("<li class=\"page-item");
-                if (iPage == pagination.Page)
+                if (i == pagination.Page)
                 {
-                    sb.Append(" active\"><span class=\"page-link\">").Append(iPage).Append("<span></li>");
+                    sb.Append(" active\"><span class=\"page-link\">").Append(i).Append("</span></li>");
                 }
                 else
                 {
-                    sb.Append("\"><button class=\"page-link\">").Append(iPage).Append("</button></li>");
+                    sb.Append("\"><button class=\"page-link\">").Append(i).Append("</button></li>");
                 }
-                
-                iPage++;
+            }
+            if (endPage < totalPages)
+            {
+                sb.Append("<li class=\"page-item\"><button class=\"page-link\">Next</button></li>");
             }
             sb.Append("</ul></nav>");
             sb.Append("</div>");

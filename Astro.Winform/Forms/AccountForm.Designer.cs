@@ -50,8 +50,9 @@
             tabControl1.Controls.Add(tabPage2);
             tabControl1.Location = new Point(12, 12);
             tabControl1.Name = "tabControl1";
+            tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(657, 281);
+            tabControl1.Size = new Size(540, 321);
             tabControl1.TabIndex = 0;
             // 
             // tabPage1
@@ -64,18 +65,18 @@
             tabPage1.Controls.Add(textBox2);
             tabPage1.Controls.Add(label1);
             tabPage1.Controls.Add(textBox1);
-            tabPage1.Location = new Point(4, 26);
+            tabPage1.Location = new Point(4, 32);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(649, 251);
+            tabPage1.Size = new Size(532, 285);
             tabPage1.TabIndex = 0;
-            tabPage1.Text = "tabPage1";
+            tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(6, 116);
+            label4.Location = new Point(57, 116);
             label4.Name = "label4";
             label4.Size = new Size(57, 17);
             label4.TabIndex = 8;
@@ -86,16 +87,16 @@
             comboBox2.DisplayMember = "Name";
             comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBox2.FormattingEnabled = true;
-            comboBox2.Location = new Point(137, 113);
+            comboBox2.Location = new Point(120, 113);
             comboBox2.Name = "comboBox2";
-            comboBox2.Size = new Size(487, 25);
+            comboBox2.Size = new Size(305, 25);
             comboBox2.TabIndex = 7;
             comboBox2.ValueMember = "Id";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(6, 85);
+            label3.Location = new Point(29, 85);
             label3.Name = "label3";
             label3.Size = new Size(85, 17);
             label3.TabIndex = 6;
@@ -106,15 +107,15 @@
             comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBox1.FormattingEnabled = true;
             comboBox1.Items.AddRange(new object[] { "Bank", "E-Wallet", "E-Money" });
-            comboBox1.Location = new Point(137, 82);
+            comboBox1.Location = new Point(120, 82);
             comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(190, 25);
+            comboBox1.Size = new Size(305, 25);
             comboBox1.TabIndex = 5;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(6, 54);
+            label2.Location = new Point(8, 54);
             label2.Name = "label2";
             label2.Size = new Size(106, 17);
             label2.TabIndex = 3;
@@ -122,15 +123,15 @@
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(137, 51);
+            textBox2.Location = new Point(120, 51);
             textBox2.Name = "textBox2";
-            textBox2.Size = new Size(487, 25);
+            textBox2.Size = new Size(400, 25);
             textBox2.TabIndex = 4;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(6, 23);
+            label1.Location = new Point(21, 23);
             label1.Name = "label1";
             label1.Size = new Size(93, 17);
             label1.TabIndex = 1;
@@ -138,28 +139,28 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(137, 20);
+            textBox1.Location = new Point(120, 20);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(487, 25);
+            textBox1.Size = new Size(400, 25);
             textBox1.TabIndex = 2;
             // 
             // tabPage2
             // 
-            tabPage2.Location = new Point(4, 24);
+            tabPage2.Location = new Point(4, 32);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(649, 322);
+            tabPage2.Size = new Size(532, 285);
             tabPage2.TabIndex = 1;
-            tabPage2.Text = "tabPage2";
+            tabPage2.Text = "🕒 Histories";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 328);
+            button1.Location = new Point(12, 339);
             button1.Name = "button1";
-            button1.Size = new Size(116, 30);
+            button1.Size = new Size(81, 30);
             button1.TabIndex = 1;
-            button1.Text = "Save";
+            button1.Text = "💾 Save";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
@@ -167,13 +168,17 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(680, 374);
+            ClientSize = new Size(564, 381);
             Controls.Add(button1);
             Controls.Add(tabControl1);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "AccountForm";
+            ShowIcon = false;
             StartPosition = FormStartPosition.CenterParent;
-            Text = "AccountForm";
+            Text = "Account";
             Load += AccountForm_Load;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);

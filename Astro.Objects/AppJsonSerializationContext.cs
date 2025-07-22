@@ -17,6 +17,7 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(List<Province>))]
 [JsonSerializable(typeof(List<City>))]
 
+[JsonSerializable(typeof(AccountProvider))]
 [JsonSerializable(typeof(Account))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(Address))]

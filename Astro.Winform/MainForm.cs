@@ -40,7 +40,7 @@ namespace PointOfSale
                         sectionLength--;
                     }
                 }
-                
+
                 this.WindowState = FormWindowState.Maximized;
                 if (My.Application.User != null)
                 {
@@ -175,6 +175,12 @@ namespace PointOfSale
                     lform.ApplyFilter(this.searchTextBox.Text);
                 }
             }
+        }
+
+        private void OpenAccountProviderForm(object sender, EventArgs e)
+        {
+            var form = new ListAccountProviderForm();
+            form.ShowDialog();
         }
     }
 }

@@ -53,6 +53,7 @@ app.MapUnitEndPoints();
 app.MapSupplierEndPoints();
 app.MapCustomerEndPoints();
 app.MapAccountEndPoints();
+app.MapAccountProviderEndPoints();
 
 app.MapControllers();
 

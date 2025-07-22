@@ -1,0 +1,86 @@
+﻿using Astro.Models;
+using Astro.Winform.Classes;
+using Astro.Winform.Tables;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Astro.Winform.Forms
+{
+    public partial class ListAccountProviderForm : Form
+    {
+        private readonly AccountProviderDataTable table;
+        private readonly BindingSource bs;
+        public ListAccountProviderForm()
+        {
+            InitializeComponent();
+            dataGridView1.AutoGenerateColumns = false;
+            table = new AccountProviderDataTable();
+            bs = new BindingSource();
+            dataGridView1.DataSource = bs;
+        }
+        private async Task LoadDataAsync()
+        {
+            await table.LoadAsync();
+            if (bs.DataSource is null) bs.DataSource = table;
+        }
+
+        private async void ListAccountProviderForm_Load(object sender, EventArgs e)
+        {
+            await LoadDataAsync();
+        }
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            var form = new AccountProviderForm();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                await LoadDataAsync();
+            }
+        }
+
+        private async void button2_Click(object sender, EventArgs e)
+        {
+            if (this.bs.Current is null) return;
+
+            var id = (short)((DataRowView)this.bs.Current)[0];
+            var json = await HttpClientSingleton.DeleteAsync("/data/account-providers/" + id.ToString());
+            var commonResult = CommonResult.Create(json);
+            if (commonResult != null)
+            {
+                if (commonResult.Success)
+                {
+                    await LoadDataAsync();
+                }
+            }
+        }
+
+        private async void HandleGridDoubleClicked(object sender, DataGridViewCellEventArgs e)
+        {
+            if (this.bs.Current is null) return;
+
+            var form = new AccountProviderForm();
+            var id = (short)((DataRowView)this.bs.Current)[0];
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/account-providers/" + id.ToString()))
+            using (var reader = new IO.Reader(stream))
+            {
+                if (reader.ReadBoolean())
+                {
+                    form.Provider.Id = reader.ReadInt16();
+                    form.Provider.Name = reader.ReadString();
+                    form.Provider.Type = reader.ReadInt16();
+                }
+            }
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                await LoadDataAsync();
+            }
+        }
+    }
+}
