@@ -34,7 +34,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetCategoryDataTable(), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetCategoryDataTable(), "application/octet-stream");
 
             var sb = new StringBuilder();
             await sb.AppendCategoryTableAsync(db);
@@ -42,7 +42,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetCategory(id), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetCategory(id), "application/octet-stream");
             else
                 return Results.Ok(CommonResult.Fail("This endpoint is not available for web applications."));
         }

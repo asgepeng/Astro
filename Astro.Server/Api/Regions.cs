@@ -4,6 +4,8 @@ using Astro.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Data;
+using DocumentFormat.OpenXml.InkML;
+using Astro.Server.Extensions;
 
 
 namespace Astro.Server.Api
@@ -16,15 +18,15 @@ namespace Astro.Server.Api
             app.MapGet("data/regions/states/{id}", GetProvincesAsync).RequireAuthorization();
             app.MapGet("data/regions/cities/{id}", GetCitiesAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetCountriesAsync(IDatabase db, HttpContext contxt)
+        internal static async Task<IResult> GetCountriesAsync(IDatabase db, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(contxt.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             var commandText = """
                 select country_id, country_name
                 from countries
                 order by country_name
                 """;
-            if (isWinformApp)
+            if (context.Request.IsDesktopAppRequest())
             {
                 using (var builder = new IO.Writer())
                 {
@@ -56,7 +58,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetProvincesAsync(short id, IDatabase db, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             var commandText = """
                 select state_id, state_name
                 from states
@@ -101,7 +103,7 @@ namespace Astro.Server.Api
                 where state_id = @id
                 order by city_name;
                 """;
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp)
             {
                 using (var builder = new IO.Writer())

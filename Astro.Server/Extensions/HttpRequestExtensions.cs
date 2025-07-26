@@ -10,7 +10,7 @@ namespace Astro.Server.Extensions
 {
     internal static class HttpRequestExtensions
     {
-        internal static async Task<MemoryStream> GetMemoryStream(this HttpRequest request)
+        internal static async Task<MemoryStream> GetMemoryStreamAsync(this HttpRequest request)
         {
             request.EnableBuffering();
 
@@ -20,7 +20,11 @@ namespace Astro.Server.Extensions
 
             request.Body.Position = 0;
 
-            return memoryStream;
+            return memoryStream;    
+        }
+        internal static bool IsDesktopAppRequest(this HttpRequest request)
+        {
+            return request.Headers.UserAgent.ToString() == "astro.winform.app";     
         }
     }
 }

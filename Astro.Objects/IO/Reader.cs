@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Astro.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +18,7 @@ namespace Astro.IO
         }
         public bool ReadBoolean() => reader.ReadBoolean();
         public byte ReadByte() => reader.ReadByte();
+        public sbyte ReadSByte() => reader.ReadSByte();
         public short ReadInt16() => reader.ReadInt16();
         public ushort ReadUInt16() => reader.ReadUInt16();
         public int ReadInt32() => reader.ReadInt32();
@@ -43,6 +46,40 @@ namespace Astro.IO
             return ticks == 0 ? (DateTime?)null : new DateTime(ticks);
         }
         public bool Read()=> reader.BaseStream.Position < reader.BaseStream.Length;
+        public byte[] ReadByteArray()
+        {
+            var length = reader.ReadInt32();
+            return reader.ReadBytes(length);
+        }
+        public System.Data.DataTable ReadDataTable()
+        {
+            var table = new DataTable();
+            var colCount = ReadByte();
+            var types = new DbType[colCount];
+
+            for (int i = 0; i < colCount; i++)
+            {
+                var colName = ReadString();
+                types[i] = (DbType)ReadByte();
+                table.Columns.Add(colName, types[i].ToType());
+            }
+            try
+            {
+                var rowCount = ReadInt32();
+                for (int i = 0; i < rowCount; i++)
+                {
+                    var values = new object[colCount];
+                    for (int j = 0; j < colCount; j++)
+                    {
+                        values[j] = this.ReadCell(types[j]);
+                    }
+                    table.Rows.Add(values);
+                }
+            }
+            catch { }
+            
+            return table;
+        }
         public Guid? ReadGuid()
         {
             if (reader.ReadBoolean())

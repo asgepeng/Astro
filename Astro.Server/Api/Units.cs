@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using System.Data;
 using System.Data.Common;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Api
 {
@@ -21,7 +22,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetUnitDataTable(), "application/octet-stream");
             else
             {
@@ -31,7 +32,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetUnit(id), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUnit(id), "application/octet-stream");
             else return Results.Ok(CommonResult.Fail("This endpoint is not available for web applications."));
         }
         private static async Task<IResult> CreateAsync(Unit unit, IDatabase db, HttpContext context)

@@ -6,6 +6,8 @@ using System.Data.Common;
 using System.Globalization;
 using Npgsql;
 using System.Data;
+using Org.BouncyCastle.Asn1.X509.Qualified;
+using System.Collections.Concurrent;
 
 namespace Astro.Data
 {

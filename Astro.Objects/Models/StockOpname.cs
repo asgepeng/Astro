@@ -10,8 +10,10 @@ namespace Astro.Models
     public class StockOpname
     {
         [JsonPropertyName("id")]
-        public int Id { get; set; } = 0;
+        public Guid Id { get; set; } = Guid.NewGuid();
         [JsonPropertyName("date")]
         public DateTime Date { get; set; } = DateTime.UtcNow;
+        [JsonPropertyName("product")]
+        public int ProductId { get; set; } = 0;
     }
 }

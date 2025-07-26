@@ -9,6 +9,7 @@ using System.Text;
 using System.Data;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
+using Microsoft.AspNetCore.Routing;
 
 namespace Astro.Server.Api
 {
@@ -21,12 +22,11 @@ namespace Astro.Server.Api
             app.MapPost("/data/users", CreateAsync).RequireAuthorization();
             app.MapPut("/data/users", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/users/{id}", DeleteAsync).RequireAuthorization();
-            app.MapGet("data/users/role-options", GetRoleOptionsAsync).RequireAuthorization();
+            app.MapGet("/data/users/role-options", GetRoleOptionsAsync).RequireAuthorization();
         }
         internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var winFormApp = Application.IsWinformApp(context.Request);
-            if (winFormApp)
+            if (context.Request.IsDesktopAppRequest())
             {
                 return Results.File(await db.GetUserDataTable(), "application/octet-stream");
             }
@@ -39,7 +39,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp)
             {
                 var data = await db.GetUser(id);

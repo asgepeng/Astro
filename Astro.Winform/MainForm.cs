@@ -100,6 +100,18 @@ namespace PointOfSale
                 case 10:
                     OpenOrCreateListingForm(ListingData.Accounts);
                     break;
+                case 11:
+                    var soForm = new StockOpnameForm();
+                    soForm.MdiParent = this;
+                    soForm.Show();
+                    soForm.WindowState = FormWindowState.Maximized;
+                    break;
+                case 12:
+                    var pForm = new PurchaseForm();
+                    pForm.MdiParent = this;
+                    pForm.Show();
+                    pForm.WindowState = FormWindowState.Maximized;
+                    break;
             }
         }
         private void OpenOrCreateListingForm(ListingData type)
@@ -180,6 +192,15 @@ namespace PointOfSale
         private void OpenAccountProviderForm(object sender, EventArgs e)
         {
             var form = new ListAccountProviderForm();
+            form.ShowDialog();
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            var form = new ListingPopUpForm("SELECT * FROM products WHERE is_deleted = false");
+            form.AddColumn("Product Name", "product_name", 300);
+            form.AddColumn("SKU", "product_sku", 180);
+            form.AddColumn("Price", "price", 100, DataGridViewContentAlignment.MiddleRight, "N0");
             form.ShowDialog();
         }
     }

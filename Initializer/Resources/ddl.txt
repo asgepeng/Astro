@@ -348,3 +348,35 @@ CREATE TABLE cashflows
     `createdDate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_cashflows PRIMARY KEY (`id`)
 );
+create table auto_numbers
+(
+	rec_id int not null primary key,
+	so int not null default 1,
+	pb int not null default 1,
+	rt int not null default 1,
+	pj int not null default 1,
+	rj int not null default 1
+);
+CREATE TABLE stock_flows
+(
+    id UUID NOT NULL PRIMARY KEY,
+    type SMALLINT NOT NULL DEFAULT 0,
+    stock INT NOT NULL DEFAULT 0,
+    qty INT NOT NULL DEFAULT 0,
+    notes VARCHAR(255) NOT NULL DEFAULT '',
+    user_id SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+create table stock_opnames
+(
+    so_id               UUID            NOT NULL PRIMARY KEY,
+    so_number           VARCHAR(25)     NOT NULL DEFAULT '',
+    so_date             TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    product_id          SMALLINT        NOT NULL DEFAULT 0,
+    system_stock        INT             NOT NULL DEFAULT 0,
+    actual_stock        INT             NOT NULL DEFAULT 0,
+    status              SMALLINT        NOT NULL DEFAULT 0,
+    notes               VARCHAR(255)    NOT NULL DEFAULT '',
+    user_id             SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+)

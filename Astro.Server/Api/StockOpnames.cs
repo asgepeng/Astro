@@ -2,6 +2,7 @@
 using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
+using Astro.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -22,7 +23,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetAccountDataTable(), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountDataTable(), "application/octet-stream");
             return Results.Ok();
         }
         private static async Task<IResult> GetByIdAsync(int id, IDatabase db, HttpContext context)

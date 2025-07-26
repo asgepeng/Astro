@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             toolTipGlobal = new ToolTip(components);
             ms = new MenuStrip();
             statusStrip1 = new StatusStrip();
@@ -47,9 +48,10 @@
             spr3 = new ToolStripSeparator();
             categortButton = new ToolStripButton();
             unitButton = new ToolStripButton();
+            apButton = new ToolStripButton();
             searchTextBox = new ToolStripTextBox();
             searchLabel = new ToolStripLabel();
-            apButton = new ToolStripButton();
+            toolStripButton1 = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -86,7 +88,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel });
+            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1 });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -211,6 +213,16 @@
             unitButton.Text = "Units";
             unitButton.Click += unitButton_Click;
             // 
+            // apButton
+            // 
+            apButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            apButton.Image = Astro.Winform.Properties.Resources.cashflow;
+            apButton.ImageTransparentColor = Color.Magenta;
+            apButton.Name = "apButton";
+            apButton.Size = new Size(28, 28);
+            apButton.Text = "Account Providers";
+            apButton.Click += OpenAccountProviderForm;
+            // 
             // searchTextBox
             // 
             searchTextBox.Alignment = ToolStripItemAlignment.Right;
@@ -229,15 +241,15 @@
             searchLabel.Size = new Size(69, 28);
             searchLabel.Text = "🔍 Search";
             // 
-            // apButton
+            // toolStripButton1
             // 
-            apButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            apButton.Image = Astro.Winform.Properties.Resources.cashflow;
-            apButton.ImageTransparentColor = Color.Magenta;
-            apButton.Name = "apButton";
-            apButton.Size = new Size(28, 28);
-            apButton.Text = "Account Providers";
-            apButton.Click += OpenAccountProviderForm;
+            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
+            toolStripButton1.ImageTransparentColor = Color.Magenta;
+            toolStripButton1.Name = "toolStripButton1";
+            toolStripButton1.Size = new Size(28, 28);
+            toolStripButton1.Text = "toolStripButton1";
+            toolStripButton1.Click += toolStripButton1_Click;
             // 
             // MainForm
             // 
@@ -284,5 +296,6 @@
         private ToolStripTextBox searchTextBox;
         private ToolStripLabel searchLabel;
         private ToolStripButton apButton;
+        private ToolStripButton toolStripButton1;
     }
 }

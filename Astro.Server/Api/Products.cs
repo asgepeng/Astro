@@ -21,6 +21,7 @@ namespace Astro.Server.Api
             app.MapPost("/data/products", CreateAsync).RequireAuthorization();
             app.MapPut("/data/products", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/products/{id}", DeleteAsync).RequireAuthorization();
+            app.MapGet("/test/datatable", GetDataTableAsync);
         }
         internal static async Task<IResult> GetAllAsync(
             [FromQuery] int? pg,
@@ -31,7 +32,7 @@ namespace Astro.Server.Api
             IDatabase db, HttpContext context)
         {
 
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetProductDataTable(), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProductDataTable(), "application/octet-stream");
             else
             {
                 var pagination = new Pagination()
@@ -49,7 +50,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetProduct(id), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProduct(id), "application/octet-stream");
             else
             {
                 return Results.NotFound();
@@ -169,6 +170,19 @@ namespace Astro.Server.Api
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameter);
             return success ? Results.Ok(CommonResult.Ok("Product have benn succesfully deleted")) : Results.Problem("An error occurred while deleting the product. Please try again later.");
+        }
+        private static async Task<IResult> GetDataTableAsync(IDatabase db)
+        {
+            var data = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    await writer.WriteDataTableAsync(reader);
+                }, "SELECT * FROM products WHERE is_deleted = false");
+                data = writer.ToArray();
+            }
+            return Results.File(data, "application/octet-stream");
         }
         private static async Task<bool> IsBarcodeUsed(IDatabase db, Product product)
         {

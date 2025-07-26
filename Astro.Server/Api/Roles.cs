@@ -23,7 +23,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetRoleDataTable(), "application/octet-stream");
             else
             {
@@ -34,7 +34,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetByIdAsync(IDatabase db, short id, HttpContext context)
         {
-            var isWinformApp = Application.IsWinformApp(context.Request);
+            var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetRole(id), "application/octet-stream");
 
             Role? role = null;

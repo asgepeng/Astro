@@ -52,14 +52,6 @@ namespace Astro.Helpers
             }
             return token is null ? "" : token;
         }
-        internal static string GetUserAgent(HttpRequest request)
-        {
-            return request.Headers.UserAgent.ToString();
-        }
-        internal static bool IsWinformApp(HttpRequest request)
-        {
-            return GetUserAgent(request) == "astro.winform.app";
-        }
     }
 
     public static class ExcelHelper

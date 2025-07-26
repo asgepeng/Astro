@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Astro.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +20,7 @@ namespace Astro.IO
         }
         public void WriteBoolean(bool value) => writer.Write(value);
         public void WriteByte(byte value) => writer.Write(value);
+        public void WriteSByte(sbyte value) => writer.Write(value);
         public void WriteInt16(short value) => writer.Write(value);
         public void WriteUInt16(ushort value) => writer.Write(value);
         public void WriteInt32(int value) => writer.Write(value);
@@ -49,6 +52,11 @@ namespace Astro.IO
             }
             else writer.Write(false);
         }
+        public void WriteByteArray(byte[] bytes)
+        {
+            WriteInt32(bytes.Length);
+            writer.Write(bytes);
+        }
         public long ReserveInt16()
         {
             WriteInt16(0);
@@ -63,6 +71,32 @@ namespace Astro.IO
         {
             WriteInt64(0L);
             return writer.BaseStream.Position - 8;
+        }
+        public async Task WriteDataTableAsync(System.Data.Common.DbDataReader reader)
+        {
+            var colCount = reader.FieldCount;
+            var types = new DbType[colCount];
+
+            WriteByte((byte)colCount);
+            if (colCount == 0) return;
+
+            for (int i = 0; i < colCount; i++)
+            {
+                WriteString(reader.GetName(i));
+                types[i] = (DbType)reader.GetDbType(i);
+                WriteByte((byte)types[i]);
+            }
+            var rowCount = 0;
+            var iPos = ReserveInt32();
+            while (await reader.ReadAsync())
+            {
+                for (int i = 0; i < colCount; i++)
+                {
+                    reader.Copy(i, this, types[i]);
+                }
+                rowCount++;
+            }
+            WriteInt32(rowCount, iPos);
         }
         public byte[] ToArray()
         {

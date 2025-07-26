@@ -112,7 +112,7 @@ namespace Astro.Winform.Classes
             }
             return Stream.Null;
         }
-        internal static async Task<Stream> GetStreamAsync(string url)
+        internal static async Task<Stream> PostStreamAsync(string url, byte[] content)
         {
             if (My.Application.ApiToken == "")
             {
@@ -120,6 +120,32 @@ namespace Astro.Winform.Classes
                 return Stream.Null;
             }
 
+            var endpoint = CreateUri(url);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            if (content.Length > 0) request.Content = new ByteArrayContent(content);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
+
+            try
+            {
+                HttpResponseMessage response = await Instance.SendAsync(request);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return Stream.Null;
+        }
+        internal static async Task<Stream> GetStreamAsync(string url)
+        {
             var endpoint = CreateUri(url);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, endpoint);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);

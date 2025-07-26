@@ -9,6 +9,8 @@ using System.Data.Common;
 using System.Data;
 using Astro.Server.Binaries;
 using Astro.Server.Memory;
+using Microsoft.AspNetCore.Routing;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Api
 {
@@ -71,7 +73,7 @@ namespace Astro.Server.Api
                 return Results.Problem("We were unable to generate your access token. Please contact your administrator for assistance");
             }
 
-            if (Application.IsWinformApp(context.Request))
+            if (context.Request.IsDesktopAppRequest())
             {
                 using (var writer =new IO.Writer())
                 {
@@ -127,7 +129,7 @@ namespace Astro.Server.Api
         internal static async Task<IResult> GetPermissionsAsync(IDatabase db, HttpContext context)
         {
             var roleId = Application.GetRoleID(context);
-            if (Application.IsWinformApp(context.Request)) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
 
             var commandText = """
                 SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete

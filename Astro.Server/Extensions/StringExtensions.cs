@@ -12,5 +12,9 @@ namespace Astro.Server.Extensions
         {
             return value.Replace("'", "''");
         }
+        internal static int ToInt32(this string value, int defaultValue = 0)
+        {
+            return int.TryParse(value, out int outValue) ? outValue : defaultValue;
+        }
     }
 }

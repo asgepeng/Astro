@@ -16,5 +16,15 @@ namespace Astro.Winform.Helpers
                 e.Handled = true;
             }
         }
+        internal static void FilterAlphaNumeric(this KeyPressEventArgs e)
+        {
+            char c = e.KeyChar;
+
+            if (!char.IsLetterOrDigit(c) && c != 8) // 8 = Backspace
+            {
+                e.Handled = true;
+            }
+        }
+
     }
 }
