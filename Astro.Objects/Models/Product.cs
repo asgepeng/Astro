@@ -75,7 +75,7 @@ namespace Astro.Models
         [DisplayName("Cost Average")]
         public long CostAverage { get; set; }
         [JsonPropertyName("images")]
-        public string Images { get; set; }
+        public string Images { get; set; } = string.Empty;
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.Product);
         public static Product? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.Product);
         public static Product Create(IO.Reader reader) => new Product(reader);

@@ -103,7 +103,7 @@ namespace Astro.Extensions
                 new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime, (reader, ordinal, writer) => { var val = reader.IsDBNull(ordinal) ? DateTime.MinValue : reader.GetDateTime(ordinal); writer.WriteDateTime(val); }),
                 new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime2, (reader, ordinal, writer) => { var val = reader.GetDateTime(ordinal); writer.WriteDateTime(val); }),
                 new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTimeOffset, (reader, ordinal, writer) => { var val = (DateTimeOffset)reader.GetValue(ordinal); writer.WriteDateTime(val.DateTime); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Binary, (reader, ordinal, writer) => { var val = (byte[])reader.GetValue(ordinal); writer.WriteByteArray(val); }),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Binary, (reader, ordinal, writer) => { var val = (byte[])reader.GetValue(ordinal); writer.WriteBytes(val); }),
                 new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Time, (reader, ordinal, writer) => { var val = (TimeSpan)reader.GetValue(ordinal); writer.WriteInt64(val.Ticks); }),
                 new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Object, (reader, ordinal, writer) => { var val = reader.GetValue(ordinal).ToString(); writer.WriteString(val); })
             }
@@ -129,7 +129,7 @@ namespace Astro.Extensions
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.DateTime, r => r.ReadDateTime()),
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.DateTime2, r => r.ReadDateTime()),
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.DateTimeOffset, r => new DateTimeOffset(r.ReadDateTime())),
-                new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.Binary, r => r.ReadByteArray()),
+                new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.Binary, r => r.ReadBytes()),
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.Time, r => new TimeSpan(r.ReadInt64())),
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.Object, r => r.ReadString())
             }

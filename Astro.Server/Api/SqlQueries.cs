@@ -22,19 +22,28 @@ namespace Astro.Server.Api
             using (var stream = await context.Request.GetMemoryStreamAsync())
             using (var reader = new IO.Reader(stream))
             {
-                var key = reader.ReadByte();
+                var guid = reader.ReadGuid();
+                if (guid is null) return Results.BadRequest("Bad request: missing GUID.");
+
+                var key = guid.Value.ToByteArray();
                 var encrypted = reader.ReadString();
                 commandText = Cryptography.SimpleEncryption.Decrypt(encrypted, key);
             }
-
+            var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
                     await writer.WriteDataTableAsync(reader); 
                 }, commandText);
-                return Results.File(writer.ToArray(), "application/octet-stream");
-            }
+                if (writer.GetLength() == 0)
+                {
+                    writer.WriteByte(2);
+                    writer.WriteString("An error occured while executing your Sql syntax, please check your syntaxtx and try again.");
+                }
+                data = writer.ToArray();
+                return Results.File(data, "application/octet-stream");
+            }            
         }
     }
 }

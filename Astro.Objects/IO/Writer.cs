@@ -52,7 +52,7 @@ namespace Astro.IO
             }
             else writer.Write(false);
         }
-        public void WriteByteArray(byte[] bytes)
+        public void WriteBytes(byte[] bytes)
         {
             WriteInt32(bytes.Length);
             writer.Write(bytes);
@@ -76,7 +76,15 @@ namespace Astro.IO
         {
             var colCount = reader.FieldCount;
             var types = new DbType[colCount];
-
+            if (colCount > 0)
+            {
+                WriteByte(1);
+            }
+            else 
+            {
+                WriteByte(0);
+                return;
+            }
             WriteByte((byte)colCount);
             if (colCount == 0) return;
 
@@ -98,6 +106,7 @@ namespace Astro.IO
             }
             WriteInt32(rowCount, iPos);
         }
+        public long GetLength() => stream.Length;
         public byte[] ToArray()
         {
             writer.Flush();

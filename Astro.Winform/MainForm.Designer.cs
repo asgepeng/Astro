@@ -52,6 +52,7 @@
             searchTextBox = new ToolStripTextBox();
             searchLabel = new ToolStripLabel();
             toolStripButton1 = new ToolStripButton();
+            sqlButton = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -88,7 +89,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1 });
+            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1, sqlButton });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -251,6 +252,16 @@
             toolStripButton1.Text = "toolStripButton1";
             toolStripButton1.Click += toolStripButton1_Click;
             // 
+            // sqlButton
+            // 
+            sqlButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            sqlButton.Image = (Image)resources.GetObject("sqlButton.Image");
+            sqlButton.ImageTransparentColor = Color.Magenta;
+            sqlButton.Name = "sqlButton";
+            sqlButton.Size = new Size(28, 28);
+            sqlButton.Text = "Sql Execute";
+            sqlButton.Click += sqlButton_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -297,5 +308,6 @@
         private ToolStripLabel searchLabel;
         private ToolStripButton apButton;
         private ToolStripButton toolStripButton1;
+        private ToolStripButton sqlButton;
     }
 }

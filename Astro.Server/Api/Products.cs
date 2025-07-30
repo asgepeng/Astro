@@ -21,7 +21,6 @@ namespace Astro.Server.Api
             app.MapPost("/data/products", CreateAsync).RequireAuthorization();
             app.MapPut("/data/products", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/products/{id}", DeleteAsync).RequireAuthorization();
-            app.MapGet("/test/datatable", GetDataTableAsync);
         }
         internal static async Task<IResult> GetAllAsync(
             [FromQuery] int? pg,
@@ -170,19 +169,6 @@ namespace Astro.Server.Api
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameter);
             return success ? Results.Ok(CommonResult.Ok("Product have benn succesfully deleted")) : Results.Problem("An error occurred while deleting the product. Please try again later.");
-        }
-        private static async Task<IResult> GetDataTableAsync(IDatabase db)
-        {
-            var data = Array.Empty<byte>();
-            using (var writer = new IO.Writer())
-            {
-                await db.ExecuteReaderAsync(async reader =>
-                {
-                    await writer.WriteDataTableAsync(reader);
-                }, "SELECT * FROM products WHERE is_deleted = false");
-                data = writer.ToArray();
-            }
-            return Results.File(data, "application/octet-stream");
         }
         private static async Task<bool> IsBarcodeUsed(IDatabase db, Product product)
         {

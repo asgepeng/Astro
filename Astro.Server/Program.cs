@@ -55,6 +55,7 @@ app.MapCustomerEndPoints();
 app.MapAccountEndPoints();
 app.MapAccountProviderEndPoints();
 
+app.MapDocumentEndPoints();
 app.MapSqlQueryEndPoints();
 app.MapControllers();
 

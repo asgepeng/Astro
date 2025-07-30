@@ -203,5 +203,11 @@ namespace PointOfSale
             form.AddColumn("Price", "price", 100, DataGridViewContentAlignment.MiddleRight, "N0");
             form.ShowDialog();
         }
+
+        private void sqlButton_Click(object sender, EventArgs e)
+        {
+            var form = new SqlExecuteForm();
+            form.ShowDialog();
+        }
     }
 }

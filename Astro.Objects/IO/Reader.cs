@@ -46,7 +46,7 @@ namespace Astro.IO
             return ticks == 0 ? (DateTime?)null : new DateTime(ticks);
         }
         public bool Read()=> reader.BaseStream.Position < reader.BaseStream.Length;
-        public byte[] ReadByteArray()
+        public byte[] ReadBytes()
         {
             var length = reader.ReadInt32();
             return reader.ReadBytes(length);

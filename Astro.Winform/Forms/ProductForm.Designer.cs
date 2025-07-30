@@ -63,6 +63,7 @@
             commanTabPage = new TabPage();
             label4 = new Label();
             tabControl = new TabControl();
+            button7 = new Button();
             ((System.ComponentModel.ISupportInitialize)productImage).BeginInit();
             commanTabPage.SuspendLayout();
             tabControl.SuspendLayout();
@@ -355,6 +356,7 @@
             // 
             // commanTabPage
             // 
+            commanTabPage.Controls.Add(button7);
             commanTabPage.Controls.Add(label9);
             commanTabPage.Controls.Add(stockTextBox);
             commanTabPage.Controls.Add(button4);
@@ -410,6 +412,16 @@
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(979, 485);
             tabControl.TabIndex = 8;
+            // 
+            // button7
+            // 
+            button7.Location = new Point(756, 401);
+            button7.Name = "button7";
+            button7.Size = new Size(76, 32);
+            button7.TabIndex = 107;
+            button7.Text = "Save As";
+            button7.UseVisualStyleBackColor = true;
+            button7.Click += button7_Click;
             // 
             // ProductForm
             // 
@@ -467,5 +479,6 @@
         private TabPage commanTabPage;
         private Label label4;
         private TabControl tabControl;
+        private Button button7;
     }
 }

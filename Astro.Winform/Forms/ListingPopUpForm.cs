@@ -16,7 +16,7 @@ namespace Astro.Winform.Forms
     public partial class ListingPopUpForm : Form
     {
         private readonly string commandText;
-        private readonly byte key;
+        private readonly Guid guid = Guid.NewGuid();
         private readonly BindingSource bs;
 
         private List<string> stringColumns = new List<string>();
@@ -27,16 +27,14 @@ namespace Astro.Winform.Forms
             this.dataGridView1.DataSource = bs;
             this.dataGridView1.AutoGenerateColumns = false;
             this.commandText = cmd;
-
-            var rand = new Random();
-            key = (byte)rand.Next(0, 255);
         }
         private async void ListingPopUpForm_Load(object sender, EventArgs e)
         {
+            var key = guid.ToByteArray();
             var encrypted = SimpleEncryption.Encrypt(commandText, key);
             using (var writer = new IO.Writer())
             {
-                writer.WriteByte(key);
+                writer.WriteGuid(guid);
                 writer.WriteString(encrypted);
 
                 using (var stream = await HttpClientSingleton.PostStreamAsync("/api/sql", writer.ToArray()))

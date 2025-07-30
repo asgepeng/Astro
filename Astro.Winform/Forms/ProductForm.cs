@@ -2,15 +2,7 @@
 using Astro.Text;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using Astro.Winform.Extensions;
 
 namespace Astro.Winform.Forms
 {
@@ -21,8 +13,24 @@ namespace Astro.Winform.Forms
             InitializeComponent();
         }
         public ProductViewModel? Model { get; set; } = null;
-
-        private void ProductForm_Load(object sender, EventArgs e)
+        private List<string> ImageURLs { get; } = new List<string>();
+        private int SelectedImage = 0;
+        private async Task DisplayImage(int index)
+        {
+            if (index < 0 || index >= this.ImageURLs.Count)
+            {
+                return;
+            }
+            using (var stream = await HttpClientSingleton.GetStreamAsync("/documents/download/" + this.ImageURLs[index]))
+            {
+                if (stream != null)
+                {
+                    this.productImage.Image?.Dispose();
+                    this.productImage.Image = Image.FromStream(stream);
+                }
+            }
+        }
+        private async void ProductForm_Load(object sender, EventArgs e)
         {
             if (this.Model != null)
             {
@@ -40,6 +48,16 @@ namespace Astro.Winform.Forms
                     this.maxstockTextBox.Text = this.Model.Product.MaxStock.ToString();
                     this.categoryComboBox.SelectedItem = this.Model.Categories.FirstOrDefault(c => c.Id == this.Model.Product.Category);
                     this.unitComboBox.SelectedItem = this.Model.Units.FirstOrDefault(u => u.Id == this.Model.Product.Unit);
+
+                    var arrImage = this.Model.Product.Images.Split(';');
+                    foreach (var image in arrImage)
+                    {
+                        if (!string.IsNullOrWhiteSpace(image))
+                        {
+                            this.ImageURLs.Add(image);
+                        }
+                    }
+                    await DisplayImage(0);
                 }
             }
             this.unitComboBox.DisplayMember = "Text";
@@ -75,13 +93,13 @@ namespace Astro.Winform.Forms
             {
                 MessageBox.Show("Unit not yet selected", "Unit", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 unitComboBox.Focus();
-                return;                
+                return;
             }
 
             var product = this.Model.Product != null ? this.Model.Product : new Product();
             product.Name = this.nameTextBox.Text.Trim();
             product.Description = this.descriptionTextBox.Text.Trim();
-            product.Sku  = this.skuTextBox.Text.Trim();
+            product.Sku = this.skuTextBox.Text.Trim();
             product.Category = (short)((Option)this.categoryComboBox.SelectedItem).Id;
             product.Unit = (short)((Option)this.unitComboBox.SelectedItem).Id;
             int.TryParse(stockTextBox.Text, out int productStock);
@@ -92,6 +110,7 @@ namespace Astro.Winform.Forms
             short.TryParse(maxstockTextBox.Text, out short maxStock);
             product.MinStock = minStock;
             product.MaxStock = maxStock;
+            product.Images = string.Join(";", this.ImageURLs);
 
             var result = product.ID > 0 ? await HttpClientSingleton.PutAsync("/data/products", product.ToString()) : await HttpClientSingleton.PostAsync("/data/products", product.ToString());
             var commonResult = CommonResult.Create(result);
@@ -117,6 +136,28 @@ namespace Astro.Winform.Forms
         {
             var tb = (TextBox)sender;
             tb.Text = tb.Text.ToInt64().ToDecimalFormat();
+        }
+
+        private async void button7_Click(object sender, EventArgs e)
+        {
+            var openDialog = new OpenFileDialog();
+            openDialog.Title = "Select image";
+            openDialog.Multiselect = false;
+            openDialog.Filter = "Image Files (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                var bytes = File.ReadAllBytes(openDialog.FileName);
+                var result = await HttpClientSingleton.UploadDocument("/documents/upload", bytes);
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    if (this.Model != null)
+                    {
+                        this.ImageURLs.Add(result);
+                        await this.DisplayImage(this.ImageURLs.Count - 1);
+                    }
+                }
+            }
         }
     }
 }

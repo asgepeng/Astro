@@ -112,14 +112,37 @@ namespace Astro.Winform.Classes
             }
             return Stream.Null;
         }
+        internal static async Task<string> UploadDocument(string url, byte[] file)
+        {
+            var endpoint = CreateUri(url);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            if (file.Length > 0)
+            {
+                request.Content = new ByteArrayContent(file);
+            }
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
+
+            try
+            {
+                HttpResponseMessage response = await Instance.SendAsync(request);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return string.Empty;
+        }
         internal static async Task<Stream> PostStreamAsync(string url, byte[] content)
         {
-            if (My.Application.ApiToken == "")
-            {
-                MessageBox.Show("Anda belum login silakan menutup aplikasi dan membukanya kembali untuk login", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return Stream.Null;
-            }
-
             var endpoint = CreateUri(url);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             if (content.Length > 0) request.Content = new ByteArrayContent(content);
@@ -152,15 +175,18 @@ namespace Astro.Winform.Classes
 
             try
             {
-                HttpResponseMessage response = await Instance.SendAsync(request);
-                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
-
-                switch (response.StatusCode)
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
                 {
-                    case System.Net.HttpStatusCode.InternalServerError:
-                        var problem = await response.GetProbemDetails();
-                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
+                    HttpResponseMessage response = await Instance.SendAsync(request, cts.Token);
+                    if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
+
+                    switch (response.StatusCode)
+                    {
+                        case System.Net.HttpStatusCode.InternalServerError:
+                            var problem = await response.GetProbemDetails();
+                            if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            break;
+                    }
                 }
             }
             catch (Exception ex)
