@@ -20,11 +20,11 @@ namespace Astro.Extensions
     public static class TypeMappings
     {
         public static DbType Get(Type tp) => typeDict.TryGetValue(tp, out var type) ? type : DbType.Int32;
-        public static void Copy(this System.Data.Common.DbDataReader reader, int ordinal, IO.Writer writer, DbType type)
+        public static void SetData(this System.Data.Common.DbDataReader reader, int ordinal, IO.Writer writer, DbType type)
         {
             actions[type].Invoke(reader, ordinal, writer);
         }
-        public static object ReadCell(this IO.Reader reader, DbType type)
+        public static object GetData(this IO.Reader reader, DbType type)
         {
             return functions[type].Invoke(reader);
         }
@@ -56,8 +56,7 @@ namespace Astro.Extensions
                 _ => throw new NotSupportedException($"DbType {dbType} is not supported.")
             };
         }
-
-        private static readonly ConcurrentDictionary<Type, DbType> typeDict = new ConcurrentDictionary<Type, DbType>(
+        private static readonly Dictionary<Type, DbType> typeDict = new Dictionary<Type, DbType>(
             new[]
             {
                 new KeyValuePair<Type, DbType>(typeof(bool), DbType.Boolean),
@@ -82,33 +81,33 @@ namespace Astro.Extensions
                 new KeyValuePair<Type, DbType>(typeof(object), DbType.Object)
             }
         );
-        private static readonly ConcurrentDictionary<DbType, Action<DbDataReader, int, IO.Writer>> actions = new ConcurrentDictionary<DbType, Action<DbDataReader, int, IO.Writer>>(
+        private static readonly Dictionary<DbType, Action<DbDataReader, int, IO.Writer>> actions = new Dictionary<DbType, Action<DbDataReader, int, IO.Writer>>(
             new[]
             {
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Boolean, (reader, ordinal, writer) => { var val = reader.GetBoolean(ordinal); writer.WriteBoolean(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Byte, (reader, ordinal, writer) => { var val = reader.GetByte(ordinal); writer.WriteByte(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.SByte, (reader, ordinal, writer) => { var val = (sbyte)reader.GetByte(ordinal); writer.WriteSByte(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int16, (reader, ordinal, writer) => { var val = reader.IsDBNull(ordinal) ? (short)0 : reader.GetInt16(ordinal); writer.WriteInt16(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt16, (reader, ordinal, writer) => { var val = (ushort)reader.GetInt16(ordinal); writer.WriteUInt16(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int32, (reader, ordinal, writer) => { var val = reader.GetInt32(ordinal); writer.WriteInt32(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt32, (reader, ordinal, writer) => { var val = (uint)reader.GetInt32(ordinal); writer.WriteUInt32(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int64, (reader, ordinal, writer) => { var val = reader.GetInt64(ordinal); writer.WriteInt64(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt64, (reader, ordinal, writer) => { var val = (ulong)reader.GetInt64(0); writer.WriteUInt64(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Single, (reader, ordinal, writer) => { var val = reader.GetFloat(ordinal); writer.WriteSingle(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Double, (reader, ordinal, writer) => { var val = reader.GetDouble(ordinal); writer.WriteDouble(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Decimal, (reader, ordinal, writer) => { var val = reader.GetDecimal(ordinal); writer.WriteDecimal(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.String, (reader, ordinal, writer) => { var val = reader.GetString(ordinal); writer.WriteString(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.StringFixedLength, (reader, ordinal, writer) => { var val = reader.GetString(ordinal); writer.WriteString(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Guid, (reader, ordinal, writer) => { var val = reader.IsDBNull(ordinal) ? Guid.NewGuid() : reader.GetGuid(ordinal); writer.WriteGuid(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime, (reader, ordinal, writer) => { var val = reader.IsDBNull(ordinal) ? DateTime.MinValue : reader.GetDateTime(ordinal); writer.WriteDateTime(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime2, (reader, ordinal, writer) => { var val = reader.GetDateTime(ordinal); writer.WriteDateTime(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTimeOffset, (reader, ordinal, writer) => { var val = (DateTimeOffset)reader.GetValue(ordinal); writer.WriteDateTime(val.DateTime); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Binary, (reader, ordinal, writer) => { var val = (byte[])reader.GetValue(ordinal); writer.WriteBytes(val); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Time, (reader, ordinal, writer) => { var val = (TimeSpan)reader.GetValue(ordinal); writer.WriteInt64(val.Ticks); }),
-                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Object, (reader, ordinal, writer) => { var val = reader.GetValue(ordinal).ToString(); writer.WriteString(val); })
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Boolean, (r, o, w) => w.WriteBoolean(r.IsDBNull(o) ? default : r.GetBoolean(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Byte, (r, o, w) => w.WriteByte(r.IsDBNull(o) ? default : r.GetByte(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.SByte, (r, o, w) => w.WriteSByte(r.IsDBNull(o) ? default : (sbyte)r.GetByte(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int16, (r, o, w) => w.WriteInt16(r.IsDBNull(o) ? default : r.GetInt16(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt16, (r, o, w) => w.WriteUInt16(r.IsDBNull(o) ? default : (ushort)r.GetInt16(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int32, (r, o, w) => w.WriteInt32(r.IsDBNull(o) ? default : r.GetInt32(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt32, (r, o, w) => w.WriteUInt32(r.IsDBNull(o) ? default : (uint)r.GetInt32(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Int64, (r, o, w) => w.WriteInt64(r.IsDBNull(o) ? default : r.GetInt64(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.UInt64, (r, o, w) => w.WriteUInt64(r.IsDBNull(o) ? default : (ulong)r.GetInt64(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Single, (r, o, w) => w.WriteSingle(r.IsDBNull(o) ? default : r.GetFloat(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Double, (r, o, w) => w.WriteDouble(r.IsDBNull(o) ? default : r.GetDouble(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Decimal, (r, o, w) => w.WriteDecimal(r.IsDBNull(o) ? default : r.GetDecimal(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.String, (r, o, w) => w.WriteString(r.IsDBNull(o) ? string.Empty : r.GetString(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.StringFixedLength, (r, o, w) => w.WriteString(r.IsDBNull(o) ? string.Empty : r.GetString(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Guid, (r, o, w) => w.WriteGuid(r.IsDBNull(o) ? Guid.Empty : r.GetGuid(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime, (r, o, w) => w.WriteDateTime(r.IsDBNull(o) ? DateTime.MinValue : r.GetDateTime(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTime2, (r, o, w) => w.WriteDateTime(r.IsDBNull(o) ? DateTime.MinValue : r.GetDateTime(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.DateTimeOffset, (r, o, w) => w.WriteDateTime(r.IsDBNull(o) ? DateTime.MinValue : ((DateTimeOffset)r.GetValue(o)).DateTime)),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Binary, (r, o, w) => w.WriteBytes(r.IsDBNull(o) ? Array.Empty<byte>() : (byte[])r.GetValue(o))),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Time, (r, o, w) => w.WriteInt64(r.IsDBNull(o) ? 0L : ((TimeSpan)r.GetValue(o)).Ticks)),
+                new KeyValuePair<DbType, Action<DbDataReader, int, IO.Writer>>(DbType.Object, (r, o, w) => w.WriteString(r.IsDBNull(o) ? string.Empty : r.GetValue(o).ToString()))
             }
         );
-        private static readonly ConcurrentDictionary<DbType, Func<IO.Reader, object>> functions = new ConcurrentDictionary<DbType, Func<IO.Reader, object>>(
+        private static readonly Dictionary<DbType, Func<IO.Reader, object>> functions = new Dictionary<DbType, Func<IO.Reader, object>>(
             new[]
             {
                 new KeyValuePair<DbType, Func<IO.Reader, object>>(DbType.Boolean, r => r.ReadBoolean()),

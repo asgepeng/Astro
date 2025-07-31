@@ -11,10 +11,6 @@ namespace Astro.Text
 {
     public static class Convert
     {
-        private static readonly Regex EmailRegex = new Regex(
-        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         public static int ToInt32(string value, CultureInfo culterInfo = null)
         {
             if (culterInfo is null) culterInfo = new CultureInfo("id-ID");
@@ -46,12 +42,6 @@ namespace Astro.Text
             }
             return 0;
         }
-        public static bool IsValidEmailFormat(this string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return false;
-
-            return EmailRegex.IsMatch(value);
-        }
+        
     }
 }

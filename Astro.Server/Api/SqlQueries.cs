@@ -1,4 +1,5 @@
-﻿using Astro.Data;
+﻿using Astro.Cryptography;
+using Astro.Data;
 using Astro.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +28,7 @@ namespace Astro.Server.Api
 
                 var key = guid.Value.ToByteArray();
                 var encrypted = reader.ReadString();
-                commandText = Cryptography.SimpleEncryption.Decrypt(encrypted, key);
+                commandText = encrypted.Decrypt(key);
             }
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())

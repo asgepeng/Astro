@@ -37,7 +37,7 @@ namespace Astro.Winform.Forms
                 return;
             }
             Category.Name = this.textBox1.Text.Trim();
-            var json = Category.Id > 0 ? await HttpClientSingleton.PutAsync("/data/categories", Category.ToString()) : await HttpClientSingleton.PostAsync("/data/categories", Category.ToString());
+            var json = Category.Id > 0 ? await WClient.PutAsync("/data/categories", Category.ToString()) : await WClient.PostAsync("/data/categories", Category.ToString());
             var commondResult = CommonResult.Create(json);
             if (commondResult != null)
             {

@@ -33,7 +33,7 @@ namespace Astro.Winform.Forms
         {
             this.Cursor = Cursors.WaitCursor;
             if (table.Rows.Count > 0) table.Rows.Clear();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/categories"))
+            using (var stream = await WClient.GetStreamAsync("/data/categories"))
             using (var reader = new IO.Reader(stream))
             {
                 while (reader.Read())
@@ -70,7 +70,7 @@ namespace Astro.Winform.Forms
             if (this.bs.Current is null) return;
 
             var id = (short)((DataRowView)this.bs.Current)[0];
-            var json = await HttpClientSingleton.DeleteAsync($"/data/categories/{id}");
+            var json = await WClient.DeleteAsync($"/data/categories/{id}");
             await LoadDataAsync();
         }
 
@@ -81,7 +81,7 @@ namespace Astro.Winform.Forms
             if (bs.Current is null) return;
             var id = (short)((DataRowView)this.bs.Current)[0];
             var form = new CategoryForm() { Category = new Models.Category() };
-            using (var stream = await HttpClientSingleton.GetStreamAsync($"/data/categories/{id}"))
+            using (var stream = await WClient.GetStreamAsync($"/data/categories/{id}"))
             using (var reader = new IO.Reader(stream))
             {
                 if (reader.Read())

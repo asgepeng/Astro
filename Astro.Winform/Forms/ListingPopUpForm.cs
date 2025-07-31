@@ -31,24 +31,35 @@ namespace Astro.Winform.Forms
         private async void ListingPopUpForm_Load(object sender, EventArgs e)
         {
             var key = guid.ToByteArray();
-            var encrypted = SimpleEncryption.Encrypt(commandText, key);
+            var encrypted = Encryption.Encrypt(commandText, key);
             using (var writer = new IO.Writer())
             {
                 writer.WriteGuid(guid);
                 writer.WriteString(encrypted);
 
-                using (var stream = await HttpClientSingleton.PostStreamAsync("/api/sql", writer.ToArray()))
+                using (var stream = await WClient.PostStreamAsync("/api/sql", writer.ToArray()))
                 using (var reader = new IO.Reader(stream))
                 {
-                    var table = reader.ReadDataTable();
-                    foreach (DataColumn col in table.Columns)
+                    var result = reader.ReadByte();
+                    if (result == 1)
                     {
-                        if (col.DataType.Equals(typeof(string)))
+                        var table = reader.ReadDataTable();
+                        dataGridView1.DataSource = table;
+                        foreach (DataColumn col in table.Columns)
                         {
-                            stringColumns.Add(col.ColumnName);
+                            if (col.DataType.Equals(typeof(string)))
+                            {
+                                stringColumns.Add(col.ColumnName);
+                            }
                         }
+                        this.bs.DataSource = table;
                     }
-                    this.bs.DataSource = table;
+                    else if (result == 2)
+                    {
+                        var message = reader.ReadString();
+                        MessageBox.Show(message);
+                    }
+                    
                     this.textBox1.Enabled = true;
                     this.dataGridView1.Enabled = true;
                     this.button1.Enabled = true;

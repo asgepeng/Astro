@@ -100,7 +100,7 @@ namespace Astro.IO
             {
                 for (int i = 0; i < colCount; i++)
                 {
-                    reader.Copy(i, this, types[i]);
+                    reader.SetData(i, this, types[i]);
                 }
                 rowCount++;
             }

@@ -45,7 +45,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("@name", unit.Name.Trim(), DbType.String),
-                db.CreateParameter("@creatorId", Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("@creatorId", Helpers.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Unit created successfully.")) 

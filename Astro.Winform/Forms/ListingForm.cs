@@ -148,7 +148,7 @@ namespace Astro.Winform.Forms
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }
-            var result = await HttpClientSingleton.DeleteAsync(url);
+            var result = await WClient.DeleteAsync(url);
             var commonResult = CommonResult.Create(result);
             if (commonResult != null)
             {

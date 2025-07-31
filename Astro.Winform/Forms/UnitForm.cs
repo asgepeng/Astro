@@ -37,7 +37,7 @@ namespace Astro.Winform.Forms
                 return;
             }
             Unit.Name = this.textBox1.Text.Trim();
-            var json = Unit.Id > 0 ? await HttpClientSingleton.PutAsync("/data/units", Unit.ToString()) : await HttpClientSingleton.PostAsync("/data/units", Unit.ToString());
+            var json = Unit.Id > 0 ? await WClient.PutAsync("/data/units", Unit.ToString()) : await WClient.PostAsync("/data/units", Unit.ToString());
             var commondResult = CommonResult.Create(json);
             if (commondResult != null)
             {

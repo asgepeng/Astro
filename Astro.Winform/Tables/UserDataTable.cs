@@ -22,7 +22,7 @@ namespace Astro.DataTables
         }
         internal async override Task LoadAsync()
         {
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/users"))
+            using (var stream = await WClient.GetStreamAsync("/data/users"))
             using (var reader = new IO.Reader(stream))
             {
                 while (reader.Read())

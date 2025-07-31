@@ -15,20 +15,38 @@ namespace Astro.Winform.Forms
         public ProductViewModel? Model { get; set; } = null;
         private List<string> ImageURLs { get; } = new List<string>();
         private int SelectedImage = 0;
-        private async Task DisplayImage(int index)
+        private async Task DisplayImage()
         {
-            if (index < 0 || index >= this.ImageURLs.Count)
+            if (SelectedImage < 0 || SelectedImage >= this.ImageURLs.Count)
             {
                 return;
             }
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/documents/download/" + this.ImageURLs[index]))
+            using (var stream = await WClient.GetStreamAsync("/documents/download/" + this.ImageURLs[SelectedImage]))
             {
-                if (stream != null)
+                if (stream != null && stream.Length > 0)
                 {
-                    this.productImage.Image?.Dispose();
-                    this.productImage.Image = Image.FromStream(stream);
+                    try
+                    {
+                        this.productImage.Image?.Dispose();
+                        this.productImage.Image = Image.FromStream(stream);
+                    }
+                    catch (Exception)
+                    {
+                        this.ImageURLs.RemoveAt(SelectedImage);
+                        this.SelectedImage = 0;
+                    }
                 }
             }
+        }
+        private async Task PreviousImage()
+        {
+            if (SelectedImage > 0) SelectedImage--; ;
+            await DisplayImage();
+        }
+        private async Task NextImage()
+        {
+            if (SelectedImage < this.ImageURLs.Count - 1) SelectedImage++;
+            await DisplayImage();
         }
         private async void ProductForm_Load(object sender, EventArgs e)
         {
@@ -54,10 +72,10 @@ namespace Astro.Winform.Forms
                     {
                         if (!string.IsNullOrWhiteSpace(image))
                         {
-                            this.ImageURLs.Add(image);
+                            this.ImageURLs.Add(image.Trim());
                         }
                     }
-                    await DisplayImage(0);
+                    await DisplayImage();
                 }
             }
             this.unitComboBox.DisplayMember = "Text";
@@ -112,7 +130,7 @@ namespace Astro.Winform.Forms
             product.MaxStock = maxStock;
             product.Images = string.Join(";", this.ImageURLs);
 
-            var result = product.ID > 0 ? await HttpClientSingleton.PutAsync("/data/products", product.ToString()) : await HttpClientSingleton.PostAsync("/data/products", product.ToString());
+            var result = product.ID > 0 ? await WClient.PutAsync("/data/products", product.ToString()) : await WClient.PostAsync("/data/products", product.ToString());
             var commonResult = CommonResult.Create(result);
             if (commonResult != null)
             {
@@ -148,15 +166,109 @@ namespace Astro.Winform.Forms
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 var bytes = File.ReadAllBytes(openDialog.FileName);
-                var result = await HttpClientSingleton.UploadDocument("/documents/upload", bytes);
+                var result = await WClient.UploadDocument("/documents/upload", bytes);
                 if (!string.IsNullOrWhiteSpace(result))
                 {
                     if (this.Model != null)
                     {
                         this.ImageURLs.Add(result);
-                        await this.DisplayImage(this.ImageURLs.Count - 1);
+                        this.SelectedImage = this.ImageURLs.Count - 1;
+                        await this.DisplayImage();
                     }
                 }
+            }
+        }
+
+        private async void button2_Click(object sender, EventArgs e)
+        {
+            await PreviousImage();
+        }
+
+        private async void button3_Click(object sender, EventArgs e)
+        {
+            await NextImage();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if (this.productImage is null) return;
+
+            using (var saveDialog = new SaveFileDialog())
+            {
+                saveDialog.Filter = """
+                    JPEG Image (*.jpg)|*.jpg|
+                    PNG Image (*.png)|*.png|
+                    Bitmap Image (*.bmp)|*.bmp|
+                    GIF Image (*.gif)|*.gif
+                    """;
+                saveDialog.Title = "Simpan Gambar";
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var ext = Path.GetExtension(saveDialog.FileName).ToLower();
+                    var format = System.Drawing.Imaging.ImageFormat.Png;
+
+                    switch (ext)
+                    {
+                        case ".jpg":
+                        case ".jpeg":
+                            format = System.Drawing.Imaging.ImageFormat.Jpeg; break;
+                        case ".bmp":
+                            format = System.Drawing.Imaging.ImageFormat.Bmp; break;
+                        case ".gif":
+                            format = System.Drawing.Imaging.ImageFormat.Gif; break;
+                        case ".png":
+                            format = System.Drawing.Imaging.ImageFormat.Png; break;
+                        default:
+                            MessageBox.Show("Ekstensi tidak dikenali. Menyimpan sebagai PNG.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            break;
+                    }
+
+                    try
+                    {
+                        using (var stream = new MemoryStream())
+                        {
+                            this.productImage.Image.Save(stream, this.productImage.Image.RawFormat);
+                            System.IO.File.WriteAllBytes(saveDialog.FileName, stream.ToArray());
+                            MessageBox.Show("Gambar berhasil disimpan.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Gagal menyimpan gambar: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private async void button8_Click(object sender, EventArgs e)
+        {
+            if (this.ImageURLs.Count > 0) SelectedImage = this.ImageURLs.Count - 1;
+            await DisplayImage();
+        }
+
+        private async void button9_Click(object sender, EventArgs e)
+        {
+            if (this.ImageURLs.Count > 0 && SelectedImage > 0) SelectedImage = 0;
+            await DisplayImage();
+        }
+
+        private async void button10_Click(object sender, EventArgs e)
+        {
+            if (this.ImageURLs.Count > 0 && this.SelectedImage >= 0 && this.SelectedImage < this.ImageURLs.Count)
+            {
+                this.ImageURLs.RemoveAt(this.SelectedImage);
+                if (this.ImageURLs.Count == 0)
+                {
+                    this.productImage.Image?.Dispose();
+                    this.productImage.Image = null;
+                    this.SelectedImage = 0;
+                }
+                else if (this.SelectedImage >= this.ImageURLs.Count)
+                {
+                    this.SelectedImage = this.ImageURLs.Count - 1;
+                }
+                await DisplayImage();
             }
         }
     }

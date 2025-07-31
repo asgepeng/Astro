@@ -14,7 +14,7 @@ namespace Astro.Winform.Helpers
         public async Task<UserViewModel> CreateUserViewModel(short userId)
         {
             UserViewModel? uvm = null;
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/users/" + userId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/users/" + userId.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 var userExists = reader.ReadBoolean();
@@ -73,7 +73,7 @@ namespace Astro.Winform.Helpers
         public async Task<Role> CreateRoleViewModel(short roleId)
         {
             var role = new Role();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/roles/" + roleId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/roles/" + roleId.ToString()))
             using (var r = new IO.Reader(stream))
             {
                 var roleExists = r.ReadBoolean();
@@ -102,7 +102,7 @@ namespace Astro.Winform.Helpers
         public async Task<ProductViewModel> CreateProductViewModel(short productId)
         {
             var model = new ProductViewModel();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/products/" + productId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/products/" + productId.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 var productExist = reader.ReadBoolean();
@@ -137,7 +137,7 @@ namespace Astro.Winform.Helpers
         public async Task<Contact> CreateSupplier(short contactId)
         {
             var contact = new Contact();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/suppliers/" + contactId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/suppliers/" + contactId.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 var supplierExist = reader.ReadBoolean();
@@ -204,7 +204,7 @@ namespace Astro.Winform.Helpers
         public async Task<Contact> CreateCustomer(short contactId)
         {
             var contact = new Contact();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/customers/" + contactId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/customers/" + contactId.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 var supplierExist = reader.ReadBoolean();
@@ -271,7 +271,7 @@ namespace Astro.Winform.Helpers
         public async Task<AccountViewModel> CreateAccountViewModel(short accountId)
         {
             var cvm = new AccountViewModel();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/accounts/" + accountId.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/accounts/" + accountId.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 var accountExists = reader.ReadBoolean();

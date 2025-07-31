@@ -19,7 +19,7 @@ namespace PointOfSale
             var form = new LoginForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
-                using (var stream = await HttpClientSingleton.GetStreamAsync("/auth/permissions"))
+                using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
                 using (var reader = new Reader(stream))
                 {
                     var sectionLength = reader.ReadInt32();
@@ -55,8 +55,8 @@ namespace PointOfSale
 
         private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (My.Application.ApiToken.Trim() != "") await HttpClientSingleton.SignOutAsync();
-            HttpClientSingleton.Dispose();
+            if (My.Application.ApiToken.Trim() != "") await WClient.SignOutAsync();
+            WClient.Dispose();
         }
         private async void HandleMenuClicked(object? sender, EventArgs e)
         {

@@ -71,7 +71,7 @@ namespace Astro.IO
                     var values = new object[colCount];
                     for (int j = 0; j < colCount; j++)
                     {
-                        values[j] = this.ReadCell(types[j]);
+                        values[j] = this.GetData(types[j]);
                     }
                     table.Rows.Add(values);
                 }

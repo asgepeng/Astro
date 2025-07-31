@@ -36,7 +36,6 @@
             stockTextBox = new TextBox();
             button4 = new Button();
             button3 = new Button();
-            button2 = new Button();
             button1 = new Button();
             productImage = new PictureBox();
             isactiveCheckBox = new CheckBox();
@@ -61,9 +60,13 @@
             skuLabel = new Label();
             button5 = new Button();
             commanTabPage = new TabPage();
+            button9 = new Button();
+            button8 = new Button();
+            button7 = new Button();
+            button2 = new Button();
             label4 = new Label();
             tabControl = new TabControl();
-            button7 = new Button();
+            button10 = new Button();
             ((System.ComponentModel.ISupportInitialize)productImage).BeginInit();
             commanTabPage.SuspendLayout();
             tabControl.SuspendLayout();
@@ -109,30 +112,23 @@
             // 
             // button4
             // 
-            button4.Location = new Point(674, 401);
+            button4.Location = new Point(757, 401);
             button4.Name = "button4";
-            button4.Size = new Size(76, 32);
+            button4.Size = new Size(96, 32);
             button4.TabIndex = 104;
-            button4.Text = "Save As";
+            button4.Text = "Save Image As";
             button4.UseVisualStyleBackColor = true;
+            button4.Click += button4_Click;
             // 
             // button3
             // 
-            button3.Location = new Point(625, 401);
+            button3.Location = new Point(859, 401);
             button3.Name = "button3";
             button3.Size = new Size(43, 32);
             button3.TabIndex = 103;
-            button3.Text = ">";
+            button3.Text = "▶";
             button3.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            button2.Location = new Point(576, 401);
-            button2.Name = "button2";
-            button2.Size = new Size(43, 32);
-            button2.TabIndex = 102;
-            button2.Text = "<";
-            button2.UseVisualStyleBackColor = true;
+            button3.Click += button3_Click;
             // 
             // button1
             // 
@@ -356,6 +352,9 @@
             // 
             // commanTabPage
             // 
+            commanTabPage.Controls.Add(button10);
+            commanTabPage.Controls.Add(button9);
+            commanTabPage.Controls.Add(button8);
             commanTabPage.Controls.Add(button7);
             commanTabPage.Controls.Add(label9);
             commanTabPage.Controls.Add(stockTextBox);
@@ -392,6 +391,46 @@
             commanTabPage.Text = "Umum";
             commanTabPage.UseVisualStyleBackColor = true;
             // 
+            // button9
+            // 
+            button9.Location = new Point(576, 401);
+            button9.Name = "button9";
+            button9.Size = new Size(43, 32);
+            button9.TabIndex = 109;
+            button9.Text = "|◀";
+            button9.UseVisualStyleBackColor = true;
+            button9.Click += button9_Click;
+            // 
+            // button8
+            // 
+            button8.Location = new Point(908, 401);
+            button8.Name = "button8";
+            button8.Size = new Size(43, 32);
+            button8.TabIndex = 108;
+            button8.Text = "▶|";
+            button8.UseVisualStyleBackColor = true;
+            button8.Click += button8_Click;
+            // 
+            // button7
+            // 
+            button7.Location = new Point(675, 401);
+            button7.Name = "button7";
+            button7.Size = new Size(34, 32);
+            button7.TabIndex = 107;
+            button7.Text = "+";
+            button7.UseVisualStyleBackColor = true;
+            button7.Click += button7_Click;
+            // 
+            // button2
+            // 
+            button2.Location = new Point(626, 401);
+            button2.Name = "button2";
+            button2.Size = new Size(43, 32);
+            button2.TabIndex = 102;
+            button2.Text = "◀";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
+            // 
             // label4
             // 
             label4.AutoSize = true;
@@ -405,34 +444,39 @@
             // 
             tabControl.Controls.Add(commanTabPage);
             tabControl.Controls.Add(tabPage1);
+            tabControl.HotTrack = true;
             tabControl.ImageList = il;
             tabControl.Location = new Point(13, 12);
+            tabControl.Multiline = true;
             tabControl.Name = "tabControl";
             tabControl.Padding = new Point(10, 3);
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(979, 485);
             tabControl.TabIndex = 8;
             // 
-            // button7
+            // button10
             // 
-            button7.Location = new Point(756, 401);
-            button7.Name = "button7";
-            button7.Size = new Size(76, 32);
-            button7.TabIndex = 107;
-            button7.Text = "Save As";
-            button7.UseVisualStyleBackColor = true;
-            button7.Click += button7_Click;
+            button10.Location = new Point(715, 401);
+            button10.Name = "button10";
+            button10.Size = new Size(34, 32);
+            button10.TabIndex = 110;
+            button10.Text = "x";
+            button10.UseVisualStyleBackColor = true;
+            button10.Click += button10_Click;
             // 
             // ProductForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1004, 561);
+            ClientSize = new Size(1005, 561);
             Controls.Add(button6);
             Controls.Add(loginButton);
             Controls.Add(button5);
             Controls.Add(tabControl);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "ProductForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "ProductForm";
@@ -452,7 +496,6 @@
         private TextBox stockTextBox;
         private Button button4;
         private Button button3;
-        private Button button2;
         private Button button1;
         private PictureBox productImage;
         private CheckBox isactiveCheckBox;
@@ -480,5 +523,9 @@
         private Label label4;
         private TabControl tabControl;
         private Button button7;
+        private Button button9;
+        private Button button8;
+        private Button button2;
+        private Button button10;
     }
 }

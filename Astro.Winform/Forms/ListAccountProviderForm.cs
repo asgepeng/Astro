@@ -50,7 +50,7 @@ namespace Astro.Winform.Forms
             if (this.bs.Current is null) return;
 
             var id = (short)((DataRowView)this.bs.Current)[0];
-            var json = await HttpClientSingleton.DeleteAsync("/data/account-providers/" + id.ToString());
+            var json = await WClient.DeleteAsync("/data/account-providers/" + id.ToString());
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)
             {
@@ -67,7 +67,7 @@ namespace Astro.Winform.Forms
 
             var form = new AccountProviderForm();
             var id = (short)((DataRowView)this.bs.Current)[0];
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/account-providers/" + id.ToString()))
+            using (var stream = await WClient.GetStreamAsync("/data/account-providers/" + id.ToString()))
             using (var reader = new IO.Reader(stream))
             {
                 if (reader.ReadBoolean())

@@ -110,7 +110,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("price", product.Price, DbType.Int64),
                 db.CreateParameter("cost_average", product.CostAverage, DbType.Int64),
                 db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
-                db.CreateParameter("creator_id", Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("creator_id", Helpers.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("created_date", DateTime.UtcNow, DbType.DateTime)
             };
 
@@ -165,7 +165,7 @@ namespace Astro.Server.Api
             var parameter = new DbParameter[]
             {
                 db.CreateParameter("product_id", id, DbType.Int16),
-                db.CreateParameter("editor_id", Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("editor_id", Helpers.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameter);
             return success ? Results.Ok(CommonResult.Ok("Product have benn succesfully deleted")) : Results.Problem("An error occurred while deleting the product. Please try again later.");

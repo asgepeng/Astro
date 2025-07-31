@@ -26,13 +26,13 @@ namespace Astro.Winform.Forms
                 var commandText = richTextBox1.Text.Trim();
                 var guid = Guid.NewGuid();
                 var key = guid.ToByteArray();
-                var encrypted = SimpleEncryption.Encrypt(commandText, key);
+                var encrypted = Encryption.Encrypt(commandText, key);
                 using (var writer = new IO.Writer())
                 {
                     writer.WriteGuid(guid);
                     writer.WriteString(encrypted);
 
-                    using (var stream = await HttpClientSingleton.PostStreamAsync("/api/sql", writer.ToArray()))
+                    using (var stream = await WClient.PostStreamAsync("/api/sql", writer.ToArray()))
                     using (var reader = new IO.Reader(stream))
                     {
                         var result = reader.ReadByte();

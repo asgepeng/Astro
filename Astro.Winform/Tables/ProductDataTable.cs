@@ -25,7 +25,7 @@ namespace Astro.Winform.Tables
         internal override async Task LoadAsync()
         {
             if (this.Rows.Count > 0) this.Rows.Clear();
-            using (var stream = await HttpClientSingleton.GetStreamAsync("/data/products"))
+            using (var stream = await WClient.GetStreamAsync("/data/products"))
             using (var reader = new IO.Reader(stream))
             {
                 while (reader.Read())

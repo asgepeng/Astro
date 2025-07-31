@@ -69,11 +69,11 @@ namespace Astro.Winform.Forms
             var json = string.Empty;
             if (this.Contact.Id == 0)
             {
-                json = await HttpClientSingleton.PostAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
+                json = await WClient.PostAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
             }
             else
             {
-                json = await HttpClientSingleton.PutAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
+                json = await WClient.PutAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
             }
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)

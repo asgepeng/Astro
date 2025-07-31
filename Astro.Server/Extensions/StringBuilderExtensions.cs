@@ -1,4 +1,5 @@
 ﻿using Astro.Data;
+using Astro.Extensions;
 using Astro.Models;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System;
@@ -177,7 +178,7 @@ namespace Astro.Server.Extensions
                 """);
             if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var searchKeyword = pagination.Search.SqlString();
+                var searchKeyword = pagination.Search.EscapeSql();
                 sbSql.Append(" AND (p.product_name LIKE '%").Append(searchKeyword).Append("%' OR ");
                 sbSql.Append(" p.product_sku LIKE '%").Append(searchKeyword).Append("%' OR");
                 sbSql.Append(" c.category_name LIKE '%").Append(searchKeyword).Append("%' OR ");

@@ -36,7 +36,7 @@ namespace Astro.Winform.Forms
             if (this.Role is null) return;
 
             this.Role.Name = this.rolenameTextBox.Text.Trim();
-            var json = this.Role.Id > 0 ? await HttpClientSingleton.PutAsync("/data/roles", this.Role.ToString()) :await HttpClientSingleton.PostAsync("/data/roles", this.Role.ToString());
+            var json = this.Role.Id > 0 ? await WClient.PutAsync("/data/roles", this.Role.ToString()) :await WClient.PostAsync("/data/roles", this.Role.ToString());
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)
             {

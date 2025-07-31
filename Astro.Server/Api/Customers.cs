@@ -138,7 +138,7 @@ namespace Astro.Server.Api
             {
                 db.CreateParameter("contactName", contact.Name.Trim(), DbType.String),
                 db.CreateParameter("contactType", (short)0, DbType.Int16),
-                db.CreateParameter("creatorId", Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("creatorId", Helpers.Application.GetUserID(context), DbType.Int16)
             };
             var contactId = await db.ExecuteScalarInt16Async(commandText, parameters);
             if (contactId <= 0) return Results.Problem("An error occured while creating the contact. Please try again later.");
@@ -217,7 +217,7 @@ namespace Astro.Server.Api
             {
                 db.CreateParameter("contactId", contact.Id, DbType.Int16),
                 db.CreateParameter("contactName", contact.Name.Trim(), DbType.String),
-                db.CreateParameter("editor", Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editor", Helpers.Application.GetUserID(context), DbType.Int16),
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             var sb = new StringBuilder();
@@ -281,7 +281,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("contactId", id, DbType.Int16),
-                db.CreateParameter("editorId", Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("editorId", Helpers.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success

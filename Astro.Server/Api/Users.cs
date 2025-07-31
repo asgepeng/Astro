@@ -256,7 +256,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("concurrencyStamp", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("usePasswordExpiration", user.UsePasswordExpiration, DbType.Boolean),
                 db.CreateParameter("passwordExpirationDate", (object?)user.PasswordExpirationDate ?? DBNull.Value, DbType.DateTime),
-                db.CreateParameter("creatorId", Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("creatorId", Helpers.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("createdDate", DateTime.UtcNow, DbType.DateTime)
             };
 
@@ -321,7 +321,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("concurrencyStamp", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("usePasswordExpiration", user.UsePasswordExpiration, DbType.Boolean),
                 db.CreateParameter("passwordExpirationDate", (object?)user.PasswordExpirationDate ?? DBNull.Value, DbType.DateTime),
-                db.CreateParameter("editorId", Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editorId", Helpers.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("editedDate", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("userId", user.Id, DbType.Int16)
             };

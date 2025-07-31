@@ -11,19 +11,51 @@ namespace Astro.Extensions
         public static string ToHexString(this byte[] bytes)
         {
             var sb = new StringBuilder();
-            if (bytes.Length == 0)
-            {
-                sb.Append("[]");
-            }
-            else
-            {
-                sb.Append("0x");
-            }
             foreach (var b in bytes )
             {
-                sb.Append(b.ToString("x2"));
+                sb.Append(b.ToString("X2"));
             }
             return sb.ToString();
         }
+        public static byte[] SubBytes(this byte[] input, int start, int length)
+        {
+            if (input.Length < start + length)
+                throw new ArgumentException("Key length is insufficient for the selected encryption type.");
+
+            byte[] result = new byte[length];
+            Array.Copy(input, start, result, 0, length);
+            return result;
+        }
+        public static byte[][] Split(this byte[] input, byte separator)
+        {
+            if (input == null)
+                throw new ArgumentNullException(nameof(input));
+
+            var result = new List<byte[]>();
+            int start = 0;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == separator)
+                {
+                    int length = i - start;
+                    byte[] segment = new byte[length];
+                    Buffer.BlockCopy(input, start, segment, 0, length);
+                    result.Add(segment);
+                    start = i + 1;
+                }
+            }
+
+            if (start <= input.Length)
+            {
+                int length = input.Length - start;
+                byte[] segment = new byte[length];
+                Buffer.BlockCopy(input, start, segment, 0, length);
+                result.Add(segment);
+            }
+
+            return result.ToArray();
+        }
+
     }
 }

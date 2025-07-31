@@ -30,7 +30,12 @@ namespace Astro.Server.Api
         }
         public static IResult DownloadAsync(string fileName, HttpContext context)
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "wwwroot", "images", fileName);
+            var fn = fileName is null ? string.Empty : fileName;
+            if (string.IsNullOrWhiteSpace(fn))
+            {
+                return Results.BadRequest("parameters must not be empty");
+            }
+            var path = Path.Combine(AppContext.BaseDirectory, "wwwroot", "images", fn);
             if (fileName is null || !File.Exists(path))
             {
                 return Results.NotFound();

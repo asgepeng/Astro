@@ -1,4 +1,5 @@
-﻿using Astro.Models;
+﻿using Astro.Extensions;
+using Astro.Models;
 using Astro.Text;
 using System;
 using System.Collections.Generic;

@@ -47,7 +47,7 @@ namespace Astro.Winform.Forms
                 return;
             }
             var request = new ChangePasswordRequest(this.passwordTextBox.Text, this.confirmPasswordTextBox.Text);
-            var response = await HttpClientSingleton.PostAsync("/auth/change-password", request.ToString());
+            var response = await WClient.PostAsync("/auth/change-password", request.ToString());
             var result = CommonResult.Create(response);
             if (result != null)
             {

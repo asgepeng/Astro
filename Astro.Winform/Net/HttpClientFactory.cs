@@ -1,20 +1,15 @@
 ﻿using Astro.Models;
 using Astro.Winform.Net;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Astro.Winform.Classes
 {
-    internal static class HttpClientSingleton
+    internal static class WClient
     {
         private static readonly HttpClient client;
         private static readonly object lockObj = new object();
         private static bool isDisposed = false;
-        static HttpClientSingleton()
+        static WClient()
         {
             client = new HttpClient
             {
@@ -80,7 +75,7 @@ namespace Astro.Winform.Classes
             string response = await PostAsync("/auth/logout");
             return response.ToLower() == "true" ? true : false;
         }
-        internal static async Task<Stream> PostStreamAsync(string url, string content)
+        internal static async Task<Stream> PostStreamAsync(string url, string content, string contentType = "application/json")
         {
             if (My.Application.ApiToken == "")
             {
@@ -90,7 +85,7 @@ namespace Astro.Winform.Classes
 
             var endpoint = CreateUri(url);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            if (content.Length > 0) request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+            if (content.Length > 0) request.Content = new StringContent(content, Encoding.UTF8, contentType);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
 
             try

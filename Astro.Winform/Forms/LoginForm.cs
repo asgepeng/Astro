@@ -45,7 +45,7 @@ namespace Astro.Winform.Forms
                 return;
             }
 
-            var success = await HttpClientSingleton.SignInAsync(usernameTextBox.Text.Trim(), passwordTextBox.Text);
+            var success = await WClient.SignInAsync(usernameTextBox.Text.Trim(), passwordTextBox.Text);
             if (success)
             {
                 this.DialogResult = DialogResult.OK;

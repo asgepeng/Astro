@@ -49,7 +49,7 @@ namespace Astro.Winform.Forms
             this.Provider.Name = this.textBox2.Text;
             this.Provider.Type = (short)(this.comboBox1.SelectedIndex + 1);
 
-            var json = this.IsUpdate ? await HttpClientSingleton.PutAsync("/data/account-providers", this.Provider.ToString()) : await HttpClientSingleton.PostAsync("/data/account-providers", this.Provider.ToString());
+            var json = this.IsUpdate ? await WClient.PutAsync("/data/account-providers", this.Provider.ToString()) : await WClient.PostAsync("/data/account-providers", this.Provider.ToString());
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)
             {

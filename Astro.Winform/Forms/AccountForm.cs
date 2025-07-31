@@ -88,7 +88,7 @@ namespace Astro.Winform.Forms
             account.AccountType = (short)(this.comboBox1.SelectedIndex + 1);
             account.Provider = ((AccountProvider)this.comboBox2.SelectedItem).Id;
 
-            var json = account.Id > 0 ? await HttpClientSingleton.PutAsync("/data/accounts", account.ToString()) : await HttpClientSingleton.PostAsync("/data/accounts", account.ToString());
+            var json = account.Id > 0 ? await WClient.PutAsync("/data/accounts", account.ToString()) : await WClient.PostAsync("/data/accounts", account.ToString());
             var commonResult = CommonResult.Create(json);
             if (commonResult != null)
             {

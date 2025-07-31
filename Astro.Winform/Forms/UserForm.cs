@@ -137,7 +137,7 @@ namespace Astro.Winform.Forms
 
             if (user.Id > 0)
             {
-                var json = await HttpClientSingleton.PutAsync("/data/users", user.ToString());
+                var json = await WClient.PutAsync("/data/users", user.ToString());
                 var commonResult = CommonResult.Create(json);
                 if (commonResult != null)
                 {
@@ -151,7 +151,7 @@ namespace Astro.Winform.Forms
             }
             else
             {
-                var json = await HttpClientSingleton.PostAsync("/data/users", user.ToString());
+                var json = await WClient.PostAsync("/data/users", user.ToString());
                 var commonResult = CommonResult.Create(json);
                 if (commonResult != null)
                 {
