@@ -164,5 +164,12 @@ namespace Astro.Winform.Forms
                 }
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var resetPasswordForm = new ResetPasswordForm();
+            resetPasswordForm.Request.UserId = this.UserView != null ? this.UserView.User.Id : (short)0;
+            resetPasswordForm.ShowDialog();
+        }
     }
 }

@@ -6,17 +6,28 @@ using System.Data.Common;
 using System.Globalization;
 using Npgsql;
 using System.Data;
-using Org.BouncyCastle.Asn1.X509.Qualified;
-using System.Collections.Concurrent;
 
 namespace Astro.Data
 {
-    public class CString
+    public interface IDatabase
     {
-        public string Server { get; set; } = "";
-        public string Database { get; set; } = "";
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
+        DbParameter CreateParameter(string name, object? value);
+        DbParameter CreateParameter(string name, object? value, DbType dbType);
+
+        Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
+        Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters);
+        Task<bool> AnyRecordsAsync(string commandText, params DbParameter[] parameters);
+        Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters);
+        Task<List<T>> CreateListAsync<T>(string commandText, params DbParameter[] parameters);
+        Task<Dictionary<TKey, TValue>> CreateDictionyAsync<TKey, TValue>(string commandText, params DbParameter[] parameters)
+            where TKey : notnull where TValue : notnull;
+
+        bool ExecuteNonQuery(string commandText, params DbParameter[] parameters);
+        T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters);
+        bool AnyRecords(string commandText, params DbParameter[] parameters);
+        void ExecuteReader(Action<DbDataReader> handler, string commandText, params DbParameter[] parameters);
+        List<T> CreateList<T>(string commandText, params DbParameter[] parameters);
+
     }
     public abstract class DatabaseClient : IDatabase
     {
@@ -93,6 +104,25 @@ namespace Astro.Data
                 catch { }
             }
         }
+        public List<T> CreateList<T>(string commandText, params DbParameter[] parameters)
+        {
+            var list = new List<T>();
+            ExecuteReader(async reader =>
+            {
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        var item = (T)Convert.ChangeType(reader.GetValue(0), typeof(T))!;
+                        if (item is not null)
+                        {
+                            list.Add(item);
+                        }
+                    }
+                }
+            }, commandText, parameters);
+            return list;
+        }
         public async Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
@@ -111,6 +141,42 @@ namespace Astro.Data
                     File.WriteAllText(AppContext.BaseDirectory + "db.executeReaderAsync.txt", commandText + "\n" + ex.ToString());
                 }
             }
+        }
+        public async Task<List<T>> CreateListAsync<T>(string commandText, params DbParameter[] parameters)
+        {
+            var list = new List<T>();
+            await ExecuteReaderAsync(async reader =>
+            {
+                while (await reader.ReadAsync())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        var item  = (T)Convert.ChangeType(reader.GetValue(0), typeof(T))!;
+                        if (item is not null)
+                        {
+                            list.Add(item);
+                        }
+                    }
+                }
+            }, commandText, parameters);
+            return list;
+        }
+        public async Task<Dictionary<TKey, TValue>> CreateDictionyAsync<TKey, TValue>(string commandText, params DbParameter[] parameters) where TKey : notnull where TValue : notnull
+        {
+            var dict = new Dictionary<TKey, TValue>();
+            await ExecuteReaderAsync(async reader =>
+            {
+                while (await reader.ReadAsync())
+                {
+                    var okey = !reader.IsDBNull(0) ? (TKey)Convert.ChangeType(reader.GetValue(0), typeof(TKey))! : default!;
+                    var ovalue = !reader.IsDBNull(1) ? (TValue)Convert.ChangeType(reader.GetValue(1), typeof(TValue))! : default!;
+                    if (okey is not null && ovalue is not null)
+                    {
+                        dict.Add(okey, ovalue);
+                    }
+                }
+            }, commandText, parameters);
+            return dict;
         }
         public byte[] ExportToExcel(string commandText, params (string, object)[] parameters)
         {
@@ -215,20 +281,29 @@ namespace Astro.Data
             }
             return data;
         }
-        public object? ExecuteScalar(string commandText, params DbParameter[] parameters)
+        public T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
-            using (conn) using (cmd)
+            using (conn)
+            using (cmd)
             {
                 try
                 {
                     conn.Open();
-                    return cmd.ExecuteScalar();
+                    object? res = cmd.ExecuteScalar();
+                    if (res is null || res == DBNull.Value)
+                        return default;
+
+                    return (T)Convert.ChangeType(res, typeof(T))!;
                 }
-                catch { return null; }
+                catch
+                {
+                    return default;
+                }
             }
         }
-        public async Task<object?> ExecuteScalarAsync(string commandText, params DbParameter[] parameters)
+
+        public async Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
             using (conn) using (cmd)
@@ -236,28 +311,15 @@ namespace Astro.Data
                 try
                 {
                     await conn.OpenAsync();
-                    return await cmd.ExecuteScalarAsync();
+                    object? result = await cmd.ExecuteScalarAsync();
+                    if (result is null || result == DBNull.Value)
+                    {
+                        return default;
+                    }
+                    return (T?)Convert.ChangeType(result, typeof(T));
                 }
-                catch { return null; }
+                catch { return default; }
             }
-        }
-        public int? ExecuteScalarInteger(string commandText, params DbParameter[] parameters)
-        {
-            var obj = ExecuteScalar(commandText, parameters);
-            if (obj is null) return null;
-            return Convert.ToInt32(obj);
-        }
-        public async Task<int?> ExecuteScalarIntegerAsync(string commandText, params DbParameter[] parameters)
-        {
-            var obj = await ExecuteScalarAsync(commandText, parameters);
-            if (obj is null) return null;
-            return Convert.ToInt32(obj);
-        }
-        public async Task<short?> ExecuteScalarInt16Async(string commandText, params DbParameter[] parameters)
-        {
-            var obj = await ExecuteScalarAsync(commandText, parameters);
-            if (obj is null) return null;
-            return Convert.ToInt16(obj);
         }
         //FUNCTION
         private Stylesheet GenerateStylesheet()

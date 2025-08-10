@@ -66,7 +66,7 @@ namespace Astro.Winform.Forms
                     this.maxstockTextBox.Text = this.Model.Product.MaxStock.ToString();
                     this.categoryComboBox.SelectedItem = this.Model.Categories.FirstOrDefault(c => c.Id == this.Model.Product.Category);
                     this.unitComboBox.SelectedItem = this.Model.Units.FirstOrDefault(u => u.Id == this.Model.Product.Unit);
-
+                    this.isactiveCheckBox.Checked = this.Model.Product.Active;
                     var arrImage = this.Model.Product.Images.Split(';');
                     foreach (var image in arrImage)
                     {

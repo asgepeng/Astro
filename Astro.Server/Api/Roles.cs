@@ -1,5 +1,4 @@
 ﻿using Astro.Data;
-using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
@@ -92,10 +91,10 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("rolename", role.Name, DbType.String),
-                db.CreateParameter("creator", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("creator", Extensions.Application.GetUserID(context), DbType.Int16)
             };
-            var roleId = await db.ExecuteScalarInt16Async(commandText, parameters);
-            if (roleId == null) return Results.Ok(CommonResult.Fail("Failed to create role."));
+            var roleId = await db.ExecuteScalarAsync<short>(commandText, parameters);
+            if (roleId == default(short)) return Results.Ok(CommonResult.Fail("Failed to create role."));
 
             commandText = """
                 insert into role_to_menus
@@ -136,7 +135,7 @@ namespace Astro.Server.Api
             {
                 db.CreateParameter("rolename", role.Name, DbType.String),
                 db.CreateParameter("id", role.Id, DbType.Int16),
-                db.CreateParameter("editor", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("editor", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             for (int i = 0; i < role.Permissions.Count; i++)
             {

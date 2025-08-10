@@ -67,6 +67,7 @@ CREATE TABLE users (
     user_lastname           VARCHAR(100) NOT NULL DEFAULT '',
     suffix_id               SMALLINT     NOT NULL DEFAULT 0,
     role_id                 SMALLINT     NOT NULL DEFAULT 0,
+    location_id             SMALLINT     NOT NULL DEFAULT 0,
 
     user_name               VARCHAR(100) NOT NULL DEFAULT '',
     normalized_user_name    VARCHAR(100) NOT NULL DEFAULT '',
@@ -199,28 +200,56 @@ CREATE TABLE categories (
     is_deleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
+-- stores
+CREATE TABLE locations (
+    location_id        SMALLSERIAL       PRIMARY KEY,
+	name               VARCHAR(100)    NOT NULL DEFAULT '',
+	street_address     VARCHAR(250)    NOT NULL DEFAULT '',
+	city_id            INTEGER         NOT NULL DEFAULT 0,
+	zip_code           VARCHAR(15)     NOT NULL DEFAULT '',
+	phone_number       VARCHAR(30)     NOT NULL DEFAULT '',
+	fax_number         VARCHAR(30)     NOT NULL DEFAULT '',
+	email              VARCHAR(80)     NOT NULL DEFAULT '',
+	creator_id         SMALLINT        NOT NULL DEFAULT 0,
+	created_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	editor_id          SMALLINT,
+	edited_date        TIMESTAMP
+);
+
 -- products
 CREATE TABLE products (
     product_id          SMALLSERIAL     PRIMARY KEY,
     product_name        VARCHAR(100)    NOT NULL    DEFAULT '',
     product_description VARCHAR(8000)   NOT NULL    DEFAULT '',
     product_sku         VARCHAR(40)     NOT NULL    DEFAULT '',
+    parent_id           SMALLINT        NOT NULL    DEFAULT 0,
     category_id         SMALLINT        NOT NULL    DEFAULT 0,
-    product_type        INTEGER         NOT NULL    DEFAULT 0,
-    is_active           BOOLEAN         NOT NULL    DEFAULT false,
-    stock               INT NOT         NULL        DEFAULT 0,
-    min_stock           SMALLINT        NOT NULL    DEFAULT 0,
-    max_stock           SMALLINT        NOT NULL    DEFAULT 0,
     unit_id             SMALLINT        NOT NULL    DEFAULT 0,
-    price               BIGINT          NOT NULL    DEFAULT 0,
-    cost_average        BIGINT          NOT NULL    DEFAULT 0,
-    images              VARCHAR(250)    NOT NULL    DEFAULT '',
     manufacture_id      SMALLINT        NOT NULL    DEFAULT 0,
+    product_type        INTEGER         NOT NULL    DEFAULT 0,
+    images              VARCHAR(250)    NOT NULL    DEFAULT '',
     creator_id          SMALLINT        NOT NULL    DEFAULT 0,
     created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     editor_id           SMALLINT,
     edited_date         TIMESTAMP,
     is_deleted          BOOLEAN         NOT NULL    DEFAULT false
+);
+
+-- inventories
+CREATE TABLE inventories (
+	location_id         SMALLINT        NOT NULL,
+	product_id          SMALLINT        NOT NULL,
+    is_active           BOOLEAN         NOT NULL    DEFAULT false,
+    buyprice            BIGINT          NOT NULL    DEFAULT 0,
+    cogs                BIGINT          NOT NULL    DEFAULT 0,
+    price               BIGINT          NOT NULL    DEFAULT 0,
+    stock               INT             NOT NULL    DEFAULT 0,
+	min_stock           SMALLINT        NOT NULL    DEFAULT 0,
+	max_stock           SMALLINT        NOT NULL    DEFAULT 0,
+	creator_id          SMALLINT        NOT NULL    DEFAULT 0,
+	created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+	editor_id           SMALLINT,
+	edited_date         TIMESTAMP
 );
 
 -- contacts
@@ -238,21 +267,6 @@ CREATE TABLE contacts (
     editor_id           SMALLINT,
     edited_date         TIMESTAMP,
     is_deleted          BOOLEAN         NOT NULL DEFAULT false
-);
-
--- organizations
-CREATE TABLE organizations (
-	org_id              SMALLINT        PRIMARY KEY,
-	name                VARCHAR(250)    NOT NULL DEFAULT '',
-    type                SMALLINT        NOT NULL DEFAULT 0,
-    street_address      VARCHAR(250)    NOT NULL DEFAULT '',
-    city_id             INTEGER         NOT NULL DEFAULT 0,
-    zip_code            VARCHAR(15)     NOT NULL DEFAULT '',
-	creator_id          SMALLINT        NOT NULL DEFAULT 0,
-	created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	editor_id           SMALLINT,
-	edited_date         TIMESTAMP,
-	is_deleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- wsprices
@@ -327,12 +341,107 @@ CREATE TABLE accounts (
 
 -- cashflows
 CREATE TABLE cashflows (
-    cashflow_id BIGSERIAL PRIMARY KEY,
-    cashflow_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    account_id INTEGER NOT NULL DEFAULT 0,
-    account_type INTEGER NOT NULL DEFAULT 0,
-    debt BIGINT NOT NULL DEFAULT 0,
-    credit BIGINT NOT NULL DEFAULT 0,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    cashflow_id         UUID            PRIMARY KEY,
+    cashflow_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    account_id          SMALLINT        NOT NULL DEFAULT 0,
+    account_type        SMALLINT        NOT NULL DEFAULT 0,
+    debt                BIGINT          NOT NULL DEFAULT 0,
+    credit              BIGINT          NOT NULL DEFAULT 0,
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE receipts
+(
+    id                  BIGSERIAL       NOT NULL    PRIMARY KEY,
+    sale_id             UUID            NOT NULL,
+    receipt_method      SMALLINT        NOT NULL    DEFAULT 0,
+    cashflow_id         INT             NOT NULL    DEFAULT 0
+);
+
+CREATE TABLE costs 
+(
+    id              BIGSERIAL           NOT NULL    PRIMARY KEY,
+    tran_id         UUID                NOT NULL,
+    amount          INT                 NOT NULL    DEFAULT 0,
+    notes           VARCHAR(250)        NOT NULL    DEFAULT ''
+);
+
+-- stockflows
+CREATE TABLE stockflows
+(
+    flow_id         BIGSERIAL   PRIMARY KEY,
+    location_id     SMALLINT    NOT NULL,
+    product_id      SMALLINT    NOT NULL,
+    flow_date       TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    ref_type        SMALLINT    NOT NULL,
+    ref_id          UUID        NOT NULL,
+    cogs            BIGINT      NOT NULL    DEFAULT 0,
+    stock           INT         NOT NULL    DEFAULT 0,
+    debt            INT         NOT NULL    DEFAULT 0,
+    credit          INT         NOT NULL    DEFAULT 0,
+    price           BIGINT      NOT NULL    DEFAULT 0,
+    discount        INT         NOT NULL    DEFAULT 0,
+    notes           VARCHAR(250) NOT NULL   DEFAULT '',
+    creator_id      SMALLINT    NOT NULL    DEFAULT 0,
+    created_date    TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- sales
+CREATE TABLE sales
+(
+    sale_id             UUID            NOT NULL PRIMARY KEY,
+    invoice_number      VARCHAR(50)     NOT NULL DEFAULT '',
+    location_id         SMALLINT        NOT NULL DEFAULT 0,
+    sale_date           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    customer_id         SMALLINT        NOT NULL DEFAULT 0,
+    sub_total           BIGINT          NOT NULL DEFAULT 0,
+    discount            INT             NOT NULL DEFAULT 0,
+    tax                 INT             NOT NULL DEFAULT 0,
+    percent_tax         FLOAT           NOT NULL DEFAULT 0,
+    cost                INT             NOT NULL DEFAULT 0,
+    grand_total         BIGINT          NOT NULL DEFAULT 0,
+    nett_profit         BIGINT          NOT NULL DEFAULT 0,
+    total_receipt       BIGINT          NOT NULL DEFAULT 0,
+    status              SMALLINT        NOT NULL DEFAULT 0,
+    notes               VARCHAR(250)    NOT NULL DEFAULT '',
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- purchases
+CREATE TABLE purchases
+(
+    purchase_id         UUID            NOT NULL PRIMARY KEY,
+    invoice_number      VARCHAR(50)     NOT NULL DEFAULT '',
+    location_id         SMALLINT        NOT NULL DEFAULT 0,
+    purchase_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    supplier_id         SMALLINT        NOT NULL DEFAULT 0,
+    sub_total           BIGINT          NOT NULL DEFAULT 0,
+    discount            INT             NOT NULL DEFAULT 0,
+    tax                 INT             NOT NULL DEFAULT 0,
+    percent_tax         FLOAT           NOT NULL DEFAULT 0,
+    cost                INT             NOT NULL DEFAULT 0,
+    grand_total         BIGINT          NOT NULL DEFAULT 0,
+    nett_profit         BIGINT          NOT NULL DEFAULT 0,
+    total_receipt       BIGINT          NOT NULL DEFAULT 0,
+    status              SMALLINT        NOT NULL DEFAULT 0,
+    notes               VARCHAR(250)    NOT NULL DEFAULT '',
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+-- stockopnames
+CREATE TABLE stockopnames (
+    opname_id           UUID            PRIMARY KEY,
+    opname_date         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    locstion_id         SMALLINT        NOT NULL DEFAULT 0,
+    product_id          SMALLINT        NOT NULL DEFAULT 0,
+    stock_before        INT             NOT NULL DEFAULT 0,
+    stock_after         INT             NOT NULL DEFAULT 0,
+    difference          INT             NOT NULL DEFAULT 0,
+    amount              BIGINT          NOT NULL DEFAULT 0,
+    notes               VARCHAR(255)    NOT NULL DEFAULT '',
+    creator_id          SMALLINT        NOT NULL DEFAULT 0,
+    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+

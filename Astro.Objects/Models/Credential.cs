@@ -86,4 +86,15 @@ namespace Astro.Models
         public bool IsLocked { get; }
         public DateTime LockExpirationDate { get; }
     }
+
+    public class ResetPasswordRequest
+    {
+        [JsonPropertyName("userId")]
+        public short UserId { get; set; } = 0;
+        [JsonPropertyName("password")]
+        public string Password { get; set; } = string.Empty;
+
+        public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.ResetPasswordRequest);
+        public static ResetPasswordRequest? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.ResetPasswordRequest);
+    }
 }

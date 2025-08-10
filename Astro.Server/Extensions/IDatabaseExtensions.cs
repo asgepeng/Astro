@@ -2,6 +2,8 @@
 using Astro.Models;
 using System.Data.Common;
 using System.Data;
+using Microsoft.AspNetCore.Http;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Binaries
 {
@@ -217,13 +219,14 @@ namespace Astro.Server.Binaries
                 return builder.ToArray();
             }
         }
-        internal static async Task<byte[]> GetProduct(this IDatabase db, short id)
+        internal static async Task<byte[]> GetProduct(this IDatabase db, short id, HttpRequest request)
         {
             var commandText = """
-                select product_id, product_name, product_description, product_sku, category_id, product_type,
-                	is_active, stock, min_stock, max_stock, unit_id, price, cost_average, images
-                from products
-                where product_id = @id and is_deleted = false;
+                SELECT p.product_id, p.product_name, p.product_description, p.product_sku, p.category_id, p.product_type,
+                	i.is_active, i.stock, i.min_stock, i.max_stock, p.unit_id, i.price, i.cogs, p.images
+                FROM products AS p
+                INNER JOIN inventories AS i ON p.product_id = i.product_id AND i.location_id = @location
+                where p.product_id = @id and p.is_deleted = false;
                 """;
             using (var writer = new IO.Writer())
             {
@@ -247,7 +250,7 @@ namespace Astro.Server.Binaries
                         writer.WriteInt64(reader.GetInt64(12));
                         writer.WriteString(reader.GetString(13));
                     }
-                }, commandText, db.CreateParameter("id", id, DbType.Int16));
+                }, commandText, db.CreateParameter("id", id, DbType.Int16), db.CreateParameter("location", request.GetLocationID(), DbType.Int16));
 
                 commandText = """
                         select category_id, category_name
@@ -607,17 +610,17 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetProductDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetProductDataTable(this IDatabase db, HttpRequest request)
         {
             var commandText = """
-                select p.product_id, p.product_name, p.product_sku, c.category_name,  p.stock, unt.unit_name, p.price, 
-                   	concat(u.user_firstname, ' ', u.user_lastname) as creator, p.created_date
-                from products as p
-                inner join categories as c on p.category_id = c.category_id
-                inner join units as unt on p.unit_id = unt.unit_id
-                inner join users as u on p.creator_id = u.user_id
-                where p.is_deleted = false
-                order by p.product_id
+                SELECT p.product_id, p.product_name, p.product_sku, c.category_name, i.stock, u.unit_name,
+                i.price, CONCAT(creator.user_firstname, ' ', creator.user_lastname) AS creator, p.created_date
+                FROM products AS p
+                INNER JOIN categories AS c ON p.category_id = c.category_id
+                INNER JOIN units AS u ON p.unit_id = u.unit_id
+                INNER JOIN inventories AS i ON p.product_id = i.product_id AND i.location_id = @location
+                INNER JOIN users AS creator ON p.creator_id = creator.user_id
+                WHERE p.is_deleted = false
                 """;
             using (var writer = new IO.Writer())
             {
@@ -635,7 +638,7 @@ namespace Astro.Server.Binaries
                         writer.WriteString(reader.GetString(7));
                         writer.WriteDateTime(reader.GetDateTime(8));
                     }
-                }, commandText);
+                }, commandText, db.CreateParameter("location", request.GetLocationID(), DbType.Int16));
                 return writer.ToArray();
             }
         }

@@ -1,5 +1,4 @@
-﻿using Astro.Helpers;
-using Astro.Data;
+﻿using Astro.Data;
 using Astro.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +30,7 @@ namespace Astro.Server.Api
             IDatabase db, HttpContext context)
         {
 
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProductDataTable(), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProductDataTable(context.Request), "application/octet-stream");
             else
             {
                 var pagination = new Pagination()
@@ -49,7 +48,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProduct(id), "application/octet-stream");
+            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProduct(id, context.Request), "application/octet-stream");
             else
             {
                 return Results.NotFound();
@@ -66,13 +65,7 @@ namespace Astro.Server.Api
                     product_sku,
                     category_id,
                     product_type,
-                    is_active,
-                    stock,
-                    min_stock,
-                    max_stock,
                     unit_id,
-                    price,
-                    cost_average,
                     images,
                     creator_id,
                     created_date
@@ -83,17 +76,11 @@ namespace Astro.Server.Api
                     @product_sku,
                     @category_id,
                     @product_type,
-                    @is_active,
-                    @stock,
-                    @min_stock,
-                    @max_stock,
-                    @unit_id,
-                    @price,
-                    @cost_average,
+                    @unit,
                     @images,
                     @creator_id,
                     @created_date
-                );                
+                ) RETURNING product_id;           
                 """;
             var parameters = new DbParameter[]
             {
@@ -102,18 +89,32 @@ namespace Astro.Server.Api
                 db.CreateParameter("product_sku", product.Sku ?? string.Empty, DbType.String),
                 db.CreateParameter("category_id", product.Category, DbType.Int16),
                 db.CreateParameter("product_type", product.Type, DbType.Int16),
+                db.CreateParameter("unit", product.Unit, DbType.Int16),
+                db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
+                db.CreateParameter("creator_id", Extensions.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("created_date", DateTime.UtcNow, DbType.DateTime)
+            };
+            var productId = await db.ExecuteScalarAsync<short>(commandText, parameters);
+            if (productId == default(short)) return Results.Problem("An error occured while saving the product. Please try again later.");
+
+            commandText = """
+                INSERT INTO inventories
+                (location_id, product_id, is_active, stock, min_stock, max_stock, price, cogs)
+                VALUES
+                (@location, @product_id, @is_active, @stock, @min_stock, @max_stock, @price, @cogs);
+                """;
+            parameters = new DbParameter[]
+            {
+                db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16),
+                db.CreateParameter("product_id", productId, DbType.Int16),
                 db.CreateParameter("is_active", product.Active, DbType.Boolean),
                 db.CreateParameter("stock", product.Stock, DbType.Int32),
                 db.CreateParameter("min_stock", product.MinStock, DbType.Int16),
                 db.CreateParameter("max_stock", product.MaxStock, DbType.Int16),
                 db.CreateParameter("unit_id", product.Unit, DbType.Int16),
                 db.CreateParameter("price", product.Price, DbType.Int64),
-                db.CreateParameter("cost_average", product.CostAverage, DbType.Int64),
-                db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
-                db.CreateParameter("creator_id", Helpers.Application.GetUserID(context), DbType.Int16),
-                db.CreateParameter("created_date", DateTime.UtcNow, DbType.DateTime)
+                db.CreateParameter("cogs", product.CostAverage, DbType.Int64)
             };
-
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Product was successfully saved")) : Results.Problem("An error occured while saving the product. Please try again later.");
         }
@@ -128,15 +129,17 @@ namespace Astro.Server.Api
                     product_sku = @product_sku,
                     category_id = @category_id,
                     product_type = @product_type,
-                    is_active = @is_active,
+                    unit_id = @unit_id,
+                    images = @images
+                WHERE product_id = @product_id AND is_deleted = false;
+                UPDATE inventories
+                SET is_active = @is_active,
                     stock = @stock,
                     min_stock = @min_stock,
                     max_stock = @max_stock,
-                    unit_id = @unit_id,
                     price = @price,
-                    cost_average = @cost_average,
-                    images = @images
-                WHERE product_id = @product_id AND is_deleted = false;
+                    cogs = @cost_average
+                WHERE product_id = @product_id AND location_id = @location
                 """;
             var parameters = new DbParameter[]
             {
@@ -153,7 +156,8 @@ namespace Astro.Server.Api
                 db.CreateParameter("unit_id", product.Unit, DbType.Int16),
                 db.CreateParameter("price", product.Price, DbType.Int64),
                 db.CreateParameter("cost_average", product.CostAverage, DbType.Int64),
-                db.CreateParameter("images", product.Images ?? string.Empty, DbType.String)
+                db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
+                db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16)
             };
 
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
@@ -165,7 +169,7 @@ namespace Astro.Server.Api
             var parameter = new DbParameter[]
             {
                 db.CreateParameter("product_id", id, DbType.Int16),
-                db.CreateParameter("editor_id", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameter);
             return success ? Results.Ok(CommonResult.Ok("Product have benn succesfully deleted")) : Results.Problem("An error occurred while deleting the product. Please try again later.");

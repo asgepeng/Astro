@@ -1,5 +1,4 @@
 ﻿using Astro.Data;
-using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
@@ -135,9 +134,9 @@ namespace Astro.Server.Api
             {
                 db.CreateParameter("contactName", contact.Name.Trim(), DbType.String),
                 db.CreateParameter("contactType", (short)0, DbType.Int16),
-                db.CreateParameter("creatorId", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("creatorId", Extensions.Application.GetUserID(context), DbType.Int16)
             };
-            var contactId = await db.ExecuteScalarInt16Async(commandText, parameters);
+            var contactId = await db.ExecuteScalarAsync<short>(commandText, parameters);
             if (contactId <= 0) return Results.Problem("An error occured while creating the contact. Please try again later.");
 
             if (contact.Addresses.Count == 0 && contact.Phones.Count == 0 && contact.Emails.Count == 0)
@@ -214,7 +213,7 @@ namespace Astro.Server.Api
             {
                 db.CreateParameter("contactId", contact.Id, DbType.Int16),
                 db.CreateParameter("contactName", contact.Name.Trim(), DbType.String),
-                db.CreateParameter("editor", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editor", Extensions.Application.GetUserID(context), DbType.Int16),
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             var sb = new StringBuilder();
@@ -278,7 +277,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("contactId", id, DbType.Int16),
-                db.CreateParameter("editorId", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("editorId", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success

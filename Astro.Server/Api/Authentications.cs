@@ -1,6 +1,5 @@
 ﻿using Astro.Data;
 using Astro.Models;
-using Astro.Helpers;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -98,13 +97,13 @@ namespace Astro.Server.Api
 
         internal static IResult SignOut(IDatabase db, HttpContext context)
         {
-            var token = Helpers.Application.GetToken(context.Request).Trim();
+            var token = context.Request.GetToken();
             TokenStore.Delete(token);
             return Results.Ok();
         }
         internal static async Task<IResult> ChangePasswordAsync(ChangePasswordRequest request, IDatabase db, HttpContext context)
         {
-            var userId = (short)Helpers.Application.GetUserID(context);
+            var userId = (short)Extensions.Application.GetUserID(context);
             var user = await GetUserByIdAsync(userId, db);
             if (user is null) return Results.Ok(CommonResult.Fail("User not found"));
 
@@ -128,7 +127,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetPermissionsAsync(IDatabase db, HttpContext context)
         {
-            var roleId = Helpers.Application.GetRoleID(context);
+            var roleId = Extensions.Application.GetRoleID(context);
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
 
             var commandText = """
@@ -297,7 +296,7 @@ namespace Astro.Server.Api
         private static string RegisterNewToken(User user, HttpContext context)
         {
             var token = Guid.NewGuid().ToString();
-            var ipv4 = Helpers.Application.GetIpAddress(context.Request);
+            var ipv4 = Extensions.Application.GetIpAddress(context.Request);
             var userAgent = context.Request.Headers.UserAgent.ToString();
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())
@@ -342,7 +341,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("userId", userId),
-                db.CreateParameter("ipv4", Helpers.Application.GetIpAddress(context.Request)),
+                db.CreateParameter("ipv4", Extensions.Application.GetIpAddress(context.Request)),
                 db.CreateParameter("success", loginResult == LoginResult.Success),
                 db.CreateParameter("userAgent", userAgent),
                 db.CreateParameter("notes", notes)
@@ -352,7 +351,7 @@ namespace Astro.Server.Api
         }
         private static async Task<string> GetRoleNameAsync(short roleId, IDatabase db)
         {
-            var result = await db.ExecuteScalarAsync("SELECT role_name FROM roles WHERE role_id = @roleId",db.CreateParameter("roleId", roleId));
+            var result = await db.ExecuteScalarAsync<string>("SELECT role_name FROM roles WHERE role_id = @roleId",db.CreateParameter("roleId", roleId));
             return result as string ?? string.Empty;
         }
         private static async Task<Role> GetRoleAsync(short roleId, IDatabase db)

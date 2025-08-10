@@ -60,13 +60,14 @@
             skuLabel = new Label();
             button5 = new Button();
             commanTabPage = new TabPage();
+            button10 = new Button();
             button9 = new Button();
             button8 = new Button();
             button7 = new Button();
             button2 = new Button();
             label4 = new Label();
             tabControl = new TabControl();
-            button10 = new Button();
+            tabPage2 = new TabPage();
             ((System.ComponentModel.ISupportInitialize)productImage).BeginInit();
             commanTabPage.SuspendLayout();
             tabControl.SuspendLayout();
@@ -96,7 +97,7 @@
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(19, 246);
+            label9.Location = new Point(19, 289);
             label9.Name = "label9";
             label9.Size = new Size(86, 17);
             label9.TabIndex = 106;
@@ -104,7 +105,7 @@
             // 
             // stockTextBox
             // 
-            stockTextBox.Location = new Point(150, 240);
+            stockTextBox.Location = new Point(150, 283);
             stockTextBox.MaxLength = 15;
             stockTextBox.Name = "stockTextBox";
             stockTextBox.Size = new Size(120, 25);
@@ -155,7 +156,7 @@
             // isactiveCheckBox
             // 
             isactiveCheckBox.AutoSize = true;
-            isactiveCheckBox.Location = new Point(153, 377);
+            isactiveCheckBox.Location = new Point(150, 391);
             isactiveCheckBox.Name = "isactiveCheckBox";
             isactiveCheckBox.Size = new Size(95, 21);
             isactiveCheckBox.TabIndex = 11;
@@ -165,7 +166,7 @@
             // label11
             // 
             label11.AutoSize = true;
-            label11.Location = new Point(310, 326);
+            label11.Location = new Point(310, 369);
             label11.Name = "label11";
             label11.Size = new Size(92, 17);
             label11.TabIndex = 26;
@@ -173,7 +174,7 @@
             // 
             // maxstockTextBox
             // 
-            maxstockTextBox.Location = new Point(430, 317);
+            maxstockTextBox.Location = new Point(430, 360);
             maxstockTextBox.MaxLength = 15;
             maxstockTextBox.Name = "maxstockTextBox";
             maxstockTextBox.Size = new Size(120, 25);
@@ -182,7 +183,7 @@
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(310, 300);
+            label10.Location = new Point(310, 343);
             label10.Name = "label10";
             label10.Size = new Size(83, 17);
             label10.TabIndex = 24;
@@ -190,7 +191,7 @@
             // 
             // minstockTextBox
             // 
-            minstockTextBox.Location = new Point(430, 291);
+            minstockTextBox.Location = new Point(430, 334);
             minstockTextBox.MaxLength = 15;
             minstockTextBox.Name = "minstockTextBox";
             minstockTextBox.Size = new Size(120, 25);
@@ -199,7 +200,7 @@
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new Point(310, 246);
+            label7.Location = new Point(310, 289);
             label7.Name = "label7";
             label7.Size = new Size(93, 17);
             label7.TabIndex = 16;
@@ -208,7 +209,7 @@
             // unitComboBox
             // 
             unitComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            unitComboBox.Location = new Point(430, 240);
+            unitComboBox.Location = new Point(430, 283);
             unitComboBox.Name = "unitComboBox";
             unitComboBox.Size = new Size(120, 25);
             unitComboBox.TabIndex = 4;
@@ -243,7 +244,7 @@
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(19, 197);
+            label6.Location = new Point(19, 164);
             label6.Name = "label6";
             label6.Size = new Size(58, 17);
             label6.TabIndex = 14;
@@ -252,14 +253,14 @@
             // categoryComboBox
             // 
             categoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            categoryComboBox.Location = new Point(150, 191);
+            categoryComboBox.Location = new Point(150, 158);
             categoryComboBox.Name = "categoryComboBox";
             categoryComboBox.Size = new Size(400, 25);
             categoryComboBox.TabIndex = 3;
             // 
             // basicpriceTextBox
             // 
-            basicpriceTextBox.Location = new Point(150, 291);
+            basicpriceTextBox.Location = new Point(150, 334);
             basicpriceTextBox.MaxLength = 15;
             basicpriceTextBox.Name = "basicpriceTextBox";
             basicpriceTextBox.Size = new Size(120, 25);
@@ -271,7 +272,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(16, 326);
+            label3.Location = new Point(16, 369);
             label3.Name = "label3";
             label3.Size = new Size(87, 17);
             label3.TabIndex = 8;
@@ -279,7 +280,7 @@
             // 
             // priceTextBox
             // 
-            priceTextBox.Location = new Point(150, 317);
+            priceTextBox.Location = new Point(150, 360);
             priceTextBox.MaxLength = 15;
             priceTextBox.Name = "priceTextBox";
             priceTextBox.Size = new Size(120, 25);
@@ -298,11 +299,11 @@
             // 
             // descriptionTextBox
             // 
-            descriptionTextBox.Location = new Point(150, 72);
+            descriptionTextBox.Location = new Point(150, 83);
             descriptionTextBox.Multiline = true;
             descriptionTextBox.Name = "descriptionTextBox";
             descriptionTextBox.ScrollBars = ScrollBars.Both;
-            descriptionTextBox.Size = new Size(400, 118);
+            descriptionTextBox.Size = new Size(400, 69);
             descriptionTextBox.TabIndex = 2;
             // 
             // label1
@@ -316,7 +317,7 @@
             // 
             // nameTextBox
             // 
-            nameTextBox.Location = new Point(150, 46);
+            nameTextBox.Location = new Point(150, 52);
             nameTextBox.Name = "nameTextBox";
             nameTextBox.Size = new Size(400, 25);
             nameTextBox.TabIndex = 1;
@@ -391,6 +392,16 @@
             commanTabPage.Text = "Umum";
             commanTabPage.UseVisualStyleBackColor = true;
             // 
+            // button10
+            // 
+            button10.Location = new Point(715, 401);
+            button10.Name = "button10";
+            button10.Size = new Size(34, 32);
+            button10.TabIndex = 110;
+            button10.Text = "x";
+            button10.UseVisualStyleBackColor = true;
+            button10.Click += button10_Click;
+            // 
             // button9
             // 
             button9.Location = new Point(576, 401);
@@ -434,7 +445,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(16, 297);
+            label4.Location = new Point(16, 340);
             label4.Name = "label4";
             label4.Size = new Size(83, 17);
             label4.TabIndex = 10;
@@ -444,6 +455,7 @@
             // 
             tabControl.Controls.Add(commanTabPage);
             tabControl.Controls.Add(tabPage1);
+            tabControl.Controls.Add(tabPage2);
             tabControl.HotTrack = true;
             tabControl.ImageList = il;
             tabControl.Location = new Point(13, 12);
@@ -454,15 +466,15 @@
             tabControl.Size = new Size(979, 485);
             tabControl.TabIndex = 8;
             // 
-            // button10
+            // tabPage2
             // 
-            button10.Location = new Point(715, 401);
-            button10.Name = "button10";
-            button10.Size = new Size(34, 32);
-            button10.TabIndex = 110;
-            button10.Text = "x";
-            button10.UseVisualStyleBackColor = true;
-            button10.Click += button10_Click;
+            tabPage2.Location = new Point(4, 31);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(971, 450);
+            tabPage2.TabIndex = 2;
+            tabPage2.Text = "Inventory";
+            tabPage2.UseVisualStyleBackColor = true;
             // 
             // ProductForm
             // 
@@ -527,5 +539,6 @@
         private Button button8;
         private Button button2;
         private Button button10;
+        private TabPage tabPage2;
     }
 }

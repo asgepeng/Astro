@@ -1,3 +1,4 @@
+using Astro.Winform;
 using Astro.Winform.Forms;
 
 namespace PointOfSale
@@ -25,12 +26,12 @@ namespace PointOfSale
                 {
                     My.Application.ApiUrl = "http://localhost:5002";
                 }
+                Application.Run(new MainForm());
             }
             catch(Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error starting application", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            Application.Run(new MainForm());
         }
     }
 }

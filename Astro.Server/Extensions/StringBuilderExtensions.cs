@@ -184,9 +184,9 @@ namespace Astro.Server.Extensions
                 sbSql.Append(" c.category_name LIKE '%").Append(searchKeyword).Append("%' OR ");
                 sbSql.Append(" CONCAT(u.user_firstname, ' ', u.user_lastname) LIKE '%").Append(searchKeyword).Append("%')");
             }
-            var totalRecords = await db.ExecuteScalarIntegerAsync("SELECT COUNT(p.product_id) AS total " + sbSql.ToString());
+            var totalRecords = await db.ExecuteScalarAsync<int>("SELECT COUNT(p.product_id) AS total " + sbSql.ToString());
 
-            if (totalRecords == 0)
+            if (totalRecords == default(int))
             {
                 sb.Append("</tbody></table><strong>Total Records:</strong>0</div>");
                 return;
@@ -225,7 +225,7 @@ namespace Astro.Server.Extensions
             }, sbSql.ToString(), parameters);
             sb.Append("</tbody></table>");
             sb.Append("<span><strong>Total Records: </strong>");
-            sb.Append(totalRecords.Value.ToString("N0")).Append("</span>");
+            sb.Append(totalRecords.ToString("N0")).Append("</span>");
             sb.Append("<nav aria-label=\"Page navigation\"><ul class=\"pagination\">");
 
             int batchSize = 5;

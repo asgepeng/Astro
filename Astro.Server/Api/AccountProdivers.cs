@@ -1,5 +1,4 @@
 ﻿using Astro.Data;
-using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
@@ -41,7 +40,7 @@ namespace Astro.Server.Api
                 FROM account_providers
                 WHERE provider_id=@id
                 """;
-            var result = await db.ExecuteScalarAsync(sqlCheck, db.CreateParameter("id", provider.Id));
+            var result = await db.ExecuteScalarAsync<string>(sqlCheck, db.CreateParameter("id", provider.Id));
             if (result != null)
             {
                 return Results.Problem("ID: " + provider.Id.ToString() + " currently being used by '" + result.ToString() + "', please use another id");
@@ -82,7 +81,7 @@ namespace Astro.Server.Api
                 FROM accounts
                 WHERE provider_id = @id
                 """;
-            var accountUse = await db.ExecuteScalarIntegerAsync(sqlCheck, db.CreateParameter("id", id));
+            var accountUse = await db.ExecuteScalarAsync<int>(sqlCheck, db.CreateParameter("id", id));
             if (accountUse > 0)
             {
                 return Results.Problem("You cannot delete account provider that being used by account record");

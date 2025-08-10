@@ -1,5 +1,4 @@
-﻿using Astro.Helpers;
-using Astro.Data;
+﻿using Astro.Data;
 using Astro.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -57,7 +56,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("@name", category.Name, DbType.String),
-                db.CreateParameter("@creatorId", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("@creatorId", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Category created successfully.")) : Results.Problem("An error occured while creating the category. Please try again later.");
@@ -74,7 +73,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("@name", category.Name, DbType.String),
-                db.CreateParameter("@creatorId", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("@creatorId", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("@id", category.Id, DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
@@ -85,7 +84,7 @@ namespace Astro.Server.Api
             var commandText = "update categories set is_deleted = true, editor_id=@editor, edited_date = current_timestamp where category_id=@id";
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("@editor", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("@editor", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("@id", id, DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);

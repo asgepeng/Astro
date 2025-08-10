@@ -26,6 +26,7 @@ namespace Astro.Winform.Forms
             this.bs = new BindingSource();
             this.dataGridView1.DataSource = bs;
             this.dataGridView1.AutoGenerateColumns = false;
+            this.dataGridView1.MultiSelect = false;
             this.commandText = cmd;
         }
         private async void ListingPopUpForm_Load(object sender, EventArgs e)

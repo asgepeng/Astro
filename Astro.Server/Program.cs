@@ -4,8 +4,6 @@ using Astro.Server.Middlewares;
 using Astro.Data;
 using Astro.Server;
 using Astro.Server.Api;
-using Astro.Server.Web;
-using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IDatabase>(provider =>
@@ -57,6 +55,5 @@ app.MapAccountProviderEndPoints();
 
 app.MapDocumentEndPoints();
 app.MapSqlQueryEndPoints();
-app.MapControllers();
 
 app.Run();

@@ -9,7 +9,7 @@ using System.Globalization;
 using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Astro.Helpers
+namespace Astro.Server.Extensions
 {
     internal static class Application
     {
@@ -40,17 +40,6 @@ namespace Astro.Helpers
             // Kalau tidak ada header, ambil langsung dari koneksi
             var ipaddress = request.HttpContext.Connection.RemoteIpAddress?.ToString();
             return ipaddress is null ? "127.0.0.1" : ipaddress;
-        }
-        internal static string GetToken(HttpRequest request)
-        {
-            string? authHeader = request.Headers["Authorization"].FirstOrDefault();
-            string? token = null;
-
-            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            {
-                token = authHeader.Substring("Bearer ".Length).Trim();
-            }
-            return token is null ? "" : token;
         }
     }
 

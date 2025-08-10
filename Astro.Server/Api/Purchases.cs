@@ -1,5 +1,4 @@
 ﻿using Astro.Data;
-using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Extensions;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
@@ -32,38 +31,44 @@ namespace Astro.Server.Api
                     INSERT INTO purchases
                         (purchase_id, purchase_date, supplier_id, bruto, discount, cost, tax, tax_rate, netto, paid_amount, paid_method_count, user_id, created_date)
                     VALUES
-                        (@purchase_id, @purchase_date, @supplier_id, @bruto, @discount, @cost, @tax, @tax_rate, @netto, @paid_amount, @paid_method_count, @user_id, @created_date);
+                        (@id, @purchase_date, @supplier_id, @bruto, @discount, @cost, @tax, @tax_rate, @netto, @paid_amount, @paid_method_count, @user_id, @created_date);
                     """);
                 using (var stream = await context.Request.GetMemoryStreamAsync())
                 using (var reader = new IO.Reader(stream))
                 {
+                    var purchaseId = reader.ReadGuid();
+                    var invoiceNumber = await db.ExecuteScalarAsync<string>("SELECT invoice_number FROM purchases WHERE purchase_id = @id", db.CreateParameter("id", purchaseId, DbType.Guid));
+                    if (invoiceNumber != string.Empty) return Results.Ok(true);
+
                     var parameters = new List<DbParameter>()
-                        {
-                            db.CreateParameter("purchase_id", reader.ReadGuid(), DbType.Guid),
-                            db.CreateParameter("purchase_date", reader.ReadDateTime(), DbType.DateTime),
-                            db.CreateParameter("supplier_id", reader.ReadInt16()),
-                            db.CreateParameter("bruto", reader.ReadInt64(), DbType.Int64),
-                            db.CreateParameter("discount", reader.ReadInt32(), DbType.Int32),
-                            db.CreateParameter("cost", reader.ReadInt32(), DbType.Int32),
-                            db.CreateParameter("tax", reader.ReadInt32(), DbType.Int32),
-                            db.CreateParameter("tax_rate", reader.ReadInt32(),DbType.Int32),
-                            db.CreateParameter("netto", reader.ReadInt64(), DbType.Int64),
-                            db.CreateParameter("paid_amount", reader.ReadInt64(), DbType.Int64),
-                            db.CreateParameter("paid_method_count", reader.ReadInt16(),DbType.Int16),
-                            db.CreateParameter("user_id", reader.ReadInt16(), DbType.Int16),
-                            db.CreateParameter("created_date", reader.ReadDateTime(), DbType.DateTime)
-                        };
+                    {
+                        db.CreateParameter("id", purchaseId),
+                        db.CreateParameter("location", reader.ReadInt16()),
+                        db.CreateParameter("purchase_date", reader.ReadDateTime(), DbType.DateTime),
+                        db.CreateParameter("supplier_id", reader.ReadInt16()),
+                        db.CreateParameter("bruto", reader.ReadInt64(), DbType.Int64),
+                        db.CreateParameter("discount", reader.ReadInt32(), DbType.Int32),
+                        db.CreateParameter("cost", reader.ReadInt32(), DbType.Int32),
+                        db.CreateParameter("tax", reader.ReadInt32(), DbType.Int32),
+                        db.CreateParameter("tax_rate", reader.ReadInt32(),DbType.Int32),
+                        db.CreateParameter("netto", reader.ReadInt64(), DbType.Int64),
+                        db.CreateParameter("total_paid", reader.ReadInt64(), DbType.Int64),
+                        db.CreateParameter("paid_method_count", reader.ReadInt16(),DbType.Int16),
+                        db.CreateParameter("user_id", reader.ReadInt16(), DbType.Int16),
+                        db.CreateParameter("created_date", reader.ReadDateTime(), DbType.DateTime)
+                    };
                     var itemCount = reader.ReadInt32();
                     if (itemCount == 0) return Results.BadRequest("items is null");
                     sb.AppendLine("""
-                        INSERT INTO purchase_items
-                            (purchase_id, product_id, price, qty, discount)
+                        INSERT INTO stockflows
+                            (location_id, ref_type, ref_id, cogs, stock, qty, price, discount)
                         VALUES
+                            (@location, 1, @id, @cogs, @stock, @qty, @price, @discount);
                         """);
                     while (itemCount > 0)
                     {
                         sb
-                            .Append(" (@purchase_id, @p").Append(itemCount)
+                            .Append(" (@id, @p").Append(itemCount)
                             .Append(", @prc").Append(itemCount)
                             .Append(", @q").Append(itemCount)
                             .Append(", @d").Append(itemCount).Append(")");

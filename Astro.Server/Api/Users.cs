@@ -1,5 +1,4 @@
-﻿using Astro.Helpers;
-using Astro.Data;
+﻿using Astro.Data;
 using Astro.Models;
 using Astro.ViewModels;
 using Microsoft.AspNetCore.Builder;
@@ -23,6 +22,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/users", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/users/{id}", DeleteAsync).RequireAuthorization();
             app.MapGet("/data/users/role-options", GetRoleOptionsAsync).RequireAuthorization();
+            app.MapPost("/data/users/reset-password", ResetPasswordAsync).RequireAuthorization();
         }
         internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
         {
@@ -256,7 +256,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("concurrencyStamp", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("usePasswordExpiration", user.UsePasswordExpiration, DbType.Boolean),
                 db.CreateParameter("passwordExpirationDate", (object?)user.PasswordExpirationDate ?? DBNull.Value, DbType.DateTime),
-                db.CreateParameter("creatorId", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("creatorId", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("createdDate", DateTime.UtcNow, DbType.DateTime)
             };
 
@@ -264,7 +264,6 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("User created successfully.")) : Results.Ok(CommonResult.Fail("Failed to create user."));
         }
-
         internal static async Task<IResult> UpdateAsync(User user, IDatabase db, HttpContext context)
         {
             var commandText = """
@@ -321,7 +320,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("concurrencyStamp", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("usePasswordExpiration", user.UsePasswordExpiration, DbType.Boolean),
                 db.CreateParameter("passwordExpirationDate", (object?)user.PasswordExpirationDate ?? DBNull.Value, DbType.DateTime),
-                db.CreateParameter("editorId", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editorId", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("editedDate", DateTime.UtcNow, DbType.DateTime),
                 db.CreateParameter("userId", user.Id, DbType.Int16)
             };
@@ -331,7 +330,6 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("User updated successfully.")) : Results.Ok(CommonResult.Fail("Failed to update user."));
         }
-
         internal static async Task<IResult> DeleteAsync(int id, IDatabase db, HttpContext context)
         {
             var commandText = """
@@ -341,7 +339,6 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("userId", id, DbType.Int16));
             return success ? Results.Ok(CommonResult.Ok("User deleted successfully.")) : Results.Ok(CommonResult.Fail("Failed to delete user."));
         }
-
         internal static async Task<IResult> GetRoleOptionsAsync(IDatabase db)
         {
             var commandText = """
@@ -361,6 +358,20 @@ namespace Astro.Server.Api
                 }, commandText);
                 return Results.File(builder.ToArray(), "application/octet-stream");
             }
+        }
+        internal static async Task<IResult> ResetPasswordAsync(ResetPasswordRequest request, IDatabase db, HttpContext context)
+        {
+            var commandText = """
+                UPDATE users
+                SET password_hash = @password
+                WHERE user_id = @id
+                """;
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("password", request.Password, DbType.String),
+                db.CreateParameter("id", request.UserId, DbType.Int16)
+            };
+            return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok()) : Results.Problem();
         }
     }
 }

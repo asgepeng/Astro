@@ -23,6 +23,7 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(Address))]
 [JsonSerializable(typeof(ListOption))]
 [JsonSerializable(typeof(Option))]
+[JsonSerializable(typeof(ResetPasswordRequest))]
 [JsonSerializable(typeof(ChangePasswordRequest))]
 [JsonSerializable(typeof(ListSection))]
 [JsonSerializable(typeof(ListMenu))]

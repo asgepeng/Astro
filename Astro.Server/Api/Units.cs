@@ -1,5 +1,4 @@
-﻿using Astro.Helpers;
-using Astro.Data;
+﻿using Astro.Data;
 using Astro.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -45,7 +44,7 @@ namespace Astro.Server.Api
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("@name", unit.Name.Trim(), DbType.String),
-                db.CreateParameter("@creatorId", Helpers.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("@creatorId", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Unit created successfully.")) 

@@ -137,7 +137,7 @@ namespace Astro.Models
         }
         public bool IsPasswordExpired()
         {
-            return UsePasswordExpiration && PasswordExpirationDate.HasValue && PasswordExpirationDate.Value < DateTime.UtcNow;
+            return UsePasswordExpiration && PasswordExpirationDate.HasValue && PasswordExpirationDate.Value.AddDays(10) < DateTime.UtcNow;
         }
         public bool HasExceededFailedAttempts(int threshold = 3)
         {

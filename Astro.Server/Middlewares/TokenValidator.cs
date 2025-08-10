@@ -4,8 +4,8 @@ using System.Security.Claims;
 using System.Data.Common;
 
 using Astro.Data;
-using Astro.Helpers;
 using Astro.Server.Memory;
+using Astro.Server.Extensions;
 
 namespace Astro.Server.Middlewares
 {
@@ -13,7 +13,7 @@ namespace Astro.Server.Middlewares
     {
         public Task ValidateAsync(MessageReceivedContext context)
         {
-            string requestToken = Application.GetToken(context.Request);
+            string requestToken = context.Request.GetToken();
             string requestUserAgent = context.Request.Headers.UserAgent.ToString();
             string requestIpAddress = Application.GetIpAddress(context.Request);
 

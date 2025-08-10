@@ -1,5 +1,4 @@
 ﻿using Astro.Data;
-using Astro.Helpers;
 using Astro.Models;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
@@ -48,7 +47,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("account_name", model.AccountName),
                 db.CreateParameter("account_number", model.AccountNumber),
                 db.CreateParameter("provider_id", model.Provider),
-                db.CreateParameter("creator_id", Helpers.Application.GetUserID(context))
+                db.CreateParameter("creator_id", Extensions.Application.GetUserID(context))
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account created succesfully")) : Results.Problem("An error occured while creating account, please try again later.");
         }
@@ -68,7 +67,7 @@ namespace Astro.Server.Api
                 db.CreateParameter("account_name", model.AccountName, DbType.String),
                 db.CreateParameter("account_number", model.AccountNumber, DbType.String),
                 db.CreateParameter("provider_id", model.Provider, DbType.Int16),
-                db.CreateParameter("editor_id", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("id", model.Id, DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ?
@@ -86,7 +85,7 @@ namespace Astro.Server.Api
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("editor_id", Helpers.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("id", id, DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ?

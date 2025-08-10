@@ -26,5 +26,20 @@ namespace Astro.Server.Extensions
         {
             return request.Headers.UserAgent.ToString() == "astro.winform.app";     
         }
+        internal static string GetToken(this HttpRequest request)
+        {
+            string? authHeader = request.Headers["Authorization"].FirstOrDefault();
+            string? token = null;
+
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+            return token is null ? "" : token;
+        }
+        internal static short GetLocationID(this HttpRequest request)
+        {
+            return (short)1;
+        }
     }
 }
