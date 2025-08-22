@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Astro.Server.Middlewares;
-using Astro.Data;
-using Astro.Server;
 using Astro.Server.Api;
+using Astro.Data;
+
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSingleton<IDatabase>(provider =>
+builder.Services.AddSingleton<IDBClient>(provider =>
 {
     var config = provider.GetRequiredService<IConfiguration>();
     var connectionString = config.GetConnectionString("Npgsql") ?? throw new InvalidOperationException("Connection string 'Default' not found.");
-    return new NpgsqlDatabase(connectionString);
+    return new PgDbClient(connectionString);
 });
 builder.Services.AddScoped<TokenValidator>();
 builder.Services.AddAuthentication("Bearer")
@@ -31,9 +34,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
-
-builder.Services.AddWindowsService();
-builder.Services.AddHostedService<Worker>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -55,5 +55,7 @@ app.MapAccountProviderEndPoints();
 
 app.MapDocumentEndPoints();
 app.MapSqlQueryEndPoints();
+
+app.MapPurchaseEndPoints();
 
 app.Run();

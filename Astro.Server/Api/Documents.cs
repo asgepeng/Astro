@@ -15,7 +15,7 @@ namespace Astro.Server.Api
             app.MapPost("/documents/upload", UploadImageAsync).RequireAuthorization(); ;
             app.MapGet("/documents/download/{fileName}", DownloadAsync).RequireAuthorization();
         }
-        private static async Task<IResult> UploadImageAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> UploadImageAsync(IDBClient db, HttpContext context)
         {
             var fileName = Guid.NewGuid().ToByteArray().ToHexString();
             using (var stream = await context.Request.GetMemoryStreamAsync())

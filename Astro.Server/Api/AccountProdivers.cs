@@ -23,17 +23,17 @@ namespace Astro.Server.Api
             app.MapPut("/data/account-providers", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/account-providers/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountProviderTableAsync(), "application/octet-stream");
             return Results.Ok();
         }
-        private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountProviderAsync(id), "application/octet-stream");
             return Results.Ok();
         }
-        private static async Task<IResult> CreateAsync(AccountProvider provider, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(AccountProvider provider, IDBClient db, HttpContext context)
         {
             var sqlCheck = """
                 SELECT provider_name
@@ -58,7 +58,7 @@ namespace Astro.Server.Api
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account provider was successfully created")) : Results.Problem("An error occured while creating account providers, please try again later");
         }
-        private static async Task<IResult> UpdateAsync(AccountProvider provider, IDatabase db, HttpContext context)
+        private static async Task<IResult> UpdateAsync(AccountProvider provider, IDBClient db, HttpContext context)
         {
             var commandText = """
                 UPDATE account_providers
@@ -74,7 +74,7 @@ namespace Astro.Server.Api
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account provider was successfully created")) : Results.Problem("An error occured while creating account providers, please try again later");
         }
-        private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var sqlCheck = """
                 SELECT COUNT(*) AS total

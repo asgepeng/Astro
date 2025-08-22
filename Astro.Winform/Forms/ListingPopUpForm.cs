@@ -24,9 +24,9 @@ namespace Astro.Winform.Forms
         {
             InitializeComponent();
             this.bs = new BindingSource();
-            this.dataGridView1.DataSource = bs;
-            this.dataGridView1.AutoGenerateColumns = false;
-            this.dataGridView1.MultiSelect = false;
+            this.grid.DataSource = bs;
+            this.grid.AutoGenerateColumns = false;
+            this.grid.MultiSelect = false;
             this.commandText = cmd;
         }
         private async void ListingPopUpForm_Load(object sender, EventArgs e)
@@ -45,7 +45,6 @@ namespace Astro.Winform.Forms
                     if (result == 1)
                     {
                         var table = reader.ReadDataTable();
-                        dataGridView1.DataSource = table;
                         foreach (DataColumn col in table.Columns)
                         {
                             if (col.DataType.Equals(typeof(string)))
@@ -60,26 +59,27 @@ namespace Astro.Winform.Forms
                         var message = reader.ReadString();
                         MessageBox.Show(message);
                     }
-                    
-                    this.textBox1.Enabled = true;
-                    this.dataGridView1.Enabled = true;
-                    this.button1.Enabled = true;
+
+                    this.searchTextBox.Enabled = true;
+                    this.grid.Enabled = true;
+                    this.okButton.Enabled = true;
                 }
             }
+            this.searchTextBox.Focus();
         }
         internal void AddColumn(string headerText, string propertyName, int width, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleLeft, string format = "")
         {
-            var colname = "col_" + this.dataGridView1.Columns.Count.ToString();
-            var index = this.dataGridView1.Columns.Add(colname, headerText);
+            var colname = "col_" + this.grid.Columns.Count.ToString();
+            var index = this.grid.Columns.Add(colname, headerText);
 
-            var column = this.dataGridView1.Columns[index];
+            var column = this.grid.Columns[index];
             column.DataPropertyName = propertyName;
             column.Width = width;
             column.DefaultCellStyle.Alignment = alignment;
             column.DefaultCellStyle.Format = format;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void OKButtonClicked(object sender, EventArgs e)
         {
             if (bs.Current is null)
             {
@@ -91,9 +91,10 @@ namespace Astro.Winform.Forms
 
         }
 
-        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void GridDoubleClicked(object sender, DataGridViewCellEventArgs e)
         {
-            this.button1.PerformClick();
+            if (e.RowIndex < 0) return;
+            this.okButton.PerformClick();
         }
 
         public DataRow SelectedRow
@@ -115,14 +116,21 @@ namespace Astro.Winform.Forms
             return string.Join(" OR ", columns);
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+        private void ApplyFilter(object sender, EventArgs e)
         {
-            this.bs.Filter = CreateFilter(this.textBox1.Text);
+            this.bs.Filter = CreateFilter(this.searchTextBox.Text);
         }
 
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        private void SearchTextBoxKeyPressed(object sender, KeyPressEventArgs e)
         {
             e.FilterAlphaNumeric();
+        }
+
+        private void SearchTextBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Up) this.bs.MovePrevious();
+            if (e.KeyData == Keys.Down) this.bs.MoveNext();
+            if (e.KeyData == Keys.Enter) this.okButton.PerformClick();
         }
     }
 }

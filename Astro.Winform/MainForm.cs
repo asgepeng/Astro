@@ -14,6 +14,14 @@ namespace PointOfSale
         {
             InitializeComponent();
         }
+        internal Branch? GetSelectedBranch()
+        {
+            if (this.locationComboBox.SelectedItem is Branch branch)
+            {
+                return branch;
+            }
+            return null;
+        }
         private async void MainForm_Load(object sender, EventArgs e)
         {
             var form = new LoginForm();
@@ -40,12 +48,17 @@ namespace PointOfSale
                         sectionLength--;
                     }
                 }
-
+                foreach (var branch in My.Application.AccessableBranches)
+                {
+                    this.locationComboBox.Items.Add(branch);
+                }
+                if (locationComboBox.Items.Count > 0) locationComboBox.SelectedIndex = 0;
                 this.WindowState = FormWindowState.Maximized;
                 if (My.Application.User != null)
                 {
                     this.Text = My.Application.User.Name + " - " + My.Application.User.Role.Name;
                 }
+
             }
             else
             {
@@ -139,6 +152,20 @@ namespace PointOfSale
             {
                 this.navigator.BindingSource = lform.BindingSource;
                 this.searchTextBox.Text = lform.Filter;
+                if (lform.ListingType == ListingData.Products)
+                {
+                    locationComboBox.SelectedIndexChanged += async (sender, e) =>
+                    {
+                        if (locationComboBox.SelectedItem is null) return;
+
+                        var branch = (Branch)locationComboBox.SelectedItem;
+                        var json = await WClient.PutAsync("/auth/stores/" + branch.Id.ToString(), "");
+                        if (json.ToLowerInvariant() == "true")
+                        {
+                            refreshButton.PerformClick();
+                        }
+                    };
+                }
                 await lform.LoadDataAsync();
                 return;
             }

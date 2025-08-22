@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -12,6 +13,8 @@ namespace Astro.Models.Transactions
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
+        [JsonPropertyName("location")]
+        public short Location { get; set; } = 0;
         [JsonPropertyName("invoiceNumber")]
         public string InvoiceNumber { get; set; } = string.Empty;
         [JsonPropertyName("date")]
@@ -29,11 +32,14 @@ namespace Astro.Models.Transactions
         public long GrandTotal => SubTotal - Discount + Cost + Tax;
         [JsonPropertyName("totalPaid")]
         public long TotalPaid { get; set; }
-        
+        [JsonPropertyName("accountPayableAmount")]
+        public long AccountPayableAmount => GrandTotal - TotalPaid;        
         [JsonPropertyName("items")]
         public PurchaseItemCollection Items { get; } = new PurchaseItemCollection();
         [JsonPropertyName("payments")]
         public PaymentCollection Payments { get; } = new PaymentCollection();
+        [JsonPropertyName("costs")]
+        public CostCollection Costs { get; } = new CostCollection();
         public void Calculate()
         {
             SubTotal = 0;
@@ -46,6 +52,7 @@ namespace Astro.Models.Transactions
         {
             using (var writer = new IO.Writer())
             {
+                writer.WriteInt16(this.Location);
                 writer.WriteGuid(this.Id);
                 writer.WriteString(this.InvoiceNumber);
                 writer.WriteDateTime(this.Date);
@@ -56,12 +63,14 @@ namespace Astro.Models.Transactions
                 writer.WriteInt32(this.Cost);
                 writer.WriteInt64(this.GrandTotal);
                 writer.WriteInt64(this.TotalPaid);
+                writer.WriteInt64(this.AccountPayableAmount);
+                writer.WriteDateTime(DateTime.UtcNow);
                 writer.WriteInt32(this.Items.Count);
                 foreach (var item in this.Items)
                 {
-                    writer.WriteInt16(item.ProductId);
-                    writer.WriteString(item.ProductName);
-                    writer.WriteString(item.ProductUnit);
+                    writer.WriteInt16(item.Id);
+                    writer.WriteString(item.Name);
+                    writer.WriteString(item.Unit);
                     writer.WriteInt32(item.Quantity);
                     writer.WriteInt64(item.Price);
                     writer.WriteInt32(item.Discount);
@@ -80,15 +89,14 @@ namespace Astro.Models.Transactions
 
     public class PurchaseItem
     {
-        public short ProductId { get; set; } = 0;
-        public string ProductName { get; set; } = string.Empty;
-        public string ProductUnit { get; set; } = string.Empty;
+        public short Id { get; set; } = 0;
+        public string Name { get; set; } = string.Empty;
+        public string Sku { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public int Quantity { get; set; } = 0;
-        public long COGS { get; }
         public long Price { get; set; } = 0;
         public int Discount { get; set; } = 0;
         public long NettPrice => Price - Discount;
-        public long NettProfit => NettPrice - COGS;
         public long Total => Quantity * NettPrice;
     }
     public class PurchaseItemCollection : Collection<PurchaseItem>
@@ -97,7 +105,7 @@ namespace Astro.Models.Transactions
         {
             foreach (var i in this)
             {
-                if (item.ProductId == i.ProductId)
+                if (item.Id == i.Id)
                 {
                     i.Quantity += item.Quantity;
                     return;
@@ -115,5 +123,16 @@ namespace Astro.Models.Transactions
     public class PaymentCollection : Collection<Payment>
     {
 
+    }
+
+    public class PurchaseItemRequest
+    {
+        [JsonPropertyName("id")]
+        public short Id { get; set; } = 0;
+        [JsonPropertyName("sku")]
+        public string Sku { get; set; } = string.Empty;
+        [JsonPropertyName("location")]
+        public short Location { get; set; } = 0;
+        public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.PurchaseItemRequest);
     }
 }

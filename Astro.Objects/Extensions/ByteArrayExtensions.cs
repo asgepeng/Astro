@@ -26,6 +26,15 @@ namespace Astro.Extensions
             Array.Copy(input, start, result, 0, length);
             return result;
         }
+        public static void Copy(this byte[] data, byte[] newValue, int startIndex)
+        {
+            if (data is null) throw new ArgumentNullException(nameof(data));
+            if (newValue is null) throw new ArgumentNullException(nameof(newValue));
+            if (startIndex < 0 || startIndex + newValue.Length > data.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+            Buffer.BlockCopy(newValue, 0, data, startIndex, newValue.Length);
+        }
         public static byte[][] Split(this byte[] input, byte separator)
         {
             if (input == null)

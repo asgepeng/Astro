@@ -3,6 +3,7 @@ using Astro.Models;
 using Astro.Winform.Classes;
 using Astro.Winform.Helpers;
 using Astro.Winform.Tables;
+using PointOfSale;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -43,7 +44,15 @@ namespace Astro.Winform.Forms
                     var roleForm = new RoleForm() { Role = await objectBuilder.CreateRoleViewModel(id) };
                     return roleForm;
                 case ListingData.Products:
-                    var productForm = new ProductForm() { Model = await objectBuilder.CreateProductViewModel(id) };
+                    var productForm = new ProductForm() { Tag = id };
+                    if (this.MdiParent != null)
+                    {
+                        var branch = ((MainForm)this.MdiParent).GetSelectedBranch();
+                        if (branch != null)
+                        {
+                            productForm.BranchId = branch.Id;
+                        }
+                    }
                     return productForm;
                 case ListingData.Suppliers:
                 case ListingData.Customers:
@@ -168,7 +177,13 @@ namespace Astro.Winform.Forms
                 case ListingData.Roles:
                     return new RoleDataTable();
                 case ListingData.Products:
-                    return new ProductDataTable();
+                    var table = new ProductDataTable();
+                    if (this.MdiParent != null)
+                    {
+                        var branch = ((MainForm)this.MdiParent).GetSelectedBranch();
+                        if (branch != null) table.BranchId = branch.Id;
+                    }
+                    return table;
                 case ListingData.Suppliers:
                 case ListingData.Customers:
                     return new ContactDataTable() { ContactType = ListingType == ListingData.Suppliers ? (short)0 : (short)1 };

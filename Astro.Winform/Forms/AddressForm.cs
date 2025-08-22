@@ -1,4 +1,5 @@
 ﻿using Astro.Models;
+using Astro.Winform.Classes;
 using Astro.Winform.Helpers;
 using System;
 using System.Collections.Generic;
@@ -34,22 +35,22 @@ namespace Astro.Winform.Forms
                 streetTextBox.Focus();
                 return;
             }
-            if (countryComboBox.SelectedItem is null)
-            {
-                MessageBox.Show("Country is not selected", "Country empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                countryComboBox.Focus();
-                return;
-            }
             if (stateComboBox.SelectedItem is null)
             {
-                MessageBox.Show("State is not selected", "State empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Country is not selected", "Country empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 stateComboBox.Focus();
                 return;
             }
             if (cityComboBox.SelectedItem is null)
             {
-                MessageBox.Show("City cannot be empty.", "City", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("State is not selected", "State empty", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 cityComboBox.Focus();
+                return;
+            }
+            if (districtComboBox.SelectedItem is null)
+            {
+                MessageBox.Show("City cannot be empty.", "City", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                districtComboBox.Focus();
                 return;
             }
             if (string.IsNullOrWhiteSpace(zipCodeTextBox.Text))
@@ -61,9 +62,9 @@ namespace Astro.Winform.Forms
 
             this.Address.Type = (short)typeComboBox.SelectedIndex;
             this.Address.StreetAddress = streetTextBox.Text.Trim();
-            var selectedCity = (Option)this.cityComboBox.SelectedItem;
-            var selectedState = (Option)this.stateComboBox.SelectedItem;
-            var selectedCountry = (Option)this.countryComboBox.SelectedItem;
+            var selectedCity = (Option)this.districtComboBox.SelectedItem;
+            var selectedState = (Option)this.cityComboBox.SelectedItem;
+            var selectedCountry = (Option)this.stateComboBox.SelectedItem;
             this.Address.City = new City()
             {
                 Id = selectedCity.Id,
@@ -88,56 +89,171 @@ namespace Astro.Winform.Forms
 
         private async void AddressForm_Load(object sender, EventArgs e)
         {
-            this.countryComboBox.DisplayMember= "Text";
-            this.countryComboBox.ValueMember = "Id";
-            this.stateComboBox.DisplayMember = "Text";
+            this.stateComboBox.DisplayMember= "Name";
             this.stateComboBox.ValueMember = "Id";
-            this.cityComboBox.DisplayMember = "Text";
+            this.cityComboBox.DisplayMember = "Name";
             this.cityComboBox.ValueMember = "Id";
+            this.districtComboBox.DisplayMember = "Name";
+            this.districtComboBox.ValueMember = "Id";
+            this.villageComboBox.DisplayMember = "Name";
+            this.villageComboBox.ValueMember = "Id";
 
             this.typeComboBox.SelectedIndex = this.Address.Type;
             this.streetTextBox.Text = this.Address.StreetAddress;
 
             if (this.Address.StateOrProvince.Id == 0)
             {
-                this.countryComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
+                this.stateComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
             }
             else
             {
-                this.countryComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
-                this.stateComboBox.DataSource = await ListOptionHelper.GetStateOptionsAsync(this.Address.Country.Id);
-                this.cityComboBox.DataSource = await ListOptionHelper.GetCityOptionsAsync(this.Address.StateOrProvince.Id);
+                using (var stream = await WClient.GetStreamAsync("/data/regions/states/360"))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var stateCount = reader.ReadInt32();
+                    for (int i=0; i < stateCount; i++)
+                    {
+                        var state = new Province()
+                        {
+                            Id = reader.ReadInt16(),
+                            Name = reader.ReadString()
+                        };
+                        this.stateComboBox.Items.Add(state);
+                        if (state.Id == this.Address.StateOrProvince.Id) this.stateComboBox.SelectedIndex = i;
+                    }
+                }
+                using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + this.Address.StateOrProvince.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var cityCount = reader.ReadInt32();
+                    for (int i=0; i < cityCount; i++)
+                    {
+                        var city = new City()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        };
+                        this.cityComboBox.Items.Add(city);
+                        if (city.Id == this.Address.City.Id) this.cityComboBox.SelectedIndex = i;
+                    }
+                }
 
-                this.countryComboBox.Text = this.Address.Country.Name;
-                this.stateComboBox.Text = this.Address.StateOrProvince.Name;
-                this.cityComboBox.Text = this.Address.City.Name;
+                using (var stream = await WClient.GetStreamAsync("/data/regions/districts/" + this.Address.City.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var districtCount = reader.ReadInt32();
+                    for (int i = 0; i < districtCount; i++)
+                    {
+                        var district = new District()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        };
+                        this.districtComboBox.Items.Add(district);
+                        if (district.Id == this.Address.District.Id) this.districtComboBox.SelectedIndex = i;
+                    }
+                }
+                using (var stream = await WClient.GetStreamAsync("/data/regions/villages/" + this.Address.District.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var villageCount = reader.ReadInt32();
+                    for (int i = 0; i < villageCount; i++)
+                    {
+                        var village = new Village()
+                        {
+                            Id = reader.ReadInt64(),
+                            Name = reader.ReadString()
+                        };
+                        this.villageComboBox.Items.Add(village);
+                        if (village.Id == this.Address.Village.Id) this.villageComboBox.SelectedIndex = i;
+                    }
+                }
             }
             this.zipCodeTextBox.Text = this.Address.ZipCode;
             this.primaryCheckBox.Checked = this.Address.IsPrimary;
             this.primaryCheckBox.Visible = !this.Address.IsPrimary;
 
-            countryComboBox.SelectedIndexChanged += CountryChanged;
             stateComboBox.SelectedIndexChanged += StateChanged;
-        }
-        private async void CountryChanged(object? sender, EventArgs e)
-        {
-            if (this.countryComboBox.SelectedItem is Option country)
-            {
-                this.stateComboBox.DataSource = await ListOptionHelper.GetStateOptionsAsync((short)country.Id);
-                this.stateComboBox.SelectedIndex = -1;
-                this.cityComboBox.DataSource = null;
-            }
+            cityComboBox.SelectedIndexChanged += CityChanged;
+            districtComboBox.SelectedIndexChanged += DistrictChanged;
         }
         private async void StateChanged(object? sender, EventArgs e)
         {
-            if (this.stateComboBox.SelectedItem is Option state)
+            this.cityComboBox.Items.Clear();
+            if (this.stateComboBox.SelectedItem is null)
             {
-                this.cityComboBox.DataSource = await ListOptionHelper.GetCityOptionsAsync((short)state.Id);
-                this.cityComboBox.SelectedIndex = -1;
+                return;
             }
-            else
+            if (this.stateComboBox.SelectedItem is Province province)
             {
-                this.cityComboBox.DataSource = null;
+                using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + province.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var cityCount = reader.ReadInt32();
+                    for (int i = 0; i < cityCount; i++)
+                    {
+                        var city = new City()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        };
+                        this.cityComboBox.Items.Add(city);
+                    }
+                }
+                this.districtComboBox.Items.Clear();
+                this.villageComboBox.Items.Clear();
+            }
+        }
+        private async void CityChanged(object? sender, EventArgs e)
+        {
+            this.districtComboBox.Items.Clear();
+            if (this.cityComboBox.SelectedItem is null)
+            {
+                return;
+            }
+
+            if (this.cityComboBox.SelectedItem is City city)
+            {
+                using (var stream = await WClient.GetStreamAsync("/data/regions/districts/" + city.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var districtCount = reader.ReadInt32();
+                    for (int i = 0; i < districtCount; i++)
+                    {
+                        var district = new District()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        };
+                        this.districtComboBox.Items.Add(district);
+                    }
+                }
+                this.villageComboBox.Items.Clear();
+            }
+        }
+        private async void DistrictChanged(object? sender, EventArgs e)
+        {
+            villageComboBox.Items.Clear();
+            if (districtComboBox.SelectedItem is null)
+            {
+                return;
+            }            
+            if (districtComboBox.SelectedItem is District district)
+            {
+                using (var stream = await WClient.GetStreamAsync("/data/regions/villages/" + district.Id.ToString()))
+                using (var reader = new IO.Reader(stream))
+                {
+                    var villageCount = reader.ReadInt32();
+                    for (int i = 0; i < villageCount; i++)
+                    {
+                        var village = new Village()
+                        {
+                            Id = reader.ReadInt64(),
+                            Name = reader.ReadString()
+                        };
+                        this.villageComboBox.Items.Add(village);
+                    }
+                }
             }
         }
     }

@@ -1,10 +1,12 @@
 ﻿using Astro.DataTables;
+using Astro.Models;
 using Astro.Winform.Classes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace Astro.Winform.Tables
 {
@@ -22,10 +24,18 @@ namespace Astro.Winform.Tables
             Columns.Add("creator", typeof(string));
             Columns.Add("created_date", typeof(DateTime));
         }
+        internal short BranchId { get; set; } = 1;
         internal override async Task LoadAsync()
         {
             if (this.Rows.Count > 0) this.Rows.Clear();
-            using (var stream = await WClient.GetStreamAsync("/data/products"))
+            var requestData = Array.Empty<byte>();
+            using (var writer = new IO.Writer())
+            {
+                writer.WriteByte(0);
+                writer.WriteInt16(this.BranchId);
+                requestData = writer.ToArray();
+            }
+            using (var stream = await WClient.PostStreamAsync("/data/products", requestData))
             using (var reader = new IO.Reader(stream))
             {
                 while (reader.Read())

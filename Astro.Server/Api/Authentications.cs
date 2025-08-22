@@ -10,6 +10,8 @@ using Astro.Server.Binaries;
 using Astro.Server.Memory;
 using Microsoft.AspNetCore.Routing;
 using Astro.Server.Extensions;
+using Astro.Extensions;
+using System.Dynamic;
 
 namespace Astro.Server.Api
 {
@@ -25,50 +27,51 @@ namespace Astro.Server.Api
             app.MapPost("/auth/logout", SignOut).RequireAuthorization();
             app.MapPost("/auth/change-password", ChangePasswordAsync).RequireAuthorization();
             app.MapGet("/auth/permissions", GetPermissionsAsync).RequireAuthorization();
+            app.MapGet("/auth/stores", GetUserLocationsAsync).RequireAuthorization();
+            app.MapPut("/auth/stores/{location}", ChangeLocationAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> SignInAsync(Credential credential, IDatabase db, HttpContext context)
+        internal static async Task<IResult> SignInAsync(Credential credential, IDBClient db, HttpContext context)
         {
             if (string.IsNullOrEmpty(credential.Username) || string.IsNullOrEmpty(credential.Password))
             {
                 return Results.Unauthorized();
             }
-
-            var user = await GetUserByLoginAsync(credential.Username, db);
-            if (user is null)
+            var loginInfo = await GetLoginInfoAsync(credential.Username, db);
+            if (loginInfo is null)
             {
                 await CreateLoginHistory(null, LoginResult.NotFound, db, context);
                 return Results.Unauthorized();
             }
 
-            if (user.IsLockedOut())
+            if (loginInfo.IsLockedOut())
             {
-                await CreateLoginHistory(user, LoginResult.AccountLocked, db, context);
+                await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
                 return Results.Unauthorized();
             }
-            var credentialVerified = user.VerifyPassword(credential.Password);
+            var credentialVerified = loginInfo.VerifyPassword(credential.Password);
             if (!credentialVerified)
             {
-                if (user.LockoutEnabled && await IncrementAccessFailedCountAsync(user, db))
+                if (loginInfo.LockoutEnabled && await IncrementAccessFailedCountAsync(loginInfo, db))
                 {
-                    await CreateLoginHistory(user, LoginResult.AccountLocked, db, context);
+                    await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
                     return Results.Problem("Your account has been temporarily locked due to multiple failed login attempts.");
                 }
                 else
                 {
-                    await CreateLoginHistory(user, LoginResult.InvalidCredential, db, context);
+                    await CreateLoginHistory(loginInfo, LoginResult.InvalidCredential, db, context);
                     return Results.Unauthorized();
                 }
             }
-            if (user.IsPasswordExpired())
+            if (loginInfo.IsPasswordExpired())
             {
-                await CreateLoginHistory(user, LoginResult.PasswordExpired, db, context);
+                await CreateLoginHistory(loginInfo, LoginResult.PasswordExpired, db, context);
                 return Results.Forbid();
             }
 
-            var token = RegisterNewToken(user, context);
+            var token = await RegisterNewToken(loginInfo, db, context);
             if (string.IsNullOrEmpty(token))
             {
-                await CreateLoginHistory(user, LoginResult.CreateTokenFailed, db, context);
+                await CreateLoginHistory(loginInfo, LoginResult.CreateTokenFailed, db, context);
                 return Results.Problem("We were unable to generate your access token. Please contact your administrator for assistance");
             }
 
@@ -76,67 +79,126 @@ namespace Astro.Server.Api
             {
                 using (var writer =new IO.Writer())
                 {
-                    writer.WriteInt16(user.Id);
-                    writer.WriteString((user.FirstName + " " + user.LastName).Trim());
-                    writer.WriteInt16(user.RoleId);
-                    writer.WriteString(await GetRoleNameAsync(user.RoleId, db));
+                    var commandText = """
+                        SELECT e.fullname, e.roleid, r.name AS rolename
+                        FROM employees AS e
+                        INNER JOIN roles AS r ON e.roleid = r.roleid
+                        WHERE e.employeeid = @id
+                        """;
+                    writer.WriteInt16(loginInfo.EmployeeId);
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            writer.WriteString(reader.GetString(0));
+                            writer.WriteInt16(reader.GetInt16(1));
+                            writer.WriteString(reader.GetString(2));
+                        }
+                    }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
                     writer.WriteString(token);
 
+                    var iPos = writer.ReserveInt32();
+                    var command = """
+                        SELECT l.locationid, l.name
+                        FROM employeelocations AS el
+                        INNER JOIN locations AS l ON el.locationid = l.locationid
+                        WHERE el.employeeid = @id
+                        """;
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        var iCount = 0;
+                        while (await reader.ReadAsync())
+                        {
+                            writer.WriteInt16(reader.GetInt16(0));
+                            writer.WriteString(reader.GetString(1));
+                            iCount++;
+                        }
+                        writer.WriteInt32(iCount, iPos);
+                    }, command, db.CreateParameter("id", loginInfo.EmployeeId));
                     return Results.File(writer.ToArray(), "application/octet-stream");
                 }
             }
             else
             {
-                var role = await GetRoleAsync(user.RoleId, db);
-                var userInfo = new UserInfo(user.Id, user.GetFullName(), role);
+                var commandText = """
+                    SELECT e.fullname, e.roleid, r.name AS rolename
+                    FROM employees AS e
+                    INNER JOIN roles AS r ON e.roleid = r.roleid
+                    WHERE e.employeeid = @id
+                    """;
+                UserInfo? userInfo = null;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        userInfo = new UserInfo(loginInfo.EmployeeId, reader.GetString(0), new Role() { Id = reader.GetInt16(1), Name = reader.GetString(2) });
+                    }
+                }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
 
-                await CreateLoginHistory(user, LoginResult.Success, db, context);
+                await CreateLoginHistory(loginInfo, LoginResult.Success, db, context);
                 return Results.Ok(AuthResponse.Success(token, userInfo));
             }
         }
-
-        internal static IResult SignOut(IDatabase db, HttpContext context)
+        private static async Task<IResult> ChangeLocationAsync(short location, IDBClient db, HttpContext context)
+        {
+            var commandText = """
+                SELECT 1
+                FROM employeelocations
+                WHERE employeeid = @id AND locationid = @location
+                """;
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("id", context.GetUserID(), DbType.Int16),
+                db.CreateParameter("location", location, DbType.Int16)
+            };
+            var dataExists = await db.HasRecordsAsync(commandText, parameters);
+            if (dataExists)
+            {
+                TokenStore.SetLocationId(context.Request.GetToken(), location);
+            }
+            return Results.Ok(dataExists);
+        }
+        internal static IResult SignOut(IDBClient db, HttpContext context)
         {
             var token = context.Request.GetToken();
             TokenStore.Delete(token);
             return Results.Ok();
         }
-        internal static async Task<IResult> ChangePasswordAsync(ChangePasswordRequest request, IDatabase db, HttpContext context)
+        internal static async Task<IResult> ChangePasswordAsync(ChangePasswordRequest request, IDBClient db, HttpContext context)
         {
-            var userId = (short)Extensions.Application.GetUserID(context);
-            var user = await GetUserByIdAsync(userId, db);
-            if (user is null) return Results.Ok(CommonResult.Fail("User not found"));
+            var userId = (short)context.GetUserID();
+            var loginInfo = await GetLoginInfoAsync(userId, db);
+            if (loginInfo is null) return Results.Ok(CommonResult.Fail("User not found"));
 
-            var oldPasswrodVerified = user.VerifyPassword(request.OldPassword);
+            var oldPasswrodVerified = loginInfo.VerifyPassword(request.OldPassword);
             if (!oldPasswrodVerified) return Results.Ok(CommonResult.Fail("Invalid old password"));
 
             var newPasswordHashed = Astro.Models.Password.HashPassword(request.NewPassword);
             var commandText = """
-                UPDATE users
-                SET password_hash = @newPassword,
-                    concurrency_stamp = CURRENT_TIMESTAMP
-                WHERE user_id = @userId;
+                UPDATE logins
+                SET passwordhash = @pwd
+                WHERE employeeid = @id;
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("userId", user.Id),
-                db.CreateParameter("newPassword", newPasswordHashed)
+                db.CreateParameter("id", userId, DbType.Int16),
+                db.CreateParameter("pwd", newPasswordHashed, DbType.AnsiString)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success? Results.Ok(CommonResult.Ok("Password changed successfully")) : Results.Ok(CommonResult.Fail("Failed to change password"));
         }
-        internal static async Task<IResult> GetPermissionsAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetPermissionsAsync(IDBClient db, HttpContext context)
         {
             var roleId = Extensions.Application.GetRoleID(context);
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
 
             var commandText = """
-                SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete
-                FROM role_to_menus rtm INNER JOIN
-                    menus m ON rtm.menu_id = m.menu_id INNER JOIN
-                    sections s ON m.section_id = s.section_id
-                WHERE m.is_disabled = false AND rtm.role_id = @roleId
-                ORDER BY s.section_id, m.menu_id
+                SELECT s.sectionid, s.title, m.menuid, m.title AS menutitle, rtm.allowcreate, rtm.allowread, rtm.allowupdate, rtm.allowdelete
+                FROM rolemenus rtm INNER JOIN
+                    menus m ON rtm.menuid = m.menuid INNER JOIN
+                    sections s ON m.sectionid = s.sectionid
+                WHERE m.isdisabled = false AND rtm.roleid = @roleId
+                ORDER BY s.sectionid, m.menuid
                 """;
             var listMenu = new ListMenu();
             await db.ExecuteReaderAsync(async (DbDataReader reader) =>
@@ -161,104 +223,73 @@ namespace Astro.Server.Api
             return Results.Ok(listMenu);
         }
 
-        private static async Task<User?> GetUserByLoginAsync(string login, IDatabase db)
+        private static async Task<Login?> GetLoginInfoAsync(string login, IDBClient db)
         {
-            User? user = null;
+            Login? loginInfo = null;
             var commandText = """
-                UPDATE users
-                SET access_failed_count = 0,
-                    lockout_end = NULL
-                WHERE
-                    user_name = @login
-                    AND is_deleted = false
-                    AND lockout_end < CURRENT_TIMESTAMP;
+                UPDATE logins
+                SET accessfailedcount = 0,
+                    lockoutend = NULL
+                WHERE lockoutend < CURRENT_TIMESTAMP;
                 SELECT
-                    user_id,
-                    user_firstname,
-                    user_lastname,
-                    role_id,
-                    user_name,
-                    normalized_user_name,
-                    email,
-                    email_confirmed,
-                    phone_number,
-                    phone_number_confirmed,
-                    date_of_birth,
-                    sex,
-                    marital_status,
-                    street_address,
-                    city_id,
-                    zip_code,
-                    two_factor_enabled,
-                    access_failed_count,
-                    lockout_enabled,
-                    lockout_end,
-                    security_stamp,
-                    concurrency_stamp,
-                    use_password_expiration,
-                    password_expiration_date,
-                    password_hash
+                    l.employeeid,
+                    e.fullname,
+                    e.roleid,
+                    l.passwordhash,
+                    l.accessfailedcount,
+                    l.lockoutenabled,
+                    l.lockoutend,
+                    l.usepasswordexpiration,
+                    l.passwordexpirationdate
                 FROM
-                    users
-                WHERE user_name = @login
-                    AND is_deleted = false
+                    employees AS e
+                	INNER JOIN logins AS l ON e.employeeid = l.employeeid
+                WHERE (e.email = @login OR e.phone = @login)
+                    AND e.isdeleted = false;
                 """;
             await db.ExecuteReaderAsync(async (DbDataReader reader) =>
             {
                 if (await reader.ReadAsync())
                 {
-                    user = User.Create(reader);
+                    loginInfo = Login.Create(reader);
                 }
             }, commandText, db.CreateParameter("login", login));
-            return user;
+            return loginInfo;
         }
-        private static async Task<User?> GetUserByIdAsync(short id, IDatabase db)
+        private static async Task<Login?> GetLoginInfoAsync(short id, IDBClient db)
         {
-            if (id <= 0) return null;
-
-            User? user = null;
+            Login? loginInfo = null;
             var commandText = """
+                UPDATE logins
+                SET accessfailedcount = 0,
+                    lockoutend = NULL
+                WHERE lockoutend < CURRENT_TIMESTAMP;
                 SELECT
-                    user_id,
-                    user_firstname,
-                    user_lastname,
-                    role_id,
-                    user_name,
-                    normalized_user_name,
-                    email,
-                    email_confirmed,
-                    phone_number,
-                    phone_number_confirmed,
-                    date_of_birth,
-                    sex,
-                    marital_status,
-                    street_address,
-                    city_id,
-                    zip_code,
-                    two_factor_enabled,
-                    access_failed_count,
-                    lockout_enabled,
-                    lockout_end,
-                    security_stamp,
-                    concurrency_stamp,
-                    use_password_expiration,
-                    password_expiration_date,
-                    password_hash
+                    l.employeeid,
+                    e.fullname,
+                    e.roleid,
+                    l.passwordhash,
+                    l.accessfailedcount,
+                    l.lockoutenabled,
+                    l.lockoutend,
+                    l.usepasswordexpiration,
+                    l.passwordexpirationdate
                 FROM
-                    users
-                WHERE user_id = @userId
-                    AND is_deleted = false
+                    employees AS e
+                	INNER JOIN logins AS l ON e.employeeid = l.employeeid
+                WHERE l.employeeid = @id
+                    AND e.isdeleted = false;
                 """;
             await db.ExecuteReaderAsync(async (DbDataReader reader) =>
             {
                 if (await reader.ReadAsync())
                 {
-                    user = User.Create(reader);
+                    loginInfo = Login.Create(reader);
                 }
-            }, commandText, db.CreateParameter("userId", id));
-            return user;
+            }, commandText, db.CreateParameter("id", id, DbType.Int16));
+            return loginInfo;
         }
-        private static async Task<bool> IncrementAccessFailedCountAsync(User user, IDatabase db)
+        private static async Task<bool> IncrementAccessFailedCountAsync(Login loginInfo, IDBClient db)
         {
             var commandText = """
                 UPDATE users
@@ -271,54 +302,51 @@ namespace Astro.Server.Api
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("userId", user.Id, DbType.Int16),
+                db.CreateParameter("userId", loginInfo.EmployeeId, DbType.Int16),
                 db.CreateParameter("threshold", 3, DbType.Int32)
             };
             await db.ExecuteReaderAsync(async (DbDataReader reader) =>
             {
                 if (await reader.ReadAsync())
                 {
-                    user.AccessFailedCount = reader.GetInt16(0);
-                    if (!reader.IsDBNull(1))
-                    {
-                        user.LockoutEnd = reader.GetDateTime(1);
-                    }
-                    else
-                    {
-                        user.LockoutEnd = null;
-                    }
+                    loginInfo.AccessFailedCount = reader.GetInt16(0);
+                    loginInfo.LockoutEnd = !reader.IsDBNull(1) ? reader.GetDateTime(1) : null;
                 }
             },
             commandText, parameters);
 
-            return user.HasExceededFailedAttempts(3);
+            return loginInfo.HasExceededFailedAttempts(3);
         }
-        private static string RegisterNewToken(User user, HttpContext context)
+        private static async Task<string> RegisterNewToken(Login loginInfo, IDBClient db, HttpContext context)
         {
             var token = Guid.NewGuid().ToString();
-            var ipv4 = Extensions.Application.GetIpAddress(context.Request);
+            var ipv4 = Extensions.Application.GetIpAddress(context.Request).ToInet();
             var userAgent = context.Request.Headers.UserAgent.ToString();
-            var data = Array.Empty<byte>();
-            using (var writer = new IO.Writer())
-            {
-                writer.WriteDateTime(DateTime.Now.AddHours(9));
-                writer.WriteString(ipv4);
-                writer.WriteString(userAgent);
+            var data = new byte[18];
 
-                writer.WriteString(user.GetFullName().Trim());
-                writer.WriteInt16(user.Id);
-                writer.WriteInt16(user.RoleId);
+            var commandText = """
+                    SELECT locationid
+                    FROM employeelocations AS el
+                    WHERE employeeid = @id AND isprimary = true
+                    LIMIT 1
+                    """;
+            var locationId = await db.ExecuteScalarAsync<short>(commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
+            var expiredData = BitConverter.GetBytes(DateTime.Now.AddHours(9).Ticks);
 
-                data = writer.ToArray();
-            }
+            data.Copy(expiredData, 0);
+            data.Copy(ipv4, 8);
+            data.Copy(BitConverter.GetBytes(locationId), 12);
+            data.Copy(BitConverter.GetBytes(loginInfo.EmployeeId), 14);
+            data.Copy(BitConverter.GetBytes(loginInfo.RoleId), 16);
+
             TokenStore.Set(token, data);
             return token;
         }
-        private static async Task CreateLoginHistory(User? user, LoginResult loginResult, IDatabase db, HttpContext context)
+        private static async Task CreateLoginHistory(Login? loginInfo, LoginResult loginResult, IDBClient db, HttpContext context)
         {
             var commandText = """
                 INSERT INTO login_attempts
-                    (user_id, ipv4_address, user_agent, is_success, notes)
+                    (userid, ipv4, useragent, issuccess, notes)
                 VALUES
                     (@userId, @ipv4, @userAgent, @success, @notes);
                 """;
@@ -337,40 +365,57 @@ namespace Astro.Server.Api
             };
             var notes = getDescription(loginResult);
             var userAgent = context.Request.Headers.UserAgent.ToString();
-            var userId = user is null ? 0 : user.Id;
+            var userId = loginInfo is null ? 0 : loginInfo.EmployeeId;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("userId", userId),
-                db.CreateParameter("ipv4", Extensions.Application.GetIpAddress(context.Request)),
-                db.CreateParameter("success", loginResult == LoginResult.Success),
-                db.CreateParameter("userAgent", userAgent),
-                db.CreateParameter("notes", notes)
+                db.CreateParameter("userId", userId, DbType.Int16),
+                db.CreateParameter("ipv4", context.Request.GetIpAddress().ToInet(), DbType.Binary),
+                db.CreateParameter("success", loginResult == LoginResult.Success, DbType.Boolean),
+                db.CreateParameter("userAgent", userAgent, DbType.AnsiString),
+                db.CreateParameter("notes", notes, DbType.AnsiString)
             };
 
             await db.ExecuteNonQueryAsync(commandText, parameters);
         }
-        private static async Task<string> GetRoleNameAsync(short roleId, IDatabase db)
+        private static async Task<IResult> GetUserLocationsAsync(IDBClient db, HttpContext context)
         {
-            var result = await db.ExecuteScalarAsync<string>("SELECT role_name FROM roles WHERE role_id = @roleId",db.CreateParameter("roleId", roleId));
-            return result as string ?? string.Empty;
-        }
-        private static async Task<Role> GetRoleAsync(short roleId, IDatabase db)
-        {
-            var role = new Role();
-            var commandText = """
-                SELECT role_id, role_name
-                FROM roles
-                WHERE role_id = @roleId
-                """;
-            await db.ExecuteReaderAsync(async (DbDataReader reader) =>
+            using (var writer = new IO.Writer())
             {
-                if (await reader.ReadAsync())
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    role.Id = reader.GetInt16(0);
-                    role.Name = reader.GetString(1);
-                }
-            }, commandText, db.CreateParameter("roleId", roleId));
-            return role;
+                    writer.ReserveInt32();
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                    writer.WriteInt32(iCount, 0);
+                }, "SELECT locationid, name FROM locations");
+                var iPos = writer.ReserveInt32();
+                var commandText = """
+                    SELECT 0 AS employeeid, fullname
+                    FROM employees
+                    WHERE employeeid = @id AND isdeleted = false
+                    UNION ALL
+                    SELECT a.accountid, CONCAT(ap.name, ' - ', a.accountname) AS name 
+                    FROM accounts AS a 
+                    INNER JOIN accountproviders AS ap ON a.providerid = ap.providerid
+                    """;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    iCount = 0;
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("id", context.GetUserID(), DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+                return Results.File(writer.ToArray(), "application/octet-stream");
+            }
         }
     }
 }

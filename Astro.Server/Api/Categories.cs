@@ -20,7 +20,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/categories", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/categories/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<bool> CategoryNameExists(Category category, IDatabase db)
+        private static async Task<bool> CategoryNameExists(Category category, IDBClient db)
         {
             var commandText = "select 1 from categories where category_name = @name and is_deleted = false and category_id != @id";
             var parameters = new DbParameter[]
@@ -29,9 +29,9 @@ namespace Astro.Server.Api
                 db.CreateParameter("id", category.Id, DbType.Int16)
             };
 
-            return await db.AnyRecordsAsync(commandText, parameters);
+            return await db.HasRecordsAsync(commandText, parameters);
         }
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetCategoryDataTable(), "application/octet-stream");
 
@@ -39,13 +39,13 @@ namespace Astro.Server.Api
             await sb.AppendCategoryTableAsync(db);
             return Results.Content(sb.ToString(), "text/html");
         }
-        private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetCategory(id), "application/octet-stream");
             else
                 return Results.Ok(CommonResult.Fail("This endpoint is not available for web applications."));
         }
-        private static async Task<IResult> CreateAsync(Category category, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Category category, IDBClient db, HttpContext context)
         {
             if (await CategoryNameExists(category, db)) return Results.Ok(CommonResult.Fail("A category with this name already exists. Please choose a different name."));
 
@@ -61,7 +61,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Category created successfully.")) : Results.Problem("An error occured while creating the category. Please try again later.");
         }
-        private static async Task<IResult> UpdateAsync(Category category, IDatabase db, HttpContext context)
+        private static async Task<IResult> UpdateAsync(Category category, IDBClient db, HttpContext context)
         {
             if (await CategoryNameExists(category, db)) return Results.Ok(CommonResult.Fail("A category with this name already exists. Please choose a different name."));
 
@@ -79,7 +79,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Category updated successfully.")) : Results.Problem("An error occured while updating the category. Please try again later.");
         }
-        private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var commandText = "update categories set is_deleted = true, editor_id=@editor, edited_date = current_timestamp where category_id=@id";
             var parameters = new DbParameter[]

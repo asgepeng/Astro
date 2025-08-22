@@ -30,6 +30,18 @@ namespace Astro.Winform.Helpers
                 var itemCount = reader.ReadInt32();
                 while (itemCount > 0)
                 {
+                    uvm.AccessableBranches.Add(new Branch()
+                    {
+                        Id = reader.ReadInt16(),
+                        Name = reader.ReadString(),
+                        Address = reader.ReadString()
+                    });
+                    itemCount--;
+                }
+
+                itemCount = reader.ReadInt32();
+                while (itemCount > 0)
+                {
                     uvm.Roles.Add(new Option()
                     {
                         Id = reader.ReadInt16(),
@@ -37,6 +49,7 @@ namespace Astro.Winform.Helpers
                     });
                     itemCount--;
                 }
+
                 itemCount = reader.ReadInt32();
                 while (itemCount > 0)
                 {
@@ -153,17 +166,22 @@ namespace Astro.Winform.Helpers
                     {
                         Id = reader.ReadInt32(),
                         StreetAddress = reader.ReadString(),
+                        Village = new Village()
+                        {
+                            Id = reader.ReadInt64(),
+                            Name = reader.ReadString()
+                        },
+                        District = new District()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        },
                         City = new City()
                         {
                             Id = reader.ReadInt32(),
                             Name = reader.ReadString()
                         },
                         StateOrProvince = new Province()
-                        {
-                            Id = reader.ReadInt16(),
-                            Name = reader.ReadString()
-                        },
-                        Country = new Country()
                         {
                             Id = reader.ReadInt16(),
                             Name = reader.ReadString()
@@ -220,6 +238,16 @@ namespace Astro.Winform.Helpers
                     {
                         Id = reader.ReadInt32(),
                         StreetAddress = reader.ReadString(),
+                        Village = new Village()
+                        {
+                            Id = reader.ReadInt64(),
+                            Name = reader.ReadString()
+                        },
+                        District = new District()
+                        {
+                            Id = reader.ReadInt32(),
+                            Name = reader.ReadString()
+                        },
                         City = new City()
                         {
                             Id = reader.ReadInt32(),
@@ -229,11 +257,6 @@ namespace Astro.Winform.Helpers
                         {
                             Id = reader.ReadInt16(),
                             Name = reader.ReadString()
-                        },
-                        Country = new Country()
-                        {
-                            Id = reader.ReadInt16(),
-                            Name =reader.ReadString()
                         },
                         Type = reader.ReadInt16(),
                         IsPrimary = reader.ReadBoolean(),

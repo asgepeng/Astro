@@ -19,7 +19,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/units", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/units/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetUnitDataTable(), "application/octet-stream");
@@ -29,12 +29,12 @@ namespace Astro.Server.Api
                 return Results.Ok(list);
             }
         }
-        private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUnit(id), "application/octet-stream");
             else return Results.Ok(CommonResult.Fail("This endpoint is not available for web applications."));
         }
-        private static async Task<IResult> CreateAsync(Unit unit, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Unit unit, IDBClient db, HttpContext context)
         {
             var commandText = """
                 insert into units (unit_name, creator_id)
@@ -50,7 +50,7 @@ namespace Astro.Server.Api
             return success ? Results.Ok(CommonResult.Ok("Unit created successfully.")) 
                            : Results.Ok(CommonResult.Fail("Failed to create unit. Please try again."));
         }
-        private static async Task<IResult> UpdateAsync(Unit unit, IDatabase db, HttpContext context)
+        private static async Task<IResult> UpdateAsync(Unit unit, IDBClient db, HttpContext context)
         {
             var commandText = """
                 update units
@@ -66,7 +66,7 @@ namespace Astro.Server.Api
             return success ? Results.Ok(CommonResult.Ok("Unit updated successfully.")) 
                            : Results.Ok(CommonResult.Fail("Failed to update unit. Please try again."));
         }
-        private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var commandText = "delete from units where unit_id =@id";
             var success = await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("@id", id, DbType.Int16));

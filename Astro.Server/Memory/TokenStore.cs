@@ -32,35 +32,30 @@ namespace Astro.Server.Memory
             foreach (var kv in dict)
             {
                 var data = kv.Value;
-                if (data.Length < 2)
-                    continue;
-
-                using var stream = new MemoryStream(data);
-                using var reader = new BinaryReader(stream);
-                stream.Position = data.Length - 2;
-                var uid = reader.ReadInt16();
-
-                if (uid == userId)
+                if (data.Length < 16) continue;
+                var employeeId = BitConverter.ToInt16(data, 14);
+                if (employeeId == userId)
                 {
-                    dict.TryRemove(kv.Key, out _);
+                    TokenStore.Delete(kv.Key);
                 }
             }
-        }
-        internal static string ToView()
+        }       
+        internal static short GetLocationId(string key)
         {
-            var sb = new StringBuilder();
-            sb.Append("<table><thead><tr><th>Token</th><th>Value</th></tr></thead>");
-            sb.Append("<tbody>");
-            foreach (var kv in dict)
-            {
-                sb.Append("<tr>");
-                sb.Append("<td>").Append(kv.Key).AppendLine("</td>");
-                sb.Append("<td>").Append(kv.Value.ToHexString()).Append("</td>");
-                sb.Append("</tr>");
-            }
-            sb.Append("</tbody></table>");
+            var data = TokenStore.Get(key);
+            if (data is null) return -1;
 
-            return sb.ToString();
+            return BitConverter.ToInt16(data, 12);
+        }
+        internal static void SetLocationId(string key, short locationId)
+        {
+            var data = TokenStore.Get(key);
+            if (data is null) return;
+
+            var bytes = BitConverter.GetBytes(locationId);
+            data[12] = bytes[0];
+            data[13] = bytes[1];
+            TokenStore.Update(key, data);
         }
     }
 }

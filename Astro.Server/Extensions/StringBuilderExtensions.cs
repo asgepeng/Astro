@@ -39,7 +39,7 @@ namespace Astro.Server.Extensions
     }
     internal static class StringBuilderExtensions
     {
-        internal static async Task AppendUserTableAsync(this StringBuilder sb, IDatabase db)
+        internal static async Task AppendUserTableAsync(this StringBuilder sb, IDBClient db)
         {
             var commandText = """
                     select u.user_id, concat(u.user_firstname, ' ', u.user_lastname) AS fullname, u.email, r.role_name,
@@ -66,7 +66,7 @@ namespace Astro.Server.Extensions
             }, commandText);
             sb.Append("</tbody></table>");
         }
-        internal static async Task AppendRoleTableAsync(this StringBuilder sb, IDatabase db)
+        internal static async Task AppendRoleTableAsync(this StringBuilder sb, IDBClient db)
         {
             var commandText = """
                     select r.role_id, r.role_name, case when r.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, r.created_date
@@ -99,7 +99,7 @@ namespace Astro.Server.Extensions
             }, commandText);
             sb.Append("</tbody></table>");
         }
-        internal static async Task AppendContactTableAsync(this StringBuilder sb, IDatabase db, short contactType)
+        internal static async Task AppendContactTableAsync(this StringBuilder sb, IDBClient db, short contactType)
         {
             var commandText = """
                 SELECT c.category_id, c.category_name, c.created_date, CONCAT(u.user_firstname, ' ', u.user_lastname) AS created_by
@@ -138,15 +138,15 @@ namespace Astro.Server.Extensions
 
             sb.Append("</tbody></table>");
         }
-        internal static async Task AppendCategoryTableAsync(this StringBuilder sb, IDatabase db)
+        internal static async Task AppendCategoryTableAsync(this StringBuilder sb, IDBClient db)
         {
 
         }
-        internal static async Task AppendUnitTableAsync(this StringBuilder sb, IDatabase db)
+        internal static async Task AppendUnitTableAsync(this StringBuilder sb, IDBClient db)
         {
 
         }
-        internal static async Task AppendProductTableAsync(this StringBuilder sb, IDatabase db, Pagination pagination)
+        internal static async Task AppendProductTableAsync(this StringBuilder sb, IDBClient db, Pagination pagination)
         {
             sb.Append("<div class=\"responsive\"><table class=\"table\" page=\"").Append(pagination.Page)
                 .Append("\" page-size=\"").Append(pagination.PageSize)

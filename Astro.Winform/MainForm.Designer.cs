@@ -35,6 +35,8 @@
             statusStrip1 = new StatusStrip();
             navigator = new BindingNavigator(components);
             countLabel = new ToolStripLabel();
+            locationLabel = new ToolStripLabel();
+            locationComboBox = new ToolStripComboBox();
             refreshButton = new ToolStripButton();
             addNewButton = new ToolStripButton();
             deleteButton = new ToolStripButton();
@@ -89,7 +91,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1, sqlButton });
+            navigator.Items.AddRange(new ToolStripItem[] { locationLabel, locationComboBox, refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1, sqlButton });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -107,6 +109,21 @@
             countLabel.Name = "countLabel";
             countLabel.Size = new Size(39, 28);
             countLabel.Text = "of {0}";
+            // 
+            // locationLabel
+            // 
+            locationLabel.Name = "locationLabel";
+            locationLabel.Size = new Size(53, 28);
+            locationLabel.Text = "Cabang";
+            // 
+            // locationComboBox
+            // 
+            locationComboBox.BackColor = Color.FromArgb(255, 255, 192);
+            locationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            locationComboBox.FlatStyle = FlatStyle.Flat;
+            locationComboBox.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            locationComboBox.Name = "locationComboBox";
+            locationComboBox.Size = new Size(121, 31);
             // 
             // refreshButton
             // 
@@ -309,5 +326,7 @@
         private ToolStripButton apButton;
         private ToolStripButton toolStripButton1;
         private ToolStripButton sqlButton;
+        private ToolStripLabel locationLabel;
+        private ToolStripComboBox locationComboBox;
     }
 }

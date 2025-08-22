@@ -16,7 +16,7 @@
         }
         internal Color BackColor { get; set; } = Color.FromArgb(244, 244, 244);
         internal Rectangle Bounds { get; private set; }
-        internal string Text { get; set; } = "DAKI POS";
+        internal string Text { get; set; } = "Enterprise Resource Management System";
         internal Font Font { get; set; } = new Font("Segoe UI", 11.75F, FontStyle.Bold);
         internal Font ButtonFont { get; set; } = new Font("Segoe UI", 9.75F, FontStyle.Regular);
         internal VirtualButton[] Buttons { get; set; } = new VirtualButton[3];
@@ -28,7 +28,7 @@
         internal override void Draw(Graphics g)
         {            
             g.DrawImage(global::Astro.Winform.Properties.Resources.homecolor, 12, 8, 24, 24);
-            g.DrawString(Text, Font, Brushes.DarkBlue, new Rectangle(48, 0, 300, 40), new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
+            g.DrawString(Text, Font, Brushes.DarkBlue, new Rectangle(48, 0, 600, 40), new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center });
             //g.DrawRoundedRectangle(new Rectangle(accountButton.Location, accountButton.Size), 32, Brushes.LightGray);
             var sf = new StringFormat()
             {

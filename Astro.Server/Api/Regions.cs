@@ -14,16 +14,18 @@ namespace Astro.Server.Api
         internal static void MapRegionEndPoints(this WebApplication app)
         {
             app.MapGet("data/regions/countries", GetCountriesAsync).RequireAuthorization();
-            app.MapGet("data/regions/states/{id}", GetProvincesAsync).RequireAuthorization();
+            app.MapGet("data/regions/states/{id}", GetStatesAsync).RequireAuthorization();
             app.MapGet("data/regions/cities/{id}", GetCitiesAsync).RequireAuthorization();
+            app.MapGet("data/regions/districts/{id}", GetDistrictsAscync).RequireAuthorization();
+            app.MapGet("data/regions/villages/{id}", GetVillagesAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetCountriesAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetCountriesAsync(IDBClient db, HttpContext context)
         {
             var isWinformApp = context.Request.IsDesktopAppRequest();
             var commandText = """
-                select country_id, country_name
+                select countryid, name
                 from countries
-                order by country_name
+                order by name
                 """;
             if (context.Request.IsDesktopAppRequest())
             {
@@ -55,83 +57,104 @@ namespace Astro.Server.Api
             }, commandText);
             return Results.Ok(list);
         }
-        internal static async Task<IResult> GetProvincesAsync(short id, IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetStatesAsync(short id, IDBClient db, HttpContext context)
         {
-            var isWinformApp = context.Request.IsDesktopAppRequest();
-            var commandText = """
-                select state_id, state_name
-                from states
-                where country_id = @id
-                order by state_name;
-                """;
-            if (isWinformApp)
+            using (var builder = new IO.Writer())
             {
-                using (var builder = new IO.Writer())
+                var commandText = """
+                    select stateid, name
+                    from states
+                    where countryid = @id
+                    order by name;
+                    """;
+                var iPos = builder.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    await db.ExecuteReaderAsync(async reader =>
-                     {
-                         while (await reader.ReadAsync())
-                         {
-                             builder.WriteInt16(reader.GetInt16(0));
-                             builder.WriteString(reader.GetString(1));
-                         }
-                     }, commandText, db.CreateParameter("id", id, DbType.Int16));
-                    return Results.File(builder.ToArray(), "application/octet-stream");
-                }
-            }
-
-            var list = new ListOption();            
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                while (await reader.ReadAsync())
-                {
-                    list.Add(new Option()
+                    while (await reader.ReadAsync())
                     {
-                        Id = (int)reader.GetInt16(0),
-                        Text = reader.GetString(1)
-                    });
-                }
-            }, commandText, db.CreateParameter("id", id, DbType.Int16));
-            return Results.Ok(list);
+                        builder.WriteInt16(reader.GetInt16(0));
+                        builder.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("id", id, DbType.Int16));
+                builder.WriteInt32(iCount, iPos);
+                return Results.File(builder.ToArray(), "application/octet-stream");
+            }
         }
-        internal static async Task<IResult> GetCitiesAsync(short id, IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetCitiesAsync(short id, IDBClient db, HttpContext context)
         {
-            var commandText = """
-                select city_id, city_name
-                from cities
-                where state_id = @id
-                order by city_name;
-                """;
-            var isWinformApp = context.Request.IsDesktopAppRequest();
-            if (isWinformApp)
+            using (var builder = new IO.Writer())
             {
-                using (var builder = new IO.Writer())
+                var commandText = """
+                    select cityid, name
+                    from cities
+                    where stateid = @id
+                    order by name;
+                    """;
+                var iPos = builder.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    await db.ExecuteReaderAsync(async reader =>
+                    while (await reader.ReadAsync())
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            builder.WriteInt32(reader.GetInt32(0));
-                            builder.WriteString(reader.GetString(1));
-                        }
-                    }, commandText, db.CreateParameter("id", id, DbType.Int16));
-                    return Results.File(builder.ToArray(), "application/octet-stream");
-                }
+                        builder.WriteInt32(reader.GetInt32(0));
+                        builder.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("id", id, DbType.Int16));
+                builder.WriteInt32(iCount, iPos);
+                return Results.File(builder.ToArray(), "application/octet-stream");
             }
-
-            var list = new ListOption();
-            await db.ExecuteReaderAsync(async reader =>
+        }
+        private static async Task<IResult> GetDistrictsAscync(int id, IDBClient db)
+        {
+            using (var writer = new IO.Writer())
             {
-                while (await reader.ReadAsync())
+                var commandText = """
+                SELECT districtid, name
+                FROM districts
+                WHERE cityid = @id
+                ORDER BY name
+                """;
+                var iPos = writer.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    list.Add(new Option()
+                    while (await reader.ReadAsync())
                     {
-                        Id = (int)reader.GetInt16(0),
-                        Text = reader.GetString(1)
-                    });
-                }
-            }, commandText, db.CreateParameter("id", id, DbType.Int16));
-            return Results.Ok(list);
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("id", id, DbType.Int32));
+                writer.WriteInt32(iCount, iPos);
+                return Results.File(writer.ToArray(), "application/octet-stream");
+            }
+        }
+        private static async Task<IResult> GetVillagesAsync(int id, IDBClient db)
+        {
+            using (var writer = new IO.Writer())
+            {
+                var commandText = """
+                    SELECT villageid, name
+                    FROM villages
+                    WHERE districtid = @id
+                    """;
+                var iPos = writer.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt64(reader.GetInt64(0));
+                        writer.WriteString(reader.GetString(1));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("id", id, DbType.Int32));
+                writer.WriteInt32(iCount, iPos);
+                return Results.File(writer.ToArray(), "application/octet-stream");
+            }
         }
     }
 }

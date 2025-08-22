@@ -4,13 +4,14 @@ using System.Data.Common;
 using System.Data;
 using Microsoft.AspNetCore.Http;
 using Astro.Server.Extensions;
+using Astro.Server.Memory;
 
 namespace Astro.Server.Binaries
 {
     internal static class IDatabaseExtensions
     {
         //data objects
-        internal static async Task<byte[]> GetUser(this IDatabase db, short id)
+        internal static async Task<byte[]> GetUser(this IDBClient db, short id)
         {
             var commandText = """
                 SELECT
@@ -88,12 +89,32 @@ namespace Astro.Server.Binaries
                 }, commandText, db.CreateParameter("userId", id, DbType.Int16));
 
                 commandText = """
+                SELECT l.location_id, l.name, l.street_address
+                FROM userlocations AS ul
+                INNER JOIN locations AS l ON ul.location_id = l.location_id
+                WHERE ul.user_id = @userId
+                """;
+                var iCount = 0;
+                var iPos = builder.ReserveInt32();
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        builder.WriteInt16(reader.GetInt16(0));
+                        builder.WriteString(reader.GetString(1));
+                        builder.WriteString(reader.GetString(2));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("userId", id, DbType.Int16));
+                builder.WriteInt32(iCount, iPos);
+
+                commandText = """
                         select role_id, role_name
                         from roles
                         order by role_name
                         """;
-                int iCount = 0;
-                var iPos = builder.ReserveInt32();
+                iCount = 0;
+                iPos = builder.ReserveInt32();
                 await db.ExecuteReaderAsync(async reader =>
                 {
                     while (await reader.ReadAsync())
@@ -169,12 +190,12 @@ namespace Astro.Server.Binaries
                 return builder.ToArray();
             }
         }
-        internal static async Task<byte[]> GetRole(this IDatabase db, short id)
+        internal static async Task<byte[]> GetRole(this IDBClient db, short id)
         {
             var commandText = """
-                select role_id, role_name
+                select roleid, name
                 from roles
-                where role_id = @id;
+                where roleid = @id;
                 """;
             using (var builder = new IO.Writer())
             {
@@ -189,15 +210,15 @@ namespace Astro.Server.Binaries
                 }, commandText, db.CreateParameter("id", id, DbType.Int16));
                 commandText = """
                         select
-                            m.menu_id,
-                            m.menu_title,
-                            coalesce(rtm.allow_create, false) as allow_create,
-                            coalesce(rtm.allow_read,   false) as allow_read,
-                            coalesce(rtm.allow_update, false) as allow_update,
-                            coalesce(rtm.allow_delete, false) as allow_delete
+                            m.menuid,
+                            m.title,
+                            coalesce(rtm.allowcreate, false) as allowcreate,
+                            coalesce(rtm.allowread,   false) as allowread,
+                            coalesce(rtm.allowupdate, false) as allowupdate,
+                            coalesce(rtm.allowdelete, false) as allowdelete
                         from menus as m
-                        left join role_to_menus as rtm
-                            on m.menu_id = rtm.menu_id and rtm.role_id = @id                        
+                        left join rolemenus as rtm
+                            on m.menuid = rtm.menuid and rtm.roleid = @id                        
                         """;
                 var iCount = 0;
                 var iPos = builder.ReserveInt32();
@@ -219,14 +240,14 @@ namespace Astro.Server.Binaries
                 return builder.ToArray();
             }
         }
-        internal static async Task<byte[]> GetProduct(this IDatabase db, short id, HttpRequest request)
+        internal static async Task<byte[]> GetProduct(this IDBClient db, short id, HttpContext context)
         {
             var commandText = """
-                SELECT p.product_id, p.product_name, p.product_description, p.product_sku, p.category_id, p.product_type,
-                	i.is_active, i.stock, i.min_stock, i.max_stock, p.unit_id, i.price, i.cogs, p.images
+                SELECT p.productid, p.name, p.description, p.sku, p.categoryid, p.producttype,
+                	i.isactive, i.stock, i.minstock, i.maxstock, p.unitid, i.price, i.cogs, p.images
                 FROM products AS p
-                INNER JOIN inventories AS i ON p.product_id = i.product_id AND i.location_id = @location
-                where p.product_id = @id and p.is_deleted = false;
+                INNER JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @location
+                where p.productid = @id and p.isdeleted = false;
                 """;
             using (var writer = new IO.Writer())
             {
@@ -250,12 +271,12 @@ namespace Astro.Server.Binaries
                         writer.WriteInt64(reader.GetInt64(12));
                         writer.WriteString(reader.GetString(13));
                     }
-                }, commandText, db.CreateParameter("id", id, DbType.Int16), db.CreateParameter("location", request.GetLocationID(), DbType.Int16));
+                }, commandText, db.CreateParameter("id", id, DbType.Int16), db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16));
 
                 commandText = """
-                        select category_id, category_name
+                        select categoryid, name
                         from categories
-                        where is_deleted = false
+                        where isdeleted = false
                         """;
                 var iCount = 0;
                 var iPos = writer.ReserveInt32();
@@ -271,9 +292,9 @@ namespace Astro.Server.Binaries
                 writer.WriteInt32(iCount, iPos);
 
                 commandText = """
-                        select unit_id, unit_name
+                        select unitid, name
                         from units
-                        order by unit_name
+                        order by name
                         """;
                 iCount = 0;
                 iPos = writer.ReserveInt32();
@@ -291,12 +312,12 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetUnit(this IDatabase db, short id)
+        internal static async Task<byte[]> GetUnit(this IDBClient db, short id)
         {
             var commandText = """
-                select unit_id, unit_name
+                select unitid, name
                 from units
-                where unit_id = @id
+                where unitid = @id
                 """;
             var data = Array.Empty<byte>();
             await db.ExecuteReaderAsync(async reader =>
@@ -314,12 +335,12 @@ namespace Astro.Server.Binaries
             }, commandText, db.CreateParameter("id", id, DbType.Int16));
             return data.ToArray();
         }
-        internal static async Task<byte[]> GetCategory(this IDatabase db, short id)
+        internal static async Task<byte[]> GetCategory(this IDBClient db, short id)
         {
             var commandText = """
-                select c.category_id, c.category_name
+                select c.categoryid, c.name
                 from categories c
-                where c.is_deleted = false and c.category_id = @id
+                where c.isdeleted = false and c.categoryid = @id
                 """;
             var data = Array.Empty<byte>();
             await db.ExecuteReaderAsync(async reader =>
@@ -337,13 +358,13 @@ namespace Astro.Server.Binaries
             }, commandText, db.CreateParameter("id", id, DbType.Int16));
             return data;
         }
-        internal static async Task<byte[]> GetContact(this IDatabase db, short id)
+        internal static async Task<byte[]> GetContact(this IDBClient db, short id)
         {
             var commandText = """
-                select contact_id, contact_name
-                from contacts
-                where contact_id = @contactId
-                and is_deleted = false
+                SELECT contactid, name
+                FROM contacts
+                WHERE contactid = @contactId
+                AND isdeleted = false
                 """;
             using (var writer = new IO.Writer())
             {
@@ -361,12 +382,14 @@ namespace Astro.Server.Binaries
                 if (!contactExists) return writer.ToArray();
 
                 commandText = """
-                select a.address_id, a.street_address, a.city_id, c.city_name, c.state_id, s.state_name, cn.country_id, cn.country_name, a.address_type, a.is_primary, a.zip_code
-                from addresses as a
-                    inner join cities as c on a.city_id = c.city_id
-                    inner join states as s on c.state_id = s.state_id
-                    inner join countries as cn on s.country_id = cn.country_id
-                where a.owner_id = @contactId
+                SELECT a.addressid, a.streetaddress, v.villageid, v.name AS villagename, d.districtid, d.name AS districtname,
+                c.cityid, c.name AS cityname, s.stateid, s.name AS statename, a.addresstype, a.isprimary, a.zipcode
+                FROM addresses AS a
+                	INNER JOIN villages AS v ON a.villageid = v.villageid
+                	INNER JOIN districts AS d ON v.districtid = d.districtid
+                	INNER JOIN cities AS c on d.cityid = c.cityid
+                	INNER JOIN states AS s ON c.stateid = s.stateid	
+                WHERE a.contactid = @contactId
                 """;
                 var iPos = writer.ReserveInt32();
                 var iCount = 0;
@@ -374,26 +397,39 @@ namespace Astro.Server.Binaries
                 {
                     while (await reader.ReadAsync())
                     {
+                        //address id: int, streetaddress: string
                         writer.WriteInt32(reader.GetInt32(0));
                         writer.WriteString(reader.GetString(1));
-                        writer.WriteInt32(reader.GetInt32(2));
+
+                        //village id: int64, villagename : string
+                        writer.WriteInt64(reader.GetInt64(2));
                         writer.WriteString(reader.GetString(3));
-                        writer.WriteInt16(reader.GetInt16(4));
+
+                        //district id: int, districtname : string
+                        writer.WriteInt32(reader.GetInt32(4));
                         writer.WriteString(reader.GetString(5));
-                        writer.WriteInt16(reader.GetInt16(6));
+
+                        //city id: int, cityname : string
+                        writer.WriteInt32(reader.GetInt32(6));
                         writer.WriteString(reader.GetString(7));
+
+                        //state id: short, statename : string
                         writer.WriteInt16(reader.GetInt16(8));
-                        writer.WriteBoolean(reader.GetBoolean(9));
-                        writer.WriteString(reader.GetString(10));
+                        writer.WriteString(reader.GetString(9));
+
+                        //address type, isprimary, zipcode
+                        writer.WriteInt16(reader.GetInt16(10));
+                        writer.WriteBoolean(reader.GetBoolean(11));
+                        writer.WriteString(reader.GetString(12));
                         iCount++;
                     }
                 }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
                 writer.WriteInt32(iCount, iPos);
 
                 commandText = """
-                    select phone_id, phone_number, phone_type, is_primary
+                    select phoneid, phonenumber, phonetype, isprimary
                     from phones as p
-                    where owner_id = @contactId
+                    where contactid = @contactId
                     """;
 
                 iCount = 0;
@@ -414,9 +450,9 @@ namespace Astro.Server.Binaries
                 iCount = 0;
                 iPos = writer.ReserveInt32();
                 commandText = """
-                    select email_id, email_address, email_type, is_primary
+                    select emailid, emailaddress, emailtype, isprimary
                     from emails
-                    where owner_id = @contactId
+                    where contactid = @contactId
                     """;
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -434,7 +470,7 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetAccountProviderAsync(this IDatabase db, short id)
+        internal static async Task<byte[]> GetAccountProviderAsync(this IDBClient db, short id)
         {
             var commandText = """
                 select provider_id, provider_name, provider_type
@@ -458,7 +494,7 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetAccount(this IDatabase db, short id)
+        internal static async Task<byte[]> GetAccount(this IDBClient db, short id)
         {
             var commandText = """
                 select a.account_id, a.account_name, a.account_number, a.provider_id, p.provider_type
@@ -503,15 +539,15 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetUserPermissions(this IDatabase db, short roleID)
+        internal static async Task<byte[]> GetUserPermissions(this IDBClient db, short roleID)
         {
             var commandText = """
-                SELECT s.section_id, s.section_title, m.menu_id, m.menu_title, rtm.allow_create, rtm.allow_read, rtm.allow_update, rtm.allow_delete
-                FROM role_to_menus rtm INNER JOIN
-                    menus m ON rtm.menu_id = m.menu_id INNER JOIN
-                    sections s ON m.section_id = s.section_id
-                WHERE m.is_disabled = false AND rtm.role_id = @roleId
-                ORDER BY s.section_id, m.menu_id
+                SELECT s.sectionid, s.title, m.menuid, m.title AS menu_title, rtm.allowcreate, rtm.allowread, rtm.allowupdate, rtm.allowdelete
+                FROM rolemenus AS rtm 
+                INNER JOIN menus m ON rtm.menuid = m.menuid 
+                INNER JOIN sections s ON m.sectionid = s.sectionid
+                WHERE m.disabled = false AND rtm.roleid = @roleId
+                ORDER BY s.sectionid, m.menuid
                 """;
             var listMenu = new ListMenu();
             var data = Array.Empty<byte>();
@@ -555,21 +591,20 @@ namespace Astro.Server.Binaries
                     writer.WriteInt32(iMenuCount, iMenuPos);
                     writer.WriteInt32(iSectionCount, iSectionPos);
 
-                }, commandText, db.CreateParameter("roleId", roleID));
+                }, commandText, db.CreateParameter("roleId", roleID, DbType.Int16));
                 return writer.ToArray();
             }
         }
 
         //data tables
-        internal static async Task<byte[]> GetUserDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetUserDataTable(this IDBClient db)
         {
             var commandText = """
-                    select u.user_id, concat(u.user_firstname, ' ', u.user_lastname) AS fullname, u.email, r.role_name,
-                    case when u.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, u.created_date
-                    from users as u
-                    inner join roles as r on u.role_id = r.role_id
-                    left join users AS c ON u.creator_id = c.user_id
-                    where u.is_deleted = false
+                    SELECT e.employeeid, e.fullname, e.email, r.name, CASE WHEN e.creatorid = 0 then 'System' else c.fullname end as creator, e.createddate
+                    FROM employees AS e
+                    INNER JOIN roles AS r on e.roleid = r.roleid
+                    LEFT JOIN employees AS c ON e.creatorid = c.employeeid
+                    where e.isdeleted = false
                     """;
             using (var writer = new IO.Writer())
             {
@@ -588,12 +623,12 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetRoleDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetRoleDataTable(this IDBClient db)
         {
             var commandText = """
-                select r.role_id, r.role_name, case when r.creator_id = 0 then 'System' else concat(c.user_firstname, ' ', c.user_lastname) end as creator, r.created_date
-                FROM roles as r
-                left join users as c on r.creator_id = c.user_id
+                SELECT r.roleid, r.name, CASE WHEN r.creatorid = 0 then 'System' else c.fullname end as creator, r.createddate
+                FROM roles AS r
+                LEFT JOIN employees AS c on r.creatorid = c.employeeid
                 """;
             using (var writer = new IO.Writer())
             {
@@ -610,17 +645,17 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetProductDataTable(this IDatabase db, HttpRequest request)
+        internal static async Task<byte[]> GetProductDataTable(this IDBClient db, short locationId)
         {
             var commandText = """
-                SELECT p.product_id, p.product_name, p.product_sku, c.category_name, i.stock, u.unit_name,
-                i.price, CONCAT(creator.user_firstname, ' ', creator.user_lastname) AS creator, p.created_date
+                SELECT p.productid, p.name, p.sku, c.name AS category_name, i.stock, u.name AS unit_name,
+                i.price, e.fullname, p.createddate
                 FROM products AS p
-                INNER JOIN categories AS c ON p.category_id = c.category_id
-                INNER JOIN units AS u ON p.unit_id = u.unit_id
-                INNER JOIN inventories AS i ON p.product_id = i.product_id AND i.location_id = @location
-                INNER JOIN users AS creator ON p.creator_id = creator.user_id
-                WHERE p.is_deleted = false
+                INNER JOIN categories AS c ON p.categoryid = c.categoryid
+                INNER JOIN units AS u ON p.unitid = u.unitid
+                INNER JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @location
+                INNER JOIN employees AS e ON p.creatorid = e.employeeid
+                WHERE p.isdeleted = false
                 """;
             using (var writer = new IO.Writer())
             {
@@ -638,17 +673,17 @@ namespace Astro.Server.Binaries
                         writer.WriteString(reader.GetString(7));
                         writer.WriteDateTime(reader.GetDateTime(8));
                     }
-                }, commandText, db.CreateParameter("location", request.GetLocationID(), DbType.Int16));
+                }, commandText, db.CreateParameter("location", locationId, DbType.Int16));
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetUnitDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetUnitDataTable(this IDBClient db)
         {
             var commandText = """
-                select u.unit_id, u.unit_name, u.created_date, concat(c.user_firstname, ' ', c.user_lastname) as created_by
-                from units as u
-                inner join users as c on u.creator_id = c.user_id
-                order by u.unit_name
+                SELECT u.unitid, u.name, u.createddate, c.fullname
+                FROM units AS u
+                INNER JOIN employees AS c on u.creatorid = c.employeeid
+                ORDER BY u.name
                 """;
             using (var writer = new IO.Writer())
             {
@@ -665,14 +700,14 @@ namespace Astro.Server.Binaries
                 return writer.ToArray();
             }
         }
-        internal static async Task<byte[]> GetCategoryDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetCategoryDataTable(this IDBClient db)
         {
             var commandText = """
-                    select c.category_id, c.category_name, c.created_date, concat(u.user_firstname, ' ', u.user_lastname) as created_by
-                    from categories c
-                    inner join users u on c.creator_id = u.user_id
-                    where c.is_deleted = false
-                    order by c.category_name
+                    SELECT c.categoryid, c.name, c.createddate, u.fullname
+                    FROM categories AS c
+                    INNER JOIN employees AS u on c.creatorid = u.employeeid
+                    WHERE c.isdeleted = false
+                    ORDER BY c.name
                     """;
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())
@@ -691,19 +726,30 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetContactDataTable(this IDatabase db, short contactType)
+        internal static async Task<byte[]> GetContactDataTable(this IDBClient db, short contactType)
         {
             var commandText = """
-                select c.contact_id, c.contact_name, COALESCE(ca.street_address || ' ' || ct.city_name || ' ' || s.state_name || ', ' || ca.zip_code, '') AS address,
-                   	COALESCE(p.phone_number, '') as phone_number, concat(creator.user_firstname, ' ', creator.user_lastname) as creator, c.created_date
-                from contacts as c
-                    left join addresses as ca on c.contact_id = ca.owner_id and ca.is_primary = true
-                    left join cities as ct on ca.city_id = ct.city_id
-                    left join states as s on ct.state_id = s.state_id
-                    left join phones as p on c.contact_id = p.owner_id and p.is_primary = true
-                    inner join users as creator on c.creator_id = creator.user_id
-                where 
-                    c.is_deleted = false and c.contact_type = @contactType
+                SELECT c.contactid, 
+                       c.name, 
+                       COALESCE(ca.streetaddress || ' ' || v.name || ' ' || d.name || ' ' || cty.name || ', ' || ca.zipcode, '') AS address,
+                       COALESCE(p.phonenumber, '') as phonenumber, 
+                       creator.fullname, 
+                       c.createddate
+                FROM contacts c
+                LEFT JOIN addresses ca 
+                       ON c.contactid = ca.contactid AND ca.isprimary = true
+                LEFT JOIN villages v 
+                       ON ca.villageid = v.villageid
+                LEFT JOIN districts d 
+                       ON v.districtid = d.districtid
+                LEFT JOIN cities cty 
+                       ON d.cityid = cty.cityid
+                LEFT JOIN phones p 
+                       ON c.contactid = p.contactid AND p.isprimary = true
+                INNER JOIN employees creator 
+                       ON c.creatorid = creator.employeeid
+                WHERE c.isdeleted = false 
+                  AND c.contacttype = @contactType;
                 """;
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())
@@ -724,11 +770,11 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetAccountProviderTableAsync(this IDatabase db)
+        internal static async Task<byte[]> GetAccountProviderTableAsync(this IDBClient db)
         {
             var commandText = """
-                select provider_id, provider_name, case provider_type when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as provider_type
-                from account_providers
+                select providerid, name, case providertype when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as providertype
+                from accountproviders
                 """;
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())
@@ -746,16 +792,16 @@ namespace Astro.Server.Binaries
             }
             return data;
         }
-        internal static async Task<byte[]> GetAccountDataTable(this IDatabase db)
+        internal static async Task<byte[]> GetAccountDataTable(this IDBClient db)
         {
             var commandText = """
-                select acc.account_id, acc.account_name, acc.account_number, 
-                case ap.provider_type when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as accounttype, 
-                ap.provider_name, concat(u.user_firstname, ' ', u.user_lastname) as creator, acc.created_date, acc.edited_date
-                from accounts AS acc
-                inner join account_providers AS ap on acc.provider_id = ap.provider_id
-                inner join users as u on acc.creator_id = u.user_id
-                where acc.is_deleted = false
+                SELECT acc.accountid, acc.accountname, acc.accountnumber, 
+                CASE ap.providertype WHEN 1 THEN 'Bank' WHEN 2 THEN 'E-Wallet' WHEN 3 THEN 'E-Money' ELSE '-' END AS accounttype, 
+                ap.name, u.fullname, acc.createddate, acc.editeddate
+                FROM accounts AS acc
+                INNER JOIN accountproviders AS ap ON acc.providerid = ap.providerid
+                INNER JOIN employees AS u ON acc.creatorid = u.employeeid
+                where acc.isdeleted = false
                 """;
             var data = Array.Empty<byte>();
             using (var writer = new IO.Writer())

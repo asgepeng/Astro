@@ -37,6 +37,12 @@ namespace Astro.Winform.Forms
                 this.useExpirationCheckBox.Checked = this.UserView.User.UsePasswordExpiration;
                 this.passwordExpirationDate.Enabled = this.UserView.User.UsePasswordExpiration;
                 this.zipCodeTextBox.Text = this.UserView.User.ZipCode;
+                foreach (var branch in this.UserView.AccessableBranches)
+                {
+                    var lvi = listView1.Items.Add(branch.Id.ToString("00000"), 0);
+                    lvi.SubItems.Add(branch.Name);
+                    lvi.SubItems.Add(branch.Address);
+                }
                 if (this.passwordExpirationDate.Enabled)
                 {
                     this.passwordExpirationDate.Value = this.UserView.User.PasswordExpirationDate.HasValue ? this.UserView.User.PasswordExpirationDate.Value : new DateTime(2999, 12, 31);

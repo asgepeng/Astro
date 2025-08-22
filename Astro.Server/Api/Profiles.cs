@@ -16,14 +16,14 @@ namespace Astro.Server.Api
             app.MapGet("/profile", GetProfileAsync).RequireAuthorization();
             app.MapPost("/profile", UpdateProfileAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetProfileAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetProfileAsync(IDBClient db, HttpContext context)
         {
             var commandText = """
                 SELECT id, name
                 """;
             return await Task.FromResult(Results.Ok());
         }
-        internal static async Task<IResult> UpdateProfileAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> UpdateProfileAsync(IDBClient db, HttpContext context)
         {
             return await Task.FromResult(Results.Ok());
         }

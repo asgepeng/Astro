@@ -3,6 +3,7 @@ using Astro.Text;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
 using Astro.Winform.Extensions;
+using System.Reflection;
 
 namespace Astro.Winform.Forms
 {
@@ -11,7 +12,19 @@ namespace Astro.Winform.Forms
         public ProductForm()
         {
             InitializeComponent();
+
         }
+        private void DisableAllControls(bool disabled)
+        {
+            foreach (Control control in this.Controls)
+            {
+                if (control.GetType().Equals(typeof(TextBox)) || control.GetType().Equals(typeof(ComboBox)) || control.GetType().Equals(typeof(Button)) || control.GetType().Equals(typeof(Label)))
+                {
+                    control.Enabled = !disabled;
+                }
+            }
+        }
+        public short BranchId { get; set; } = 1;
         public ProductViewModel? Model { get; set; } = null;
         private List<string> ImageURLs { get; } = new List<string>();
         private int SelectedImage = 0;
@@ -50,24 +63,33 @@ namespace Astro.Winform.Forms
         }
         private async void ProductForm_Load(object sender, EventArgs e)
         {
-            if (this.Model != null)
+            this.unitComboBox.DisplayMember = "Text";
+            this.unitComboBox.ValueMember = "Id";
+
+            this.categoryComboBox.DisplayMember = "Text";
+            this.categoryComboBox.ValueMember = "Id";
+            var productId = this.Tag != null ? this.Tag.ToString() : "0";
+            this.DisableAllControls(true);
+            using (var stream = await WClient.GetStreamAsync("/data/products/" + productId))
+            using (var reader = new IO.Reader(stream))
             {
-                this.categoryComboBox.DataSource = this.Model.Categories;
-                this.unitComboBox.DataSource = this.Model.Units;
-                if (this.Model.Product != null)
+                if (stream is null || stream.Length == 0) return;
+                Product? product = null;
+                if (reader.ReadBoolean())
                 {
-                    this.skuTextBox.Text = this.Model.Product.Sku;
-                    this.nameTextBox.Text = this.Model.Product.Name;
-                    this.descriptionTextBox.Text = this.Model.Product.Description;
-                    this.stockTextBox.Text = this.Model.Product.Stock.ToString("N0");
-                    this.basicpriceTextBox.Text = this.Model.Product.CostAverage.ToDecimalFormat();
-                    this.priceTextBox.Text = this.Model.Product.Price.ToDecimalFormat();
-                    this.minstockTextBox.Text = this.Model.Product.MinStock.ToString();
-                    this.maxstockTextBox.Text = this.Model.Product.MaxStock.ToString();
-                    this.categoryComboBox.SelectedItem = this.Model.Categories.FirstOrDefault(c => c.Id == this.Model.Product.Category);
-                    this.unitComboBox.SelectedItem = this.Model.Units.FirstOrDefault(u => u.Id == this.Model.Product.Unit);
-                    this.isactiveCheckBox.Checked = this.Model.Product.Active;
-                    var arrImage = this.Model.Product.Images.Split(';');
+                    product = Product.Create(reader);
+
+                    this.skuTextBox.Text = product.Sku;
+                    this.nameTextBox.Text = product.Name;
+                    this.descriptionTextBox.Text = product.Description;
+                    this.stockTextBox.Text = product.Stock.ToString("N0");
+                    this.basicpriceTextBox.Text = product.COGs.ToDecimalFormat();
+                    this.priceTextBox.Text = product.Price.ToDecimalFormat();
+                    this.minstockTextBox.Text = product.MinStock.ToString();
+                    this.maxstockTextBox.Text = product.MaxStock.ToString();
+                    this.typeComboBox.SelectedIndex = product.Type - 1;
+                    this.isactiveCheckBox.Checked = product.Active;
+                    var arrImage = product.Images.Split(';');
                     foreach (var image in arrImage)
                     {
                         if (!string.IsNullOrWhiteSpace(image))
@@ -75,14 +97,38 @@ namespace Astro.Winform.Forms
                             this.ImageURLs.Add(image.Trim());
                         }
                     }
+                }
+
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    var categoryItem = new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    };
+                    this.categoryComboBox.Items.Add(categoryItem);
+                    if (product != null && product.Category == categoryItem.Id) this.categoryComboBox.SelectedIndex = this.categoryComboBox.Items.Count - 1;
+                    iCount--;
+                }
+                iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    var unitItem = new Option()
+                    {
+                        Id = reader.ReadInt16(),
+                        Text = reader.ReadString()
+                    };
+                    this.unitComboBox.Items.Add(unitItem);
+                    if (product != null && product.Unit == unitItem.Id) this.unitComboBox.SelectedIndex = this.unitComboBox.Items.Count - 1;
+                    iCount--;
+                }
+                if (this.ImageURLs.Count > 0)
+                {
                     await DisplayImage();
                 }
+                this.DisableAllControls(false);
             }
-            this.unitComboBox.DisplayMember = "Text";
-            this.unitComboBox.ValueMember = "Id";
-
-            this.categoryComboBox.DisplayMember = "Text";
-            this.categoryComboBox.ValueMember = "Id";
         }
 
         private async void loginButton_Click(object sender, EventArgs e)
@@ -113,35 +159,50 @@ namespace Astro.Winform.Forms
                 unitComboBox.Focus();
                 return;
             }
-
-            var product = this.Model.Product != null ? this.Model.Product : new Product();
-            product.Name = this.nameTextBox.Text.Trim();
-            product.Description = this.descriptionTextBox.Text.Trim();
-            product.Sku = this.skuTextBox.Text.Trim();
-            product.Category = (short)((Option)this.categoryComboBox.SelectedItem).Id;
-            product.Unit = (short)((Option)this.unitComboBox.SelectedItem).Id;
             int.TryParse(stockTextBox.Text, out int productStock);
-            product.Stock = productStock;
-            product.Price = priceTextBox.Text.ToInt64();
-            product.CostAverage = basicpriceTextBox.Text.ToInt64();
             short.TryParse(minstockTextBox.Text, out short minStock);
             short.TryParse(maxstockTextBox.Text, out short maxStock);
-            product.MinStock = minStock;
-            product.MaxStock = maxStock;
-            product.Images = string.Join(";", this.ImageURLs);
 
-            var result = product.ID > 0 ? await WClient.PutAsync("/data/products", product.ToString()) : await WClient.PostAsync("/data/products", product.ToString());
-            var commonResult = CommonResult.Create(result);
-            if (commonResult != null)
+            var productId = this.Model.Product != null ? this.Model.Product.ID : (short)0;
+            using (var writer = new IO.Writer())
             {
-                if (commonResult.Success)
+                writer.WriteByte(1);
+                writer.WriteInt16(this.BranchId);
+                writer.WriteInt16(productId);
+                writer.WriteString(this.nameTextBox.Text.Trim());
+                writer.WriteString(this.descriptionTextBox.Text.Trim());
+                writer.WriteString(this.skuTextBox.Text.Trim());
+                writer.WriteInt16((short)((Option)this.categoryComboBox.SelectedItem).Id);
+                writer.WriteInt16((short)typeComboBox.SelectedIndex);
+                writer.WriteInt16((short)((Option)this.unitComboBox.SelectedItem).Id);
+                writer.WriteString(string.Join(";", this.ImageURLs));
+                writer.WriteInt32(productStock);
+                writer.WriteInt16(minStock);
+                writer.WriteInt16(maxStock);
+                writer.WriteInt64(this.priceTextBox.Text.ToInt64());
+                writer.WriteInt64(this.basicpriceTextBox.Text.ToInt64());
+
+                var result = await WClient.PostAsync("/data/products", writer.ToArray());
+                var commonResult = CommonResult.Create(result);
+                if (commonResult != null)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show(commonResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (commonResult.Success)
+                    {
+                        if (short.TryParse(commonResult.Message, out short newProductID))
+                        {
+                            this.Tag = newProductID;
+                        }
+                        else
+                        {
+                            this.Tag = null;
+                        }
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(commonResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }

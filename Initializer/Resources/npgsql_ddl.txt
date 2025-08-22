@@ -1,368 +1,405 @@
 -- countries
 CREATE TABLE countries (
-    country_id          SMALLINT        PRIMARY KEY,
-    country_name        VARCHAR(100)    NOT NULL DEFAULT '',
-    country_a2code      CHAR(2)         NOT NULL DEFAULT '',
-    country_a3code      CHAR(3)         NOT NULL DEFAULT '',
-    country_phone_code  INTEGER         NOT NULL DEFAULT 0
+    countryid           SMALLINT        PRIMARY KEY,
+    name                VARCHAR(100)    NOT NULL DEFAULT '',
+    a2code              CHAR(2)         NOT NULL DEFAULT '',
+    a3code              CHAR(3)         NOT NULL DEFAULT '',
+    phonecode           INTEGER         NOT NULL DEFAULT 0
 );
 
 -- provinces
 CREATE TABLE states (
-    state_id            SMALLINT        PRIMARY KEY,
-    state_name          VARCHAR(100)    NOT NULL DEFAULT '',
-    country_id          SMALLINT        NOT NULL DEFAULT 0
+    stateid             SMALLINT        PRIMARY KEY,
+    name                VARCHAR(100)    NOT NULL DEFAULT '',
+    countryid           SMALLINT        NOT NULL DEFAULT 0
 );
 
 -- cities
 CREATE TABLE cities (
-    city_id             INTEGER         PRIMARY KEY,
-    city_name           VARCHAR(200)    NOT NULL DEFAULT '',
-    state_id            INTEGER         NOT NULL DEFAULT 0
+    cityid              INTEGER         PRIMARY KEY,
+    name                VARCHAR(200)    NOT NULL DEFAULT '',
+    stateid             SMALLINT         NOT NULL DEFAULT 0
+);
+--districts
+CREATE TABLE districts (
+	districtid          INTEGER         PRIMARY KEY,
+	name                VARCHAR(100)    NOT NULL DEFAULT '',
+	cityid              INTEGER         NOT NULL DEFAULT 0
 );
 
+-- villages
+CREATE TABLE villages (
+	villageid           BIGINT          PRIMARY KEY,
+	name                VARCHAR(100)    NOT NULL DEFAULT '',
+	districtid          INTEGER        NOT NULL DEFAULT 0,
+    zipcode             INT     NOT NULL DEFAULT 0
+);
+
+-- stores
+CREATE TABLE locations (
+    locationid         SMALLSERIAL       PRIMARY KEY,
+	name               VARCHAR(100)    NOT NULL DEFAULT '',
+	streetaddress      VARCHAR(250)    NOT NULL DEFAULT '',
+	villageid          BIGINT          NOT NULL DEFAULT 0,
+	zipcode            VARCHAR(15)     NOT NULL DEFAULT '',
+	phone              VARCHAR(30)     NOT NULL DEFAULT '',
+	fax                VARCHAR(30)     NOT NULL DEFAULT '',
+	email              VARCHAR(80)     NOT NULL DEFAULT '',
+	creatorid         SMALLINT        NOT NULL DEFAULT 0,
+	createddate       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	editorid          SMALLINT,
+	editeddate        TIMESTAMP
+);
+
+-- employees
+CREATE TABLE employees (
+    employeeid          SMALLSERIAL NOT NULL PRIMARY KEY,
+    fullname            VARCHAR(200) NOT NULL DEFAULT '',
+    placeofbirth        VARCHAR(50) NOT NULL DEFAULT '',
+    dateofbirth         DATE NOT NULL DEFAULT '1900-01-01',
+    sex                 SMALLINT NOT NULL DEFAULT 0,
+    maritalstatus       SMALLINT NOT NULL DEFAULT 0,
+    streetaddress       VARCHAR(250) NOT NULL DEFAULT '',
+    villageid           BIGINT NOT NULL DEFAULT 0,
+    zipcode             VARCHAR(15) NOT NULL DEFAULT '',
+    phone               VARCHAR(30) NOT NULL DEFAULT '',
+    email               VARCHAR(80) NOT NULL DEFAULT '',
+    hireddate           DATE NOT NULL DEFAULT '1900-01-01',
+    roleid              SMALLINT NOT NULL DEFAULT 0,
+    isactive            BOOLEAN NOT NULL DEFAULT true,
+    terminationdate     DATE NULL,
+    payrolldate         SMALLINT NOT NULL DEFAULT 0,
+    payrollmethod       SMALLINT NOT NULL DEFAULT 0,
+    notes               VARCHAR(250) NOT NULL DEFAULT '',
+    creatorid             SMALLINT NOT NULL DEFAULT 0,
+    createddate         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid              SMALLINT,
+    editeddate          TIMESTAMP,
+    isdeleted           BOOLEAN NOT NULL DEFAULT false
+);
+-- payrolls
+CREATE TABLE payrolls (
+    payrollid           BIGSERIAL       PRIMARY KEY,
+	employeeid          SMALLINT        NOT NULL DEFAULT 0,
+	period              VARCHAR(20)     NOT NULL DEFAULT '',
+	salary              BIGINT          NOT NULL DEFAULT 0,
+	bonus               BIGINT          NOT NULL DEFAULT 0,
+	deductions          BIGINT          NOT NULL DEFAULT 0,
+	netpay              BIGINT          NOT NULL DEFAULT 0,
+	creatorid           SMALLINT        NOT NULL DEFAULT 0,
+	createddate         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	editorid            SMALLINT,
+	editeddate          TIMESTAMP
+);
+-- logins
+CREATE TABLE logins (
+    employeeid          SMALLINT        NOT NULL DEFAULT 0,
+    passwordhash        VARCHAR(255)    NOT NULL DEFAULT '',
+    accessfailedcount   SMALLINT        NOT NULL DEFAULT 0,
+    lockoutenabled      BOOLEAN NOT NULL DEFAULT false,
+    lockoutend          TIMESTAMP NULL,
+    usepasswordexpiration BOOLEAN NOT NULL DEFAULT false,
+    passwordexpirationdate   DATE NULL,
+    creatorid           SMALLINT        NOT NULL DEFAULT 0,
+    createddate         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid            SMALLINT,
+    editeddate          TIMESTAMP
+);
+-- employeelocations
+CREATE TABLE employeelocations (
+    employeeid          SMALLINT        NOT NULL DEFAULT 0,
+	locationid          SMALLINT        NOT NULL DEFAULT 0,
+	isprimary           BOOLEAN         NOT NULL DEFAULT false,
+	creatorid          SMALLINT        NOT NULL DEFAULT 0,
+	editorid           SMALLINT,
+	createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	editeddate         TIMESTAMP,
+	CONSTRAINT pk_employeelocations PRIMARY KEY (employeeid, locationid)
+);
 -- roles
 CREATE TABLE roles (
-    role_id             SMALLSERIAL     PRIMARY KEY,
-    role_name           VARCHAR(150)    NOT NULL DEFAULT '',
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP
+    roleid             SMALLSERIAL     PRIMARY KEY,
+    name           VARCHAR(150)    NOT NULL DEFAULT '',
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP
 );
 
 -- sections
 CREATE TABLE sections (
-    section_id          SMALLSERIAL     PRIMARY KEY,
-    section_title       VARCHAR(100)    NOT NULL DEFAULT '',
-    is_disabled         BOOLEAN         NOT NULL DEFAULT false
+    sectionid           SMALLSERIAL     PRIMARY KEY,
+    title               VARCHAR(100)    NOT NULL DEFAULT '',
+    disabled            BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- menus
 CREATE TABLE menus (
-    menu_id             SMALLSERIAL     PRIMARY KEY,
-    section_id          SMALLINT        NOT NULL DEFAULT 0,
-    menu_title          VARCHAR(100)    NOT NULL DEFAULT '',
-    menu_tooltip_text   VARCHAR(250)    NOT NULL DEFAULT '',
-    is_disabled         BOOLEAN         NOT NULL DEFAULT false
+    menuid              SMALLSERIAL     PRIMARY KEY,
+    sectionid           SMALLINT        NOT NULL DEFAULT 0,
+    title               VARCHAR(100)    NOT NULL DEFAULT '',
+    tooltiptext         VARCHAR(250)    NOT NULL DEFAULT '',
+    disabled            BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- roletomenus
-CREATE TABLE role_to_menus (
-    role_id             SMALLINT        NOT NULL,
-    menu_id             SMALLINT        NOT NULL,
-    allow_create        BOOLEAN         NOT NULL DEFAULT false,
-    allow_read          BOOLEAN         NOT NULL DEFAULT false,
-    allow_update        BOOLEAN         NOT NULL DEFAULT false,
-    allow_delete        BOOLEAN         NOT NULL DEFAULT false,
-    PRIMARY KEY (role_id, menu_id)
-);
-
--- users
-CREATE TABLE users (
-    user_id                 SMALLSERIAL PRIMARY KEY,
-
-    prefix_id               SMALLINT     NOT NULL DEFAULT 0,
-    user_firstname          VARCHAR(100) NOT NULL DEFAULT '',
-    user_lastname           VARCHAR(100) NOT NULL DEFAULT '',
-    suffix_id               SMALLINT     NOT NULL DEFAULT 0,
-    role_id                 SMALLINT     NOT NULL DEFAULT 0,
-    location_id             SMALLINT     NOT NULL DEFAULT 0,
-
-    user_name               VARCHAR(100) NOT NULL DEFAULT '',
-    normalized_user_name    VARCHAR(100) NOT NULL DEFAULT '',
-    email                   VARCHAR(80)  NOT NULL DEFAULT '',
-    email_confirmed         BOOLEAN      NOT NULL DEFAULT false,
-    phone_number            VARCHAR(30)  NOT NULL DEFAULT '',
-    phone_number_confirmed  BOOLEAN      NOT NULL DEFAULT false,
-    password_hash           VARCHAR(255) NOT NULL DEFAULT '',
-
-    date_of_birth           DATE         NOT NULL DEFAULT '1900-01-01',
-    sex                     SMALLINT     NOT NULL DEFAULT 0,
-    marital_status          SMALLINT     NOT NULL DEFAULT 0,
-
-    street_address          VARCHAR(250) NOT NULL DEFAULT '',
-    city_id                 INT          NOT NULL DEFAULT 0,
-    state_id                SMALLINT     NOT NULL DEFAULT 0,
-    country_id              SMALLINT     NOT NULL DEFAULT 0,
-    zip_code                VARCHAR(30)  NOT NULL DEFAULT '',
-
-    two_factor_enabled      BOOLEAN      NOT NULL DEFAULT false,
-    access_failed_count     SMALLINT     NOT NULL DEFAULT 0,
-    lockout_enabled         BOOLEAN      NOT NULL DEFAULT false,
-    lockout_end             TIMESTAMP,
-
-    security_stamp          UUID,
-    concurrency_stamp       TIMESTAMP,
-    use_password_expiration BOOLEAN NOT NULL DEFAULT false,
-    password_expiration_date TIMESTAMP,
-
-    creator_id              SMALLINT     NOT NULL DEFAULT 0,
-    created_date            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id               SMALLINT,
-    edited_date             TIMESTAMP,
-
-    is_deleted              BOOLEAN      NOT NULL DEFAULT false
+CREATE TABLE rolemenus (
+    roleid             SMALLINT        NOT NULL,
+    menuid             SMALLINT        NOT NULL,
+    allowcreate        BOOLEAN         NOT NULL DEFAULT false,
+    allowread          BOOLEAN         NOT NULL DEFAULT false,
+    allowupdate        BOOLEAN         NOT NULL DEFAULT false,
+    allowdelete        BOOLEAN         NOT NULL DEFAULT false,
+    PRIMARY KEY (roleid, menuid)
 );
 
 -- login attempt
-CREATE TABLE login_attempts
+CREATE TABLE loginattempts
 (
-    attempt_id              SERIAL          PRIMARY KEY,
-    attempt_time            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    attemptid               SERIAL          PRIMARY KEY,
+    attempttime             TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
-    user_id                 SMALLINT        NOT NULL DEFAULT 0,
-    ipv4_address            VARCHAR(50)     NOT NULL DEFAULT '',
-    ipv6_address            VARCHAR(60)     NOT NULL DEFAULT '',
-    user_agent              VARCHAR(255)    NOT NULL DEFAULT '',
-    is_success              BOOLEAN         NOT NULL DEFAULT false,
+    employeeid              SMALLINT        NOT NULL DEFAULT 0,
+    ipv4                    BYTEA,
+    ipv6                    BYTEA,
+    useragent               VARCHAR(255)    NOT NULL DEFAULT '',
+    success                 BOOLEAN         NOT NULL DEFAULT false,
     notes                   VARCHAR(255)    NOT NULL DEFAULT ''
 );
 
 -- addresses
 CREATE TABLE addresses (
-    address_id          SERIAL          PRIMARY KEY,
-    owner_id            BIGINT          NOT NULL DEFAULT 0,
-    address_type        SMALLINT        NOT NULL DEFAULT 0,
-    street_address      VARCHAR(250)    NOT NULL DEFAULT '',
-    city_id             INTEGER         NOT NULL DEFAULT 0,
-    zip_code            VARCHAR(15)     NOT NULL DEFAULT '',
-    is_primary          BOOLEAN         NOT NULL DEFAULT false
+    addressid           SERIAL          PRIMARY KEY,
+    contactid           BIGINT          NOT NULL DEFAULT 0,
+    addresstype                SMALLINT        NOT NULL DEFAULT 0,
+    streetaddress      VARCHAR(250)    NOT NULL DEFAULT '',
+    villageid          BIGINT            NOT NULL DEFAULT 0,
+    zipcode            VARCHAR(15)     NOT NULL DEFAULT '',
+    isprimary          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- emails
 CREATE TABLE emails (
-    email_id            SERIAL          PRIMARY KEY,
-    owner_id            SMALLINT        NOT NULL DEFAULT 0,
-    email_address       VARCHAR(60)     NOT NULL DEFAULT '',
-    email_type          SMALLINT        NOT NULL DEFAULT 0,
-    is_primary          BOOLEAN         NOT NULL DEFAULT false,
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP
+    emailid            SERIAL          PRIMARY KEY,
+    contactid            SMALLINT        NOT NULL DEFAULT 0,
+    emailaddress       VARCHAR(60)     NOT NULL DEFAULT '',
+    emailtype          SMALLINT        NOT NULL DEFAULT 0,
+    isprimary          BOOLEAN         NOT NULL DEFAULT false,
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP
 );
 
 -- phones
 CREATE TABLE phones (
-    phone_id            SERIAL      PRIMARY KEY,
-    owner_id            SMALLINT    NOT NULL    DEFAULT 0,
-    phone_type          SMALLINT    NOT NULL    DEFAULT 0,
-    phone_number        VARCHAR(50) NOT NULL    DEFAULT '',
-    phone_ext           SMALLINT    NOT NULL    DEFAULT 0,
-    is_primary          BOOLEAN     NOT NULL    DEFAULT false,
-    creator_id          SMALLINT    NOT NULL    DEFAULT 0,
-    created_date        TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP
+    phoneid            SERIAL      PRIMARY KEY,
+    contactid          SMALLINT    NOT NULL    DEFAULT 0,
+    phonetype          SMALLINT    NOT NULL    DEFAULT 0,
+    phonenumber        VARCHAR(50) NOT NULL    DEFAULT '',
+    phoneext           SMALLINT    NOT NULL    DEFAULT 0,
+    isprimary          BOOLEAN     NOT NULL    DEFAULT false,
+    creatorid          SMALLINT    NOT NULL    DEFAULT 0,
+    createddate        TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP
 );
 
 -- faxes
 CREATE TABLE faxes (
-    fax_id              SERIAL      PRIMARY KEY,
-    owner_id            SMALLINT    NOT NULL DEFAULT 0,
-    fax_type            SMALLINT    NOT NULL DEFAULT 0,
-    fax_number          VARCHAR(60) NOT NULL DEFAULT '',
-    creator_id          SMALLINT    NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP
+    faxid              SERIAL      PRIMARY KEY,
+    ownerid            SMALLINT    NOT NULL DEFAULT 0,
+    faxtype            SMALLINT    NOT NULL DEFAULT 0,
+    faxnumber          VARCHAR(60) NOT NULL DEFAULT '',
+    creatorid          SMALLINT    NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP
 );
 
 -- auths
 CREATE TABLE auths (
     token               UUID            PRIMARY KEY,
-    user_id             SMALLINT        NOT NULL DEFAULT 0,
-    token_expired_date  TIMESTAMP       NOT NULL,
-    ipv4_address        VARCHAR(50)     NOT NULL DEFAULT '',
-    ipv6_address        BYTEA,
-    user_agent          VARCHAR(250)    NOT NULL DEFAULT ''
+    employeeid          SMALLINT        NOT NULL DEFAULT 0,
+    tokenexpired        TIMESTAMP       NOT NULL,
+    ipv4                INT             NOT NULL,
+    ipv6                INET,
+    useragent          VARCHAR(250)    NOT NULL DEFAULT ''
 );
 
 -- units
 CREATE TABLE units (
-    unit_id             SMALLSERIAL     PRIMARY KEY,
-    unit_name           VARCHAR(50)     NOT NULL    DEFAULT '',
-    creator_id          SMALLINT        NOT NULL    DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP
+    unitid             SMALLSERIAL     PRIMARY KEY,
+    name                VARCHAR(50)     NOT NULL    DEFAULT '',
+    creatorid          SMALLINT        NOT NULL    DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP
 );
 
 -- categories
 CREATE TABLE categories (
-    category_id         SMALLSERIAL     PRIMARY KEY,
-    category_name       VARCHAR(100)    NOT NULL DEFAULT '',
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP,
-    is_deleted          BOOLEAN         NOT NULL DEFAULT false
+    categoryid         SMALLSERIAL     PRIMARY KEY,
+    name                VARCHAR(100)    NOT NULL DEFAULT '',
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP,
+    isdeleted          BOOLEAN         NOT NULL DEFAULT false
 );
-
--- stores
-CREATE TABLE locations (
-    location_id        SMALLSERIAL       PRIMARY KEY,
-	name               VARCHAR(100)    NOT NULL DEFAULT '',
-	street_address     VARCHAR(250)    NOT NULL DEFAULT '',
-	city_id            INTEGER         NOT NULL DEFAULT 0,
-	zip_code           VARCHAR(15)     NOT NULL DEFAULT '',
-	phone_number       VARCHAR(30)     NOT NULL DEFAULT '',
-	fax_number         VARCHAR(30)     NOT NULL DEFAULT '',
-	email              VARCHAR(80)     NOT NULL DEFAULT '',
-	creator_id         SMALLINT        NOT NULL DEFAULT 0,
-	created_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	editor_id          SMALLINT,
-	edited_date        TIMESTAMP
-);
-
 -- products
 CREATE TABLE products (
-    product_id          SMALLSERIAL     PRIMARY KEY,
-    product_name        VARCHAR(100)    NOT NULL    DEFAULT '',
-    product_description VARCHAR(8000)   NOT NULL    DEFAULT '',
-    product_sku         VARCHAR(40)     NOT NULL    DEFAULT '',
-    parent_id           SMALLINT        NOT NULL    DEFAULT 0,
-    category_id         SMALLINT        NOT NULL    DEFAULT 0,
-    unit_id             SMALLINT        NOT NULL    DEFAULT 0,
-    manufacture_id      SMALLINT        NOT NULL    DEFAULT 0,
-    product_type        INTEGER         NOT NULL    DEFAULT 0,
+    productid          SMALLSERIAL     PRIMARY KEY,
+    name        VARCHAR(100)    NOT NULL    DEFAULT '',
+    description VARCHAR(8000)   NOT NULL    DEFAULT '',
+    sku         VARCHAR(40)     NOT NULL    DEFAULT '',
+    parentid           SMALLINT        NOT NULL    DEFAULT 0,
+    categoryid         SMALLINT        NOT NULL    DEFAULT 0,
+    unitid             SMALLINT        NOT NULL    DEFAULT 0,
+    manufactureid      SMALLINT        NOT NULL    DEFAULT 0,
+    producttype        INTEGER         NOT NULL    DEFAULT 0,
+    taxable            BOOLEAN         NOT NULL    DEFAULT false,
+    taxfactor           DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    percenttax          DECIMAL(5,2)    NOT NULL    DEFAULT 0.00,
     images              VARCHAR(250)    NOT NULL    DEFAULT '',
-    creator_id          SMALLINT        NOT NULL    DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP,
-    is_deleted          BOOLEAN         NOT NULL    DEFAULT false
+    creatorid          SMALLINT        NOT NULL    DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP,
+    isdeleted          BOOLEAN         NOT NULL    DEFAULT false
 );
 
 -- inventories
 CREATE TABLE inventories (
-	location_id         SMALLINT        NOT NULL,
-	product_id          SMALLINT        NOT NULL,
-    is_active           BOOLEAN         NOT NULL    DEFAULT false,
+	locationid         SMALLINT        NOT NULL,
+	productid          SMALLINT        NOT NULL,
+    isactive           BOOLEAN         NOT NULL    DEFAULT false,
     buyprice            BIGINT          NOT NULL    DEFAULT 0,
     cogs                BIGINT          NOT NULL    DEFAULT 0,
     price               BIGINT          NOT NULL    DEFAULT 0,
     stock               INT             NOT NULL    DEFAULT 0,
-	min_stock           SMALLINT        NOT NULL    DEFAULT 0,
-	max_stock           SMALLINT        NOT NULL    DEFAULT 0,
-	creator_id          SMALLINT        NOT NULL    DEFAULT 0,
-	created_date        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-	editor_id           SMALLINT,
-	edited_date         TIMESTAMP
+	minstock           SMALLINT        NOT NULL    DEFAULT 0,
+	maxstock           SMALLINT        NOT NULL    DEFAULT 0,
+	creatorid          SMALLINT        NOT NULL    DEFAULT 0,
+	createddate        TIMESTAMP       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+	editorid           SMALLINT,
+	editeddate         TIMESTAMP,
+    CONSTRAINT pk_inventories PRIMARY KEY (locationid, productid)
 );
 
 -- contacts
 CREATE TABLE contacts (
-    contact_id          SERIAL          PRIMARY KEY,
-    contact_name        VARCHAR(250)    NOT NULL DEFAULT '',
+    contactid          SERIAL          PRIMARY KEY,
+    name                VARCHAR(250)    NOT NULL DEFAULT '',
     title               VARCHAR(100)    NOT NULL DEFAULT '',
-    org_id              SMALLINT        NOT NULL DEFAULT 0,
-    contact_type        SMALLINT        NOT NULL DEFAULT 0,
-    group_id            SMALLINT        NOT NULL DEFAULT 0,
-    account_limit       INTEGER         NOT NULL DEFAULT 0,
-    account_due         SMALLINT        NOT NULL DEFAULT 0,
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id           SMALLINT,
-    edited_date         TIMESTAMP,
-    is_deleted          BOOLEAN         NOT NULL DEFAULT false
+    organizationid      SMALLINT        NOT NULL DEFAULT 0,
+    contacttype        SMALLINT        NOT NULL DEFAULT 0,
+    groupid            SMALLINT        NOT NULL DEFAULT 0,
+    accountlimit       INTEGER         NOT NULL DEFAULT 0,
+    accountdue         SMALLINT        NOT NULL DEFAULT 0,
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid           SMALLINT,
+    editeddate         TIMESTAMP,
+    isdeleted          BOOLEAN         NOT NULL DEFAULT false
 );
 
 -- wsprices
-CREATE TABLE wholesale_prices (
-    product_id BIGINT NOT NULL,
-    min_qty SMALLINT NOT NULL,
+CREATE TABLE wsprices (
+    productid BIGINT NOT NULL,
+    minqty SMALLINT NOT NULL,
     price BIGINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (product_id, min_qty)
+    PRIMARY KEY (productid, minqty)
 );
 
 -- promotions
 CREATE TABLE promotions (
-    promo_id BIGSERIAL PRIMARY KEY,
-    promo_title VARCHAR(250) NOT NULL DEFAULT '',
-    promo_start_date TIMESTAMP NOT NULL,
-    promo_end_date TIMESTAMP NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT false,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    promoid BIGSERIAL PRIMARY KEY,
+    title VARCHAR(250) NOT NULL DEFAULT '',
+    startdate TIMESTAMP NOT NULL,
+    enddate TIMESTAMP NOT NULL,
+    isactive BOOLEAN NOT NULL DEFAULT false,
+    creatorid SMALLINT NOT NULL DEFAULT 0,
+    createddate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid SMALLINT,
+    editeddate TIMESTAMP,
+    isdeleted BOOLEAN NOT NULL DEFAULT false
 );
 
 -- promoproducts
-CREATE TABLE promo_products (
-    promo_id BIGINT NOT NULL,
-    product_id SMALLINT NOT NULL,
-    promo_type SMALLINT NOT NULL DEFAULT 0,
-    promo_value BIGINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (promo_id, product_id)
+CREATE TABLE promoproducts (
+    promoid BIGINT NOT NULL,
+    productid SMALLINT NOT NULL,
+    promotype SMALLINT NOT NULL DEFAULT 0,
+    promovalue BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (promoid, productid)
 );
 
 -- groupprices
-CREATE TABLE group_prices (
-    group_id SMALLINT NOT NULL,
-    product_id SMALLINT NOT NULL,
+CREATE TABLE groupprices (
+    groupid SMALLINT NOT NULL,
+    productid SMALLINT NOT NULL,
     min_qty BIGINT NOT NULL DEFAULT 0,
-    discount_type SMALLINT NOT NULL DEFAULT 0,
-    discount_amount BIGINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (group_id, product_id)
+    discounttype SMALLINT NOT NULL DEFAULT 0,
+    discountamount BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (groupid, productid)
 );
 
 -- vouchers
 CREATE TABLE vouchers (
-    voucher_id BIGINT PRIMARY KEY,
-    voucher_expired_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    voucher_amount BIGINT NOT NULL DEFAULT 0,
-    creator_id BIGINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    voucherid BIGINT PRIMARY KEY,
+    voucherexpired_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    voucheramount BIGINT NOT NULL DEFAULT 0,
+    creatorid BIGINT NOT NULL DEFAULT 0,
+    createddate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- accproviders
-CREATE TABLE account_providers (
-    provider_id SMALLINT PRIMARY KEY,
-    provider_name VARCHAR(100) NOT NULL DEFAULT '',
-    provider_type SMALLINT NOT NULL DEFAULT 0
+CREATE TABLE accountproviders (
+    providerid SMALLINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL DEFAULT '',
+    providertype SMALLINT NOT NULL DEFAULT 0
 );
 
 -- accounts
 CREATE TABLE accounts (
-    account_id SERIAL PRIMARY KEY,
-    account_name VARCHAR(250) NOT NULL DEFAULT '',
-    account_number VARCHAR(50) NOT NULL DEFAULT '',
-    provider_id SMALLINT NOT NULL DEFAULT 0,
-    creator_id SMALLINT NOT NULL DEFAULT 0,
-    created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    editor_id SMALLINT,
-    edited_date TIMESTAMP,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    accountid SERIAL PRIMARY KEY,
+    accountname VARCHAR(250) NOT NULL DEFAULT '',
+    accountnumber VARCHAR(50) NOT NULL DEFAULT '',
+    providerid SMALLINT NOT NULL DEFAULT 0,
+    creatorid SMALLINT NOT NULL DEFAULT 0,
+    createddate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    editorid SMALLINT,
+    editeddate TIMESTAMP,
+    isdeleted BOOLEAN NOT NULL DEFAULT false
 );
 
 -- cashflows
 CREATE TABLE cashflows (
-    cashflow_id         UUID            PRIMARY KEY,
-    cashflow_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    account_id          SMALLINT        NOT NULL DEFAULT 0,
-    account_type        SMALLINT        NOT NULL DEFAULT 0,
-    debt                BIGINT          NOT NULL DEFAULT 0,
-    credit              BIGINT          NOT NULL DEFAULT 0,
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    cashflowid         UUID            PRIMARY KEY,
+    cashflowdate       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    refid               UUID            NOT NULL,
+    reftype            SMALLINT        NOT NULL,
+    accountid          SMALLINT        NOT NULL,
+    accounttype        SMALLINT        NOT NULL,
+    amount  	        BIGINT          NOT NULL,
+    notes              VARCHAR(250)    NOT NULL DEFAULT '',
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE receipts
 (
     id                  BIGSERIAL       NOT NULL    PRIMARY KEY,
-    sale_id             UUID            NOT NULL,
-    receipt_method      SMALLINT        NOT NULL    DEFAULT 0,
-    cashflow_id         INT             NOT NULL    DEFAULT 0
+    saleid             UUID            NOT NULL,
+    method      SMALLINT        NOT NULL    DEFAULT 0,
+    cashflowid         UUID             NOT NULL
 );
 
 CREATE TABLE costs 
 (
     id              BIGSERIAL           NOT NULL    PRIMARY KEY,
-    tran_id         UUID                NOT NULL,
+    refid           UUID                NOT NULL,
     amount          INT                 NOT NULL    DEFAULT 0,
     notes           VARCHAR(250)        NOT NULL    DEFAULT ''
 );
@@ -370,78 +407,79 @@ CREATE TABLE costs
 -- stockflows
 CREATE TABLE stockflows
 (
-    flow_id         BIGSERIAL   PRIMARY KEY,
-    location_id     SMALLINT    NOT NULL,
-    product_id      SMALLINT    NOT NULL,
-    flow_date       TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-    ref_type        SMALLINT    NOT NULL,
-    ref_id          UUID        NOT NULL,
+    flowid          BIGSERIAL   PRIMARY KEY,
+    flowdate       TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    locationid     SMALLINT    NOT NULL,
+    refid           UUID        NOT NULL,
+    reftype         SMALLINT    NOT NULL,
+    productid      SMALLINT    NOT NULL,
+    productname   VARCHAR(250) NOT NULL DEFAULT '',
+    productsku      VARCHAR(40)  NOT NULL DEFAULT '',
+    productunit     VARCHAR(25) NOT NULL,
+    taxable		 BOOLEAN     NOT NULL    DEFAULT false,
+    taxfactor   DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    taxpercent  DECIMAL(5,2) NOT NULL DEFAULT 0.00,
     cogs            BIGINT      NOT NULL    DEFAULT 0,
     stock           INT         NOT NULL    DEFAULT 0,
-    debt            INT         NOT NULL    DEFAULT 0,
-    credit          INT         NOT NULL    DEFAULT 0,
+    quantity        INT         NOT NULL,
     price           BIGINT      NOT NULL    DEFAULT 0,
     discount        INT         NOT NULL    DEFAULT 0,
+    taxamount       INT         NOT NULL    DEFAULT 0,
     notes           VARCHAR(250) NOT NULL   DEFAULT '',
-    creator_id      SMALLINT    NOT NULL    DEFAULT 0,
-    created_date    TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP
+    creatorid      SMALLINT    NOT NULL    DEFAULT 0,
+    createddate    TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP
 );
 
 -- sales
-CREATE TABLE sales
-(
-    sale_id             UUID            NOT NULL PRIMARY KEY,
-    invoice_number      VARCHAR(50)     NOT NULL DEFAULT '',
-    location_id         SMALLINT        NOT NULL DEFAULT 0,
-    sale_date           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    customer_id         SMALLINT        NOT NULL DEFAULT 0,
-    sub_total           BIGINT          NOT NULL DEFAULT 0,
-    discount            INT             NOT NULL DEFAULT 0,
-    tax                 INT             NOT NULL DEFAULT 0,
-    percent_tax         FLOAT           NOT NULL DEFAULT 0,
-    cost                INT             NOT NULL DEFAULT 0,
-    grand_total         BIGINT          NOT NULL DEFAULT 0,
-    nett_profit         BIGINT          NOT NULL DEFAULT 0,
-    total_receipt       BIGINT          NOT NULL DEFAULT 0,
-    status              SMALLINT        NOT NULL DEFAULT 0,
-    notes               VARCHAR(250)    NOT NULL DEFAULT '',
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE sales (
+    saleid         UUID PRIMARY KEY,
+    locationid     SMALLINT,  -- FK ke locations
+    invoicenumber  VARCHAR(50) NOT NULL,
+    saledate       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    customerid     SMALLINT,  -- FK ke customers
+    subtotal       BIGINT NOT NULL DEFAULT 0,
+    discount       BIGINT NOT NULL DEFAULT 0,
+    cost           BIGINT NOT NULL DEFAULT 0,
+    grandtotal     BIGINT NOT NULL DEFAULT 0,
+    tax            INT NOT NULL DEFAULT 0,
+    totalreceipt   BIGINT NOT NULL DEFAULT 0,
+    status         SMALLINT NOT NULL DEFAULT 0,
+    notes          TEXT DEFAULT '',
+    creatorid      SMALLINT,  -- FK ke users/employees
+    createddate    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- purchases
 CREATE TABLE purchases
 (
-    purchase_id         UUID            NOT NULL PRIMARY KEY,
-    invoice_number      VARCHAR(50)     NOT NULL DEFAULT '',
-    location_id         SMALLINT        NOT NULL DEFAULT 0,
-    purchase_date       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    supplier_id         SMALLINT        NOT NULL DEFAULT 0,
-    sub_total           BIGINT          NOT NULL DEFAULT 0,
+    purchaseid         UUID            NOT NULL PRIMARY KEY,
+    invoicenumber      VARCHAR(50)     NOT NULL DEFAULT '',
+    locationid         SMALLINT        NOT NULL DEFAULT 0,
+    purchasedate       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    supplierid         SMALLINT        NOT NULL DEFAULT 0,
+    subtotal           BIGINT          NOT NULL DEFAULT 0,
     discount            INT             NOT NULL DEFAULT 0,
-    tax                 INT             NOT NULL DEFAULT 0,
-    percent_tax         FLOAT           NOT NULL DEFAULT 0,
     cost                INT             NOT NULL DEFAULT 0,
-    grand_total         BIGINT          NOT NULL DEFAULT 0,
-    nett_profit         BIGINT          NOT NULL DEFAULT 0,
-    total_receipt       BIGINT          NOT NULL DEFAULT 0,
+    grandtotal         BIGINT          NOT NULL DEFAULT 0,
+    tax                 INT             NOT NULL DEFAULT 0,
+    totalpaid       BIGINT          NOT NULL DEFAULT 0,
     status              SMALLINT        NOT NULL DEFAULT 0,
     notes               VARCHAR(250)    NOT NULL DEFAULT '',
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- stockopnames
 CREATE TABLE stockopnames (
-    opname_id           UUID            PRIMARY KEY,
-    opname_date         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    locstion_id         SMALLINT        NOT NULL DEFAULT 0,
-    product_id          SMALLINT        NOT NULL DEFAULT 0,
-    stock_before        INT             NOT NULL DEFAULT 0,
-    stock_after         INT             NOT NULL DEFAULT 0,
+    opnameid           UUID            PRIMARY KEY,
+    locationid         SMALLINT        NOT NULL DEFAULT 0,
+    opnamedate         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    productid          SMALLINT        NOT NULL DEFAULT 0,
+    systemstcok        INT             NOT NULL DEFAULT 0,
+    actualstock         INT             NOT NULL DEFAULT 0,
     difference          INT             NOT NULL DEFAULT 0,
     amount              BIGINT          NOT NULL DEFAULT 0,
     notes               VARCHAR(255)    NOT NULL DEFAULT '',
-    creator_id          SMALLINT        NOT NULL DEFAULT 0,
-    created_date        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    creatorid          SMALLINT        NOT NULL DEFAULT 0,
+    createddate        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

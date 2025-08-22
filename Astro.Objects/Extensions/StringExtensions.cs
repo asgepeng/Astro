@@ -30,6 +30,18 @@ namespace Astro.Extensions
             }
             throw new FormatException($"The string '{value}' cannot be converted to a byte.");
         }
+        public static byte[] ToInet(this string value)
+        {
+            var arr = value.Split('.');
+            var bytes = new byte[4];
+            if (arr.Length != 4) return bytes;
+
+            for (int i = 0; i < 4; i++)
+            {
+                byte.TryParse(arr[i], out bytes[i]);
+            }
+            return bytes;
+        }
         public static short ToInt16(this string value)
         {
             return short.TryParse(value, out short shortValue) ? shortValue : (short)0;

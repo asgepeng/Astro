@@ -61,6 +61,10 @@
             passwordExpirationDate = new DateTimePicker();
             lockoutEnableCheckBox = new CheckBox();
             button3 = new Button();
+            listView1 = new ListView();
+            columnHeader1 = new ColumnHeader();
+            columnHeader2 = new ColumnHeader();
+            columnHeader3 = new ColumnHeader();
             SuspendLayout();
             // 
             // label1
@@ -354,11 +358,22 @@
             button3.UseVisualStyleBackColor = true;
             button3.Click += button3_Click;
             // 
+            // listView1
+            // 
+            listView1.Columns.AddRange(new ColumnHeader[] { columnHeader1, columnHeader2, columnHeader3 });
+            listView1.Location = new Point(575, 84);
+            listView1.Name = "listView1";
+            listView1.Size = new Size(500, 179);
+            listView1.TabIndex = 33;
+            listView1.UseCompatibleStateImageBehavior = false;
+            listView1.View = View.Details;
+            // 
             // UserForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(541, 595);
+            ClientSize = new Size(1105, 595);
+            Controls.Add(listView1);
             Controls.Add(button3);
             Controls.Add(lockoutEnableCheckBox);
             Controls.Add(label14);
@@ -439,5 +454,9 @@
         private DateTimePicker passwordExpirationDate;
         private CheckBox lockoutEnableCheckBox;
         private Button button3;
+        private ListView listView1;
+        private ColumnHeader columnHeader1;
+        private ColumnHeader columnHeader2;
+        private ColumnHeader columnHeader3;
     }
 }

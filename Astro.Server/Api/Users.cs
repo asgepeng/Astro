@@ -24,7 +24,7 @@ namespace Astro.Server.Api
             app.MapGet("/data/users/role-options", GetRoleOptionsAsync).RequireAuthorization();
             app.MapPost("/data/users/reset-password", ResetPasswordAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest())
             {
@@ -37,7 +37,7 @@ namespace Astro.Server.Api
                 return Results.Content(sb.ToString(), "text/html");
             }
         }
-        internal static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp)
@@ -88,6 +88,17 @@ namespace Astro.Server.Api
                 }
             }, commandText, db.CreateParameter("userId", id, DbType.Int16));
             if (user is null) return Results.NotFound(CommonResult.Fail("User not found."));
+
+            commandText = """
+                SELECT l.location_id, l.name, l.street_address
+                FROM userlocations AS ul
+                INNER JOIN locations AS l ON ul.location_id = l.location_id
+                WHERE ul.user_id = @userId
+                """;
+            await db.ExecuteReaderAsync(async reader =>
+            {
+
+            }, commandText, db.CreateParameter("userId", user.Id));
 
             var model = new UserViewModel(user);
             commandText = """
@@ -175,7 +186,7 @@ namespace Astro.Server.Api
             }
             return Results.Ok(model);
         }
-        internal static async Task<IResult> CreateAsync(User user, IDatabase db, HttpContext context)
+        internal static async Task<IResult> CreateAsync(User user, IDBClient db, HttpContext context)
         {
             var commandText = """
                 INSERT INTO users (
@@ -264,7 +275,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("User created successfully.")) : Results.Ok(CommonResult.Fail("Failed to create user."));
         }
-        internal static async Task<IResult> UpdateAsync(User user, IDatabase db, HttpContext context)
+        internal static async Task<IResult> UpdateAsync(User user, IDBClient db, HttpContext context)
         {
             var commandText = """
             UPDATE users
@@ -330,7 +341,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("User updated successfully.")) : Results.Ok(CommonResult.Fail("Failed to update user."));
         }
-        internal static async Task<IResult> DeleteAsync(int id, IDatabase db, HttpContext context)
+        internal static async Task<IResult> DeleteAsync(int id, IDBClient db, HttpContext context)
         {
             var commandText = """
                 UPDATE users SET is_deleted = true
@@ -339,7 +350,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("userId", id, DbType.Int16));
             return success ? Results.Ok(CommonResult.Ok("User deleted successfully.")) : Results.Ok(CommonResult.Fail("Failed to delete user."));
         }
-        internal static async Task<IResult> GetRoleOptionsAsync(IDatabase db)
+        internal static async Task<IResult> GetRoleOptionsAsync(IDBClient db)
         {
             var commandText = """
                 SELECT role_id, role_name
@@ -359,7 +370,7 @@ namespace Astro.Server.Api
                 return Results.File(builder.ToArray(), "application/octet-stream");
             }
         }
-        internal static async Task<IResult> ResetPasswordAsync(ResetPasswordRequest request, IDatabase db, HttpContext context)
+        internal static async Task<IResult> ResetPasswordAsync(ResetPasswordRequest request, IDBClient db, HttpContext context)
         {
             var commandText = """
                 UPDATE users

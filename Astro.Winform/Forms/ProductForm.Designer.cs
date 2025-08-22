@@ -28,10 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductForm));
             tabPage1 = new TabPage();
-            il = new ImageList(components);
             label9 = new Label();
             stockTextBox = new TextBox();
             button4 = new Button();
@@ -60,6 +57,8 @@
             skuLabel = new Label();
             button5 = new Button();
             commanTabPage = new TabPage();
+            label5 = new Label();
+            typeComboBox = new ComboBox();
             button10 = new Button();
             button9 = new Button();
             button8 = new Button();
@@ -67,7 +66,6 @@
             button2 = new Button();
             label4 = new Label();
             tabControl = new TabControl();
-            tabPage2 = new TabPage();
             ((System.ComponentModel.ISupportInitialize)productImage).BeginInit();
             commanTabPage.SuspendLayout();
             tabControl.SuspendLayout();
@@ -76,23 +74,13 @@
             // tabPage1
             // 
             tabPage1.ImageIndex = 2;
-            tabPage1.Location = new Point(4, 31);
+            tabPage1.Location = new Point(4, 30);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(971, 450);
+            tabPage1.Size = new Size(971, 451);
             tabPage1.TabIndex = 1;
             tabPage1.Text = "Kartu Stok";
             tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // il
-            // 
-            il.ColorDepth = ColorDepth.Depth32Bit;
-            il.ImageStream = (ImageListStreamer)resources.GetObject("il.ImageStream");
-            il.TransparentColor = Color.Transparent;
-            il.Images.SetKeyName(0, "ready-stock (1).png");
-            il.Images.SetKeyName(1, "info.png");
-            il.Images.SetKeyName(2, "sim-card.png");
-            il.Images.SetKeyName(3, "folder.png");
             // 
             // label9
             // 
@@ -113,9 +101,11 @@
             // 
             // button4
             // 
-            button4.Location = new Point(757, 401);
+            button4.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button4.FlatStyle = FlatStyle.Flat;
+            button4.Location = new Point(747, 401);
             button4.Name = "button4";
-            button4.Size = new Size(96, 32);
+            button4.Size = new Size(114, 26);
             button4.TabIndex = 104;
             button4.Text = "Save Image As";
             button4.UseVisualStyleBackColor = true;
@@ -123,9 +113,11 @@
             // 
             // button3
             // 
-            button3.Location = new Point(859, 401);
+            button3.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button3.FlatStyle = FlatStyle.Flat;
+            button3.Location = new Point(893, 401);
             button3.Name = "button3";
-            button3.Size = new Size(43, 32);
+            button3.Size = new Size(26, 26);
             button3.TabIndex = 103;
             button3.Text = "▶";
             button3.UseVisualStyleBackColor = true;
@@ -216,10 +208,9 @@
             // 
             // button6
             // 
-            button6.BackColor = Color.Red;
-            button6.FlatAppearance.BorderSize = 0;
+            button6.BackColor = Color.FromArgb(250, 250, 250);
+            button6.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button6.FlatStyle = FlatStyle.Flat;
-            button6.ForeColor = Color.White;
             button6.Location = new Point(248, 517);
             button6.Name = "button6";
             button6.Size = new Size(173, 32);
@@ -229,10 +220,9 @@
             // 
             // loginButton
             // 
-            loginButton.BackColor = SystemColors.HotTrack;
-            loginButton.FlatAppearance.BorderSize = 0;
+            loginButton.BackColor = Color.FromArgb(250, 250, 250);
+            loginButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             loginButton.FlatStyle = FlatStyle.Flat;
-            loginButton.ForeColor = Color.White;
             loginButton.Location = new Point(13, 517);
             loginButton.Name = "loginButton";
             loginButton.Size = new Size(103, 32);
@@ -340,10 +330,9 @@
             // 
             // button5
             // 
-            button5.BackColor = Color.Red;
-            button5.FlatAppearance.BorderSize = 0;
+            button5.BackColor = Color.FromArgb(250, 250, 250);
+            button5.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button5.FlatStyle = FlatStyle.Flat;
-            button5.ForeColor = Color.White;
             button5.Location = new Point(122, 517);
             button5.Name = "button5";
             button5.Size = new Size(120, 32);
@@ -353,6 +342,8 @@
             // 
             // commanTabPage
             // 
+            commanTabPage.Controls.Add(label5);
+            commanTabPage.Controls.Add(typeComboBox);
             commanTabPage.Controls.Add(button10);
             commanTabPage.Controls.Add(button9);
             commanTabPage.Controls.Add(button8);
@@ -384,19 +375,39 @@
             commanTabPage.Controls.Add(skuTextBox);
             commanTabPage.Controls.Add(skuLabel);
             commanTabPage.ImageIndex = 1;
-            commanTabPage.Location = new Point(4, 31);
+            commanTabPage.Location = new Point(4, 32);
             commanTabPage.Name = "commanTabPage";
             commanTabPage.Padding = new Padding(3);
-            commanTabPage.Size = new Size(971, 450);
+            commanTabPage.Size = new Size(971, 449);
             commanTabPage.TabIndex = 0;
-            commanTabPage.Text = "Umum";
+            commanTabPage.Text = "ℹ️ Umum";
             commanTabPage.UseVisualStyleBackColor = true;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(19, 195);
+            label5.Name = "label5";
+            label5.Size = new Size(78, 17);
+            label5.TabIndex = 112;
+            label5.Text = "Tipe Produk";
+            // 
+            // typeComboBox
+            // 
+            typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeComboBox.Items.AddRange(new object[] { "Barang", "Jasa (Service)" });
+            typeComboBox.Location = new Point(150, 189);
+            typeComboBox.Name = "typeComboBox";
+            typeComboBox.Size = new Size(400, 25);
+            typeComboBox.TabIndex = 111;
             // 
             // button10
             // 
-            button10.Location = new Point(715, 401);
+            button10.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button10.FlatStyle = FlatStyle.Flat;
+            button10.Location = new Point(672, 401);
             button10.Name = "button10";
-            button10.Size = new Size(34, 32);
+            button10.Size = new Size(28, 26);
             button10.TabIndex = 110;
             button10.Text = "x";
             button10.UseVisualStyleBackColor = true;
@@ -404,19 +415,23 @@
             // 
             // button9
             // 
+            button9.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button9.FlatStyle = FlatStyle.Flat;
             button9.Location = new Point(576, 401);
             button9.Name = "button9";
-            button9.Size = new Size(43, 32);
+            button9.Size = new Size(26, 26);
             button9.TabIndex = 109;
-            button9.Text = "|◀";
+            button9.Text = "◀";
             button9.UseVisualStyleBackColor = true;
             button9.Click += button9_Click;
             // 
             // button8
             // 
-            button8.Location = new Point(908, 401);
+            button8.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button8.FlatStyle = FlatStyle.Flat;
+            button8.Location = new Point(925, 401);
             button8.Name = "button8";
-            button8.Size = new Size(43, 32);
+            button8.Size = new Size(26, 26);
             button8.TabIndex = 108;
             button8.Text = "▶|";
             button8.UseVisualStyleBackColor = true;
@@ -424,9 +439,11 @@
             // 
             // button7
             // 
-            button7.Location = new Point(675, 401);
+            button7.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button7.FlatStyle = FlatStyle.Flat;
+            button7.Location = new Point(640, 401);
             button7.Name = "button7";
-            button7.Size = new Size(34, 32);
+            button7.Size = new Size(26, 26);
             button7.TabIndex = 107;
             button7.Text = "+";
             button7.UseVisualStyleBackColor = true;
@@ -434,9 +451,11 @@
             // 
             // button2
             // 
-            button2.Location = new Point(626, 401);
+            button2.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button2.FlatStyle = FlatStyle.Flat;
+            button2.Location = new Point(608, 401);
             button2.Name = "button2";
-            button2.Size = new Size(43, 32);
+            button2.Size = new Size(26, 26);
             button2.TabIndex = 102;
             button2.Text = "◀";
             button2.UseVisualStyleBackColor = true;
@@ -455,26 +474,14 @@
             // 
             tabControl.Controls.Add(commanTabPage);
             tabControl.Controls.Add(tabPage1);
-            tabControl.Controls.Add(tabPage2);
             tabControl.HotTrack = true;
-            tabControl.ImageList = il;
             tabControl.Location = new Point(13, 12);
             tabControl.Multiline = true;
             tabControl.Name = "tabControl";
-            tabControl.Padding = new Point(10, 3);
+            tabControl.Padding = new Point(6, 6);
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(979, 485);
             tabControl.TabIndex = 8;
-            // 
-            // tabPage2
-            // 
-            tabPage2.Location = new Point(4, 31);
-            tabPage2.Name = "tabPage2";
-            tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(971, 450);
-            tabPage2.TabIndex = 2;
-            tabPage2.Text = "Inventory";
-            tabPage2.UseVisualStyleBackColor = true;
             // 
             // ProductForm
             // 
@@ -491,7 +498,7 @@
             MinimizeBox = false;
             Name = "ProductForm";
             StartPosition = FormStartPosition.CenterParent;
-            Text = "ProductForm";
+            Text = "Produk";
             Load += ProductForm_Load;
             ((System.ComponentModel.ISupportInitialize)productImage).EndInit();
             commanTabPage.ResumeLayout(false);
@@ -503,7 +510,6 @@
         #endregion
 
         private TabPage tabPage1;
-        private ImageList il;
         private Label label9;
         private TextBox stockTextBox;
         private Button button4;
@@ -539,6 +545,7 @@
         private Button button8;
         private Button button2;
         private Button button10;
-        private TabPage tabPage2;
+        private Label label5;
+        private ComboBox typeComboBox;
     }
 }

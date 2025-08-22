@@ -13,7 +13,7 @@ namespace Astro.Server.Extensions
 {
     internal static class Application
     {
-        internal static short GetUserID(HttpContext context)
+        internal static short GetUserID(this HttpContext context)
         {
             var claimsPrincipal = context.User;
             string? userID = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Actor)?.Value;
@@ -27,7 +27,7 @@ namespace Astro.Server.Extensions
             short.TryParse(userID, out short roleId);
             return roleId;
         }
-        internal static string GetIpAddress(HttpRequest request)
+        internal static string GetIpAddress(this HttpRequest request)
         {
             // Cek header X-Forwarded-For
             if (request.Headers.TryGetValue("X-Forwarded-For", out var forwarded))

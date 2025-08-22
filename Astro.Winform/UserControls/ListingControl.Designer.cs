@@ -65,13 +65,13 @@
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.False;
             dataGridView1.DefaultCellStyle = dataGridViewCellStyle1;
             dataGridView1.GridColor = Color.FromArgb(244, 244, 244);
-            dataGridView1.Location = new Point(10, 49);
+            dataGridView1.Location = new Point(0, 49);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.ReadOnly = true;
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.RowTemplate.Height = 26;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView1.Size = new Size(1084, 481);
+            dataGridView1.Size = new Size(1108, 500);
             dataGridView1.TabIndex = 1;
             // 
             // ListingControl

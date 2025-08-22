@@ -39,6 +39,16 @@ namespace Astro.Winform.Classes
                     {
                         My.Application.User = new UserInfo(reader.ReadInt16(), reader.ReadString(), new Role() { Id = reader.ReadInt16(), Name = reader.ReadString() });
                         My.Application.ApiToken = reader.ReadString();
+                        var accessableBranchCount = reader.ReadInt32();
+                        if (My.Application.AccessableBranches.Count > 0) My.Application.AccessableBranches.Clear();
+                        for (int i = 0; i < accessableBranchCount; i++)
+                        {
+                            My.Application.AccessableBranches.Add(new Branch()
+                            {
+                                Id = reader.ReadInt16(),
+                                Name = reader.ReadString()
+                            });
+                        }
                         return true;
                     }
                 }
@@ -181,6 +191,9 @@ namespace Astro.Winform.Classes
                             var problem = await response.GetProbemDetails();
                             if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             break;
+                        case System.Net.HttpStatusCode.Unauthorized:
+                            MessageBox.Show("Unauthorized Request");
+                            break;
                     }
                 }
             }
@@ -235,6 +248,32 @@ namespace Astro.Winform.Classes
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
             request.Content = jsonObject is null ? null : new StringContent(jsonObject, Encoding.UTF8, "application/json");
+
+            try
+            {
+                HttpResponseMessage response = await Instance.SendAsync(request);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+
+                var statusCode = response.StatusCode;
+                if (statusCode == System.Net.HttpStatusCode.InternalServerError)
+                {
+                    var problem = await response.GetProbemDetails();
+                    if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unkknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return string.Empty;
+        }
+        internal static async Task<string> PostAsync(string url, byte[]? data)
+        {
+            Uri endpoint = CreateUri(url);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
+            request.Content = data is null ? null : new ByteArrayContent(data);
 
             try
             {

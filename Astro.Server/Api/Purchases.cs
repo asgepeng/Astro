@@ -1,16 +1,12 @@
 ﻿using Astro.Data;
 using Astro.Models;
+using Astro.Models.Transactions;
 using Astro.Server.Extensions;
-using DocumentFormat.OpenXml.Vml.Spreadsheet;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Astro.Server.Api
 {
@@ -20,12 +16,19 @@ namespace Astro.Server.Api
         {
             app.MapPost("/trans/purchases", CreateAsync).RequireAuthorization();
             app.MapPost("/trans/purchases/report", GetReportAsync).RequireAuthorization();
-            app.MapPost("/trans/purchases/get-items", GetPurchaseItemAsync).RequireAuthorization();
+            app.MapPost("/trans/purchases/get-item", GetPurchaseItemByIdAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> CreateAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> CreateAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest())
             {
+                using (var writer = new IO.Writer())
+                {
+                    writer.WriteBoolean(true);
+                    writer.WriteString("Transaksi pembelian sukses disimpan");
+                    writer.WriteString("Berhasil");
+                    return Results.File(writer.ToArray(), "application/octet-stream");
+                }
                 var sb = new StringBuilder();
                 sb.AppendLine("""
                     INSERT INTO purchases
@@ -42,8 +45,8 @@ namespace Astro.Server.Api
 
                     var parameters = new List<DbParameter>()
                     {
-                        db.CreateParameter("id", purchaseId),
                         db.CreateParameter("location", reader.ReadInt16()),
+                        db.CreateParameter("id", purchaseId),
                         db.CreateParameter("purchase_date", reader.ReadDateTime(), DbType.DateTime),
                         db.CreateParameter("supplier_id", reader.ReadInt16()),
                         db.CreateParameter("bruto", reader.ReadInt64(), DbType.Int64),
@@ -54,7 +57,7 @@ namespace Astro.Server.Api
                         db.CreateParameter("netto", reader.ReadInt64(), DbType.Int64),
                         db.CreateParameter("total_paid", reader.ReadInt64(), DbType.Int64),
                         db.CreateParameter("paid_method_count", reader.ReadInt16(),DbType.Int16),
-                        db.CreateParameter("user_id", reader.ReadInt16(), DbType.Int16),
+                        db.CreateParameter("user_id", context.GetUserID(), DbType.Int16),
                         db.CreateParameter("created_date", reader.ReadDateTime(), DbType.DateTime)
                     };
                     var itemCount = reader.ReadInt32();
@@ -114,7 +117,7 @@ namespace Astro.Server.Api
             }
             return Results.Ok();
         }
-        internal static async Task<IResult> GetReportAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetReportAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest())
             {
@@ -130,33 +133,73 @@ namespace Astro.Server.Api
             }
             return Results.Ok();
         }
-        private static async Task<IResult> GetPurchaseItemAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetPurchaseItemByIdAsync(PurchaseItemRequest req, IDBClient db, HttpContext context)
         {
-            using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new IO.Reader(stream))
+            using (var writer = new IO.Writer())
             {
-                var parameterType = (int)reader.ReadByte();
-                if (parameterType == 0)
+                var commandText = """
+                    SELECT p.product_id, p.product_name, p.product_sku, u.unit_name, i.buyprice
+                    FROM products AS p
+                    INNER JOIN units AS u ON p.unit_id = u.unit_id
+                    INNER JOIN inventories AS i ON p.product_id = i.product_id  AND i.location_id = @location
+                    WHERE p.is_deleted = false AND (p.product_id = @id OR p.product_sku = @sku)
+                    LIMIT 1
+                    """;
+                var parameters = new DbParameter[]
                 {
-                    var productId = reader.ReadInt16();
-                    return Results.File(await GetPurchaseItemByIdAsync(db, productId), "application/octet-stream");
-                }
-                else if (parameterType == 1)
+                    db.CreateParameter("location", req.Location, DbType.Int16),
+                    db.CreateParameter("id", req.Id, DbType.Int16),
+                    db.CreateParameter("sku", req.Sku)
+                };
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    var productSku = reader.ReadString();
-                    return Results.File(await GetPurchaseItemBySkuAsync(db, productSku));
-                }
+                    writer.WriteBoolean(reader.HasRows);
+                    if (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                        writer.WriteInt32(0);
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteInt64(reader.GetInt64(4));
+                    }
+                }, commandText, parameters);
+                return Results.File(writer.ToArray(), "application/octet-stream");
             }
-
-            return Results.Ok();
         }
-        private static async Task<byte[]> GetPurchaseItemByIdAsync(IDatabase db, short id)
+        private static async Task<IResult> GetPurchaseItemBySkuAsync(PurchaseItemRequest req, IDBClient db, string sku)
         {
-            return await Task.FromResult(Array.Empty<byte>());
-        }
-        private static async Task<byte[]> GetPurchaseItemBySkuAsync(IDatabase db, string sku)
-        {
-            return await Task.FromResult(Array.Empty<byte>());
+            using (var writer = new IO.Writer())
+            {
+                var commandText = """
+                    SELECT p.product_id, p.product_name, p.product_sku, u.unit_name, i.buyprice
+                    FROM products AS p
+                    INNER JOIN units AS u ON p.unit_id = u.unit_id
+                    INNER JOIN inventories AS i ON p.product_id = i.product_id  AND i.location_id = @location
+                    WHERE p.is_deleted = false AND (p.product_id = @id OR p.product_sku=@sku)
+                    LIMIT 1
+                    """;
+                var parameters = new DbParameter[]
+                {
+                    db.CreateParameter("location", req.Location, DbType.Int16),
+                    db.CreateParameter("id", req.Id, DbType.Int16),
+                    db.CreateParameter("sku", req.Sku, DbType.String)
+                };
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    writer.WriteBoolean(reader.HasRows);
+                    if (await reader.ReadAsync())
+                    {
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteString(reader.GetString(2));
+                        writer.WriteInt32(0);
+                        writer.WriteString(reader.GetString(3));
+                        writer.WriteInt64(reader.GetInt64(4));
+                    }
+                }, commandText, parameters);
+                return Results.File(writer.ToArray(), "application/octet-stream");
+            }
         }
     }
 }

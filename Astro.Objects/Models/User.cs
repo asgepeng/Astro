@@ -65,13 +65,6 @@ namespace Astro.Models
             UsePasswordExpiration = reader.ReadBoolean();
             PasswordExpirationDate = reader.ReadNullableDateTime();
         }
-        internal User(object[] data)
-        {
-            Id = (short)data[0];
-            FirstName = (string)data[1];
-            LastName = (string)data[2];
-            
-        }
         [JsonConstructor] public User() { }
         [JsonPropertyName("id")]
         public short Id { get; set; }
@@ -113,6 +106,8 @@ namespace Astro.Models
         public int CountryId { get; set; }
         [JsonPropertyName("zipCode")]
         public string ZipCode { get; set; } = string.Empty;
+        public int DistrictId { get; set; }
+        
         [JsonPropertyName("twoFactorEnabled")]
         public bool TwoFactorEnabled { get; set; }
         [JsonPropertyName("accessFailedCount")]

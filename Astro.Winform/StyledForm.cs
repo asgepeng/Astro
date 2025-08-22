@@ -1,10 +1,15 @@
 ﻿using Astro.Drawing.Extensions;
 using Astro.Forms.Controls;
+using Astro.IO;
+using Astro.Winform.Classes;
+using Astro.Winform.Controls;
 using Astro.Winform.Forms;
+using Astro.Winform.UserControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -287,6 +292,7 @@ namespace Astro.Winform
         private ToolTip toolTipGlobal;
         private SideBar leftSideBar;
         private Header topNavigator;
+        private MenuPanel menuPanel;
         private VirtualControlCollection VirtualControls { get; } = new VirtualControlCollection();
         public StyledForm()
         {
@@ -304,15 +310,15 @@ namespace Astro.Winform
 
             //Navigator
             this.leftSideBar = new SideBar();
-            this.leftSideBar.Items.Add("Dashboard", global::Astro.Winform.Properties.Resources.db);
-            this.leftSideBar.Items.Add("Product", global::Astro.Winform.Properties.Resources.icons8_product_24);
-            this.leftSideBar.Items.Add("Customer", global::Astro.Winform.Properties.Resources.icustomer);
-            this.leftSideBar.SelectedIndex = 0;
+
+            //Menu Panel
+            this.menuPanel = new MenuPanel();
 
             this.VirtualControls.Add(topNavigator);
             this.VirtualControls.Add(leftSideBar);
+            this.VirtualControls.Add(menuPanel);
         }
-        protected override void OnLoad(EventArgs e)
+        protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             var login = new LoginForm();
@@ -320,6 +326,40 @@ namespace Astro.Winform
             {
                 this.WindowState = FormWindowState.Maximized;
                 ApplyShadow();
+                using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
+                using (var reader = new Reader(stream))
+                {
+                    var sectionLength = reader.ReadInt32();
+                    while (sectionLength > 0)
+                    {
+                        var sectionID = reader.ReadInt16();
+                        var sectionName = reader.ReadString();
+                        var parent = new Models.Section() { Title = sectionName };
+                        menuPanel.Items.Add(parent);
+                        leftSideBar.Items.Add(parent.Title, global::Astro.Winform.Properties.Resources.data);
+                        int menuLength = reader.ReadInt32();
+                        int x = menuPanel.Bounds.X + 10, y = menuPanel.Bounds.Y + 50, w = menuPanel.Width - 20;
+                        while (menuLength > 0)
+                        {
+                            var menuID = reader.ReadInt16();
+                            var menuTitle = reader.ReadString();
+                            var menuIdentifier = reader.ReadInt32();
+                            var menu = new Models.Menu()
+                            {
+                                Id = menuID,
+                                Title = menuTitle,
+                                Bounds = new Rectangle(x, y, w, 40)
+                            };
+                            parent.Items.Add(menu);
+                            y += 40;
+                            menuLength--;
+                        }
+                        sectionLength--;
+                    }
+                    if (leftSideBar.Items.Count> 0) leftSideBar.SelectedIndex = 0;
+                    if (menuPanel.Items.Count > 0) menuPanel.SelectedIndex = 0;
+                    this.Invalidate();
+                }
             }
             else
             {
@@ -355,17 +395,20 @@ namespace Astro.Winform
         {
             base.OnPaintBackground(e);
             e.Graphics.DrawRectangle(Pens.Gainsboro, new Rectangle(0, 0, this.ClientSize.Width, this.ClientSize.Height));
-            var rect = new Rectangle(47, 40, this.ClientSize.Width - 47, this.ClientSize.Height - 40);
-            using (Brush fillColor = new SolidBrush(Color.White))
+            var rect = new Rectangle(47, 40, this.ClientSize.Width - 48, this.ClientSize.Height - 40);
+            using (Brush fillColor = new SolidBrush(Color.FromArgb(250, 250, 250)))
             using (Pen pen = new Pen(Color.Gainsboro))
             {
                 e.Graphics.DrawTopLeftRoundedRectangle(rect, 8, fillColor, pen);
+                //e.Graphics.DrawLine(pen, new Point(menuPanel.Width + 48, 40), new Point(menuPanel.Width + 48, this.ClientSize.Height));
             }
         }
         protected override void OnResize(EventArgs e)
         {
             if (leftSideBar != null) leftSideBar.MainFormResize(this.ClientSize);
             if (topNavigator != null) topNavigator.MainFormResize(this.ClientSize);
+            if (menuPanel != null) menuPanel.MainFormResize(this.ClientSize);
+
             this.Invalidate();
             base.OnResize(e);
         }
@@ -383,15 +426,20 @@ namespace Astro.Winform
                     }
                     this.Invalidate(this.leftSideBar.Bounds);
                 }
-                if (!leftSideBar.Items.AnyHoveredItem())
-                {
-                    this.toolTipGlobal.Hide(this);
-                }
             }
             else if (topNavigator.Bounds.Contains(e.Location))
             {
                 var buttonHovered = topNavigator.GetHoveredButton(e.Location);
                 this.Invalidate(topNavigator.Bounds);
+            }
+            else if (menuPanel.Bounds.Contains(e.Location))
+            {
+                menuPanel.OnMouseMove(e.Location);
+                Invalidate(menuPanel.Bounds);
+            }
+            if (!leftSideBar.Items.AnyHoveredItem())
+            {
+                this.toolTipGlobal.Hide(this);
             }
         }
         protected override void OnMouseClick(MouseEventArgs e)
@@ -401,44 +449,76 @@ namespace Astro.Winform
                 var selected = leftSideBar.GetSelectedItem(e.Location);
                 if (selected != null)
                 {
+                    this.menuPanel.SelectedIndex = selected.Index;
                     this.Invalidate(leftSideBar.Bounds);
-                    if (selected.Index == 0)
+                    this.Invalidate(menuPanel.Bounds);
+
+                    var selectedItem = menuPanel.GetSelectedItem();
+                    if (selectedItem != null)
                     {
-                        if (this.Controls.ContainsKey("ucDashboard"))
+                        var control = this.FindControl(selectedItem.Id.ToString());
+                        if (control != null)
                         {
-                            var ucDashboard = this.Controls.Find("ucDashboard", true);
-                            if (ucDashboard != null && ucDashboard.Length > 0) ucDashboard[0].BringToFront();
+                            control.BringToFront();
+                            return;
                         }
-                        else
-                        {
-                            var ucProduct = new DashboardUserControl();
-                            ucProduct.Name = "ucDashboard";
-                            ucProduct.Location = new Point(48, 48);
-                            ucProduct.Size = new Size(this.ClientSize.Width - 48, this.ClientSize.Height - 48);
-                            ucProduct.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Left;
-                            this.Controls.Add(ucProduct);
-                            ucProduct.BringToFront();
-                        }
+                        this.AddControl(selectedItem.Id);
                     }
-                    else if (selected.Index == 1)
+                    else
                     {
-                        if (this.Controls.ContainsKey("ucProduct"))
-                        {
-                            var ucProduct = this.Controls.Find("ucProduct", true);
-                            if (ucProduct != null && ucProduct.Length > 0) ucProduct[0].BringToFront();
-                        }
-                        else
-                        {
-                            var ucProduct = new ListingControl();
-                            ucProduct.Name = "ucProduct";
-                            ucProduct.Location = new Point(48, 48);
-                            ucProduct.Size = new Size(this.ClientSize.Width - 48, this.ClientSize.Height - 48);
-                            ucProduct.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Left;
-                            this.Controls.Add(ucProduct);
-                        }
+                        this.Controls.Clear();
                     }
                 }
             }
+            else if (menuPanel.Bounds.Contains(e.Location))
+            {
+                var clicked = menuPanel.GetClickedItem(e.Location);
+                if (clicked != null)
+                {
+                    var control = this.FindControl(clicked.Id.ToString());
+                    if (control != null)
+                    {
+                        control.BringToFront();
+                        return;
+                    }
+                    this.AddControl(clicked.Id);
+                    this.Invalidate(menuPanel.Bounds);
+                }
+            }
+        }
+        private void AddControl(short id)
+        {
+            if (id == 6)
+            {
+
+                var product = new ListingControl();
+                product.Location = new Point(this.menuPanel.Width + 48 + 1, 41);
+                product.Name = id.ToString();
+                product.Size = new Size(this.ClientSize.Width - this.menuPanel.Width - 49, this.ClientSize.Height - 41);
+                product.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom | AnchorStyles.Right;
+                this.Controls.Add(product);
+                product.BringToFront();
+            }
+            else if (id == 13)
+            {
+                var purchase = new PurchaseControl();
+                purchase.Name = id.ToString();
+                purchase.Size = new Size(this.ClientSize.Width - this.menuPanel.Width - 49, this.ClientSize.Height - 41);
+                purchase.Location = new Point(this.menuPanel.Width + 48 + 1, 41);
+                purchase.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom | AnchorStyles.Right;
+                this.Controls.Add(purchase);
+                purchase.BringToFront();
+            }
+            else
+            {
+                this.Controls.Clear();
+            }
+        }
+        private Control? FindControl(string key)
+        {
+            var ctrls = this.Controls.Find(key, false);
+            if (ctrls.Length > 0) return ctrls[0];
+            return null;
         }
         protected override void OnMouseLeave(EventArgs e)
         {

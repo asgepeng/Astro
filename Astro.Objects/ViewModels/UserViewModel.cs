@@ -13,6 +13,7 @@ namespace Astro.ViewModels
         [JsonPropertyName("states")] public ListOption States { get; set; } = new ListOption();
         [JsonPropertyName("cities")] public ListOption Cities { get; set; } = new ListOption();
         [JsonPropertyName("addressInfo")] public AddressInfo AddressInfo { get; set; } = new AddressInfo();
+        [JsonPropertyName("accessableBranches")] public List<Branch> AccessableBranches { get; set; } = new List<Branch>();
 
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.UserViewModel);
         public static UserViewModel? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.UserViewModel);

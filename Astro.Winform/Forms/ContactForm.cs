@@ -36,7 +36,7 @@ namespace Astro.Winform.Forms
             foreach (var ad in this.Contact.Addresses)
             {
                 var lvi = listView1.Items.Add(ad.StreetAddress, ad.Type);
-                lvi.SubItems.Add(ad.City.Name + " " + ad.StateOrProvince.Name + ", " + ad.ZipCode);
+                lvi.SubItems.Add(ad.Village.Name + " " + ad.District.Name + " " +  ad.City.Name + " " + ad.StateOrProvince.Name + ", " + ad.ZipCode);
                 lvi.SubItems.Add(ad.IsPrimary ? "Primary Address" : "Secondary");
                 lvi.Group = group;
             }

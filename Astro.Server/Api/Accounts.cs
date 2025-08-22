@@ -24,17 +24,17 @@ namespace Astro.Server.Api
             app.MapPut("/data/accounts", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/accounts/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountDataTable(), "application/octet-stream");
             return Results.Ok();
         }
-        private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccount(id), "application/octet-stream");
             return Results.Ok();
         }
-        private static async Task<IResult> CreateAsync(Account model, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Account model, IDBClient db, HttpContext context)
         {
             var commandText = """
                 insert into accounts
@@ -51,7 +51,7 @@ namespace Astro.Server.Api
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account created succesfully")) : Results.Problem("An error occured while creating account, please try again later.");
         }
-        private static async Task<IResult> UpdateAsync(Account model, IDatabase db, HttpContext context)
+        private static async Task<IResult> UpdateAsync(Account model, IDBClient db, HttpContext context)
         {
             var commandText = """
                 update accounts
@@ -74,7 +74,7 @@ namespace Astro.Server.Api
                 Results.Ok(CommonResult.Ok("An account update successfully")) :
                 Results.Problem("An error occured while updating account, please try again later.");
         }
-        private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var commandText = """
                 update accounts

@@ -6,6 +6,7 @@ using System.Data.Common;
 using Astro.Data;
 using Astro.Server.Memory;
 using Astro.Server.Extensions;
+using Astro.Extensions;
 
 namespace Astro.Server.Middlewares
 {
@@ -15,10 +16,10 @@ namespace Astro.Server.Middlewares
         {
             string requestToken = context.Request.GetToken();
             string requestUserAgent = context.Request.Headers.UserAgent.ToString();
-            string requestIpAddress = Application.GetIpAddress(context.Request);
+            var requestIPV4 = context.Request.GetIpAddress().ToInet();
 
-            var LoginInfo = TokenStore.Get(requestToken);
-            if (LoginInfo is null)
+            var data = TokenStore.Get(requestToken);
+            if (data is null)
             {
                 TokenStore.Delete(requestToken);
 
@@ -26,18 +27,18 @@ namespace Astro.Server.Middlewares
                 return Task.CompletedTask;
             }
 
-            using var stream = new MemoryStream(LoginInfo);
+
+            using var stream = new MemoryStream(data);
             using var reader = new IO.Reader(stream);
 
-            var expiredDate = reader.ReadDateTime();
+            var expiredDate = new DateTime(BitConverter.ToInt64(data, 0));
             if (expiredDate < DateTime.Now)
             {
                 context.Fail("Expired token");
                 return Task.CompletedTask;
             }
-
-            if (!string.Equals(requestIpAddress, reader.ReadString(), StringComparison.Ordinal) ||
-                !string.Equals(requestUserAgent, reader.ReadString(), StringComparison.Ordinal))
+            var IPV4 = data.SubBytes(8, 4);
+            if (!IPV4.SequenceEqual(requestIPV4))
             {
                 context.Fail("IP Address or User Agent do not match");
                 return Task.CompletedTask;
@@ -45,9 +46,8 @@ namespace Astro.Server.Middlewares
 
             var identity = new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Name, reader.ReadString()),
-                new Claim(ClaimTypes.Actor, reader.ReadInt16().ToString()),
-                new Claim(ClaimTypes.Role, reader.ReadInt16().ToString())
+                new Claim(ClaimTypes.Actor, BitConverter.ToInt16(data, 14).ToString()),
+                new Claim(ClaimTypes.Role, BitConverter.ToInt16(data, 16).ToString())
             }, "Bearer");
 
             context.Principal = new ClaimsPrincipal(identity);

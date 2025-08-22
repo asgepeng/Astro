@@ -17,7 +17,7 @@ namespace Astro.Server.Api
         {
             app.MapPost("/api/sql", GetDataTableAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetDataTableAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetDataTableAsync(IDBClient db, HttpContext context)
         {
             var commandText = string.Empty;
             using (var stream = await context.Request.GetMemoryStreamAsync())
@@ -40,7 +40,7 @@ namespace Astro.Server.Api
                 if (writer.GetLength() == 0)
                 {
                     writer.WriteByte(2);
-                    writer.WriteString("An error occured while executing your Sql syntax, please check your syntaxtx and try again.");
+                    writer.WriteString("An error occured while executing your Sql syntax, please check your syntax and try again.");
                 }
                 data = writer.ToArray();
                 return Results.File(data, "application/octet-stream");

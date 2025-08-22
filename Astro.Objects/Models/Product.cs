@@ -26,7 +26,7 @@ namespace Astro.Models
             MaxStock = reader.GetInt32(9);
             Unit = reader.GetInt16(10);
             Price = reader.GetInt64(11);
-            CostAverage = reader.GetInt64(12);
+            COGs = reader.GetInt64(12);
             Images = reader.GetString(13);
         }
         private Product(IO.Reader reader)
@@ -43,7 +43,7 @@ namespace Astro.Models
             MaxStock = reader.ReadInt16();
             Unit = reader.ReadInt16();
             Price = reader.ReadInt64();
-            CostAverage = reader.ReadInt64();
+            COGs = reader.ReadInt64();
             Images = reader.ReadString();
         }
         [JsonConstructor] public Product() { }
@@ -73,7 +73,7 @@ namespace Astro.Models
         public long Price { get; set; }
         [JsonPropertyName("costAverage")]
         [DisplayName("Cost Average")]
-        public long CostAverage { get; set; }
+        public long COGs { get; set; }
         [JsonPropertyName("images")]
         public string Images { get; set; } = string.Empty;
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.Product);

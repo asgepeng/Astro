@@ -20,7 +20,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/roles", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/roles/{id}", DeleteAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        internal static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetRoleDataTable(), "application/octet-stream");
@@ -31,7 +31,7 @@ namespace Astro.Server.Api
                 return Results.Content(sb.ToString(), "text/html");
             }
         }
-        internal static async Task<IResult> GetByIdAsync(IDatabase db, short id, HttpContext context)
+        internal static async Task<IResult> GetByIdAsync(IDBClient db, short id, HttpContext context)
         {
             var isWinformApp = context.Request.IsDesktopAppRequest();
             if (isWinformApp) return Results.File(await db.GetRole(id), "application/octet-stream");
@@ -80,7 +80,7 @@ namespace Astro.Server.Api
             }, commandText, db.CreateParameter("@id", role.Id, DbType.Int16));
             return role != null ? Results.Ok(role) : Results.NotFound();
         }
-        internal static async Task<IResult> CreateAsync(Role role, IDatabase db, HttpContext context)
+        internal static async Task<IResult> CreateAsync(Role role, IDBClient db, HttpContext context)
         {
             var commandText = """
                 insert into roles
@@ -117,7 +117,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(commandText);
             return success ? Results.Ok(CommonResult.Ok("Role created successfully.")) : Results.Problem("Failed to create role permissions.");
         }
-        internal static async Task<IResult> UpdateAsync(Role role, IDatabase db, HttpContext context)
+        internal static async Task<IResult> UpdateAsync(Role role, IDBClient db, HttpContext context)
         {
             var sb = new StringBuilder();
             sb.Append(""""
@@ -164,7 +164,7 @@ namespace Astro.Server.Api
             var success = await db.ExecuteNonQueryAsync(sb.ToString(), parameters.ToArray());
             return success ? Results.Ok(CommonResult.Ok("Role updated successfully.")) : Results.Problem("Failed to update role permissions.");
         }
-        internal static async Task<IResult> DeleteAsync(IDatabase db, short id)
+        internal static async Task<IResult> DeleteAsync(IDBClient db, short id)
         {
             var commandText = """
                 delete from roles

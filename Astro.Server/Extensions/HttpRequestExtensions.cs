@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Astro.Server.Memory;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace Astro.Server.Extensions
         }
         internal static short GetLocationID(this HttpRequest request)
         {
-            return (short)1;
+            return TokenStore.GetLocationId(request.GetToken());
         }
     }
 }

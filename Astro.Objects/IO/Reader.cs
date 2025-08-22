@@ -12,10 +12,7 @@ namespace Astro.IO
     {
         private bool disposedValue;
         private readonly BinaryReader reader;
-        public Reader(Stream stream)
-        {
-            reader = new BinaryReader(stream, Encoding.UTF8);
-        }
+        public Reader(Stream stream) => reader = new BinaryReader(stream, Encoding.UTF8);
         public bool ReadBoolean() => reader.ReadBoolean();
         public byte ReadByte() => reader.ReadByte();
         public sbyte ReadSByte() => reader.ReadSByte();
@@ -45,7 +42,7 @@ namespace Astro.IO
             long ticks = reader.ReadInt64();
             return ticks == 0 ? (DateTime?)null : new DateTime(ticks);
         }
-        public bool Read()=> reader.BaseStream.Position < reader.BaseStream.Length;
+        public bool Read() => reader.BaseStream.Position < reader.BaseStream.Length;
         public byte[] ReadBytes()
         {
             var length = reader.ReadInt32();

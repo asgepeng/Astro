@@ -65,7 +65,7 @@ namespace Astro.Winform.Forms
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
-            this.usernameTextBox.Text = "administrator";
+            this.usernameTextBox.Text = "asgepeng@gmail.com";
             this.passwordTextBox.Text = "Power123...";
             this.button1.PerformClick();
         }

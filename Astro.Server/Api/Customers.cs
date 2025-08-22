@@ -26,7 +26,7 @@ namespace Astro.Server.Api
             app.MapDelete("/data/customers/{id}", DeleteAsync).RequireAuthorization();
         }
 
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetContactDataTable(1), "application/octet-stream");
 
@@ -34,7 +34,7 @@ namespace Astro.Server.Api
             await sb.AppendContactTableAsync(db, 1);
             return Results.Content(sb.ToString(), "text/html");
         }
-        private static async Task<IResult> GetByIdAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetContact(id));
 
@@ -126,7 +126,7 @@ namespace Astro.Server.Api
             }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
             return Results.Ok(model);
         }
-        private static async Task<IResult> CreateAsync(Contact contact, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Contact contact, IDBClient db, HttpContext context)
         {
             var commandText = """
                 insert into contacts (contact_name, contact_type, creator_id)
@@ -205,7 +205,7 @@ namespace Astro.Server.Api
 
             return success ? Results.Ok(CommonResult.Ok("Supplier successfully created")) : Results.Problem("An error occured while creating the supplier. Please try again later.");
         }
-        private static async Task<IResult> UpdateAsync(Contact contact, IDatabase db, HttpContext context)
+        private static async Task<IResult> UpdateAsync(Contact contact, IDBClient db, HttpContext context)
         {
             var commandText = """
                 update contacts
@@ -274,7 +274,7 @@ namespace Astro.Server.Api
                 : Results.Problem("An error occured while updating the supplier. Please try again later.");
 
         }
-        private static async Task<IResult> DeleteAsync(short id, IDatabase db, HttpContext context)
+        private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var commandText = "update contacts set is_deleted = true, editor_id=@editorId, edited_date=current_timestamp where contact_id = @contactId and is_deleted = false;";
             var parameters = new DbParameter[]

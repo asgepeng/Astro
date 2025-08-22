@@ -13,6 +13,10 @@ namespace Astro.Models
         public int Id { get; set; } = 0;
         [JsonPropertyName("streetAddress")]
         public string StreetAddress { get; set; } = "";
+        [JsonPropertyName("village")]
+        public Village Village { get; set; } = new Village();
+        [JsonPropertyName("district")]
+        public District District { get; set; } = new District();
         [JsonPropertyName("city")]
         public City City { get; set; } = new City();
         [JsonPropertyName("state")]
@@ -33,6 +37,16 @@ namespace Astro.Models
                 Type = this.Type,
                 Id = this.Id,
                 StreetAddress = this.StreetAddress,
+                Village = new Village()
+                {
+                    Id = this.Village.Id,
+                    Name = this.Village.Name
+                },
+                District = new District()
+                {
+                    Id = this.District.Id,
+                    Name = this.District.Name
+                },
                 City = new City()
                 {
                     Id = this.City.Id,

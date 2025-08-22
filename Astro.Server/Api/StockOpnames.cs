@@ -20,16 +20,16 @@ namespace Astro.Server.Api
             app.MapGet("/trans/stock-opnames/{id}", GetByIdAsync).RequireAuthorization();
             app.MapPost("/trans/stock-opnames", CreateAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetAllAsync(IDatabase db, HttpContext context)
+        private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountDataTable(), "application/octet-stream");
             return Results.Ok();
         }
-        private static async Task<IResult> GetByIdAsync(int id, IDatabase db, HttpContext context)
+        private static async Task<IResult> GetByIdAsync(int id, IDBClient db, HttpContext context)
         {
             return await Task.FromResult(Results.Ok());
         }
-        private static async Task<IResult> CreateAsync(StockOpname stockOpname, IDatabase db, HttpContext context)
+        private static async Task<IResult> CreateAsync(StockOpname stockOpname, IDBClient db, HttpContext context)
         {
             return await Task.FromResult(Results.Ok());
         }

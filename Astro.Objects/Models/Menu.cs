@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -13,6 +14,9 @@ namespace Astro.Models
         [JsonPropertyName("id")] public short Id { get; set; } = 0;
         [JsonPropertyName("title")] public string Title { get; set; } = string.Empty;
         [JsonPropertyName("items")] public ListMenu Items { get; set; } = new ListMenu();
+        public bool Selected { get; set; }
+        public bool Hovered { get; set; }
+        public Rectangle Bounds { get; set; }
     }
     public class ListMenu : List<Menu>
     {

@@ -1,6 +1,9 @@
 ﻿using Astro.Models;
+using Astro.Models.Transactions;
 using Astro.ViewModels;
 using System.Text.Json.Serialization;
+
+[JsonSerializable(typeof(PurchaseItemRequest))]
 
 [JsonSerializable(typeof(ProductViewModel))]
 [JsonSerializable(typeof(ContactViewModel))]

@@ -29,24 +29,24 @@
         private void InitializeComponent()
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            dataGridView1 = new DataGridView();
-            button1 = new Button();
-            textBox1 = new TextBox();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            grid = new DataGridView();
+            okButton = new Button();
+            searchTextBox = new TextBox();
+            ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
             SuspendLayout();
             // 
-            // dataGridView1
+            // grid
             // 
-            dataGridView1.AllowUserToAddRows = false;
-            dataGridView1.AllowUserToDeleteRows = false;
-            dataGridView1.AllowUserToResizeRows = false;
-            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridView1.BackgroundColor = Color.White;
-            dataGridView1.BorderStyle = BorderStyle.Fixed3D;
-            dataGridView1.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridView1.ColumnHeadersHeight = 26;
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            grid.AllowUserToAddRows = false;
+            grid.AllowUserToDeleteRows = false;
+            grid.AllowUserToResizeRows = false;
+            grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            grid.BackgroundColor = Color.White;
+            grid.BorderStyle = BorderStyle.Fixed3D;
+            grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            grid.ColumnHeadersHeight = 26;
+            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = SystemColors.Window;
             dataGridViewCellStyle1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
@@ -54,69 +54,75 @@
             dataGridViewCellStyle1.SelectionBackColor = Color.Yellow;
             dataGridViewCellStyle1.SelectionForeColor = SystemColors.ControlText;
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.False;
-            dataGridView1.DefaultCellStyle = dataGridViewCellStyle1;
-            dataGridView1.Enabled = false;
-            dataGridView1.GridColor = Color.FromArgb(244, 244, 244);
-            dataGridView1.Location = new Point(12, 43);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.ReadOnly = true;
-            dataGridView1.RowHeadersVisible = false;
-            dataGridView1.RowTemplate.Height = 26;
-            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView1.Size = new Size(671, 275);
-            dataGridView1.TabIndex = 1;
-            dataGridView1.CellDoubleClick += dataGridView1_CellDoubleClick;
+            grid.DefaultCellStyle = dataGridViewCellStyle1;
+            grid.Enabled = false;
+            grid.GridColor = Color.FromArgb(244, 244, 244);
+            grid.Location = new Point(12, 43);
+            grid.Name = "grid";
+            grid.ReadOnly = true;
+            grid.RowHeadersVisible = false;
+            grid.RowTemplate.Height = 26;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.Size = new Size(835, 275);
+            grid.TabIndex = 1;
+            grid.CellDoubleClick += GridDoubleClicked;
             // 
-            // button1
+            // okButton
             // 
-            button1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            button1.Enabled = false;
-            button1.Location = new Point(12, 328);
-            button1.Name = "button1";
-            button1.Size = new Size(89, 30);
-            button1.TabIndex = 2;
-            button1.Text = "☑ Select";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            okButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            okButton.BackColor = Color.WhiteSmoke;
+            okButton.Enabled = false;
+            okButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            okButton.FlatAppearance.MouseOverBackColor = Color.LightBlue;
+            okButton.FlatStyle = FlatStyle.Flat;
+            okButton.Location = new Point(12, 328);
+            okButton.Name = "okButton";
+            okButton.Size = new Size(90, 30);
+            okButton.TabIndex = 2;
+            okButton.Text = "☑ Pilih";
+            okButton.UseVisualStyleBackColor = false;
+            okButton.Click += OKButtonClicked;
             // 
-            // textBox1
+            // searchTextBox
             // 
-            textBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBox1.BackColor = SystemColors.Info;
-            textBox1.Enabled = false;
-            textBox1.Location = new Point(12, 12);
-            textBox1.Name = "textBox1";
-            textBox1.PlaceholderText = "Filter ...";
-            textBox1.Size = new Size(671, 25);
-            textBox1.TabIndex = 3;
-            textBox1.TextChanged += textBox1_TextChanged;
-            textBox1.KeyPress += textBox1_KeyPress;
+            searchTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            searchTextBox.BackColor = SystemColors.Info;
+            searchTextBox.Enabled = false;
+            searchTextBox.Location = new Point(12, 12);
+            searchTextBox.Name = "searchTextBox";
+            searchTextBox.PlaceholderText = "Filter ...";
+            searchTextBox.Size = new Size(835, 25);
+            searchTextBox.TabIndex = 3;
+            searchTextBox.TextChanged += ApplyFilter;
+            searchTextBox.KeyDown += SearchTextBoxKeyDown;
+            searchTextBox.KeyPress += SearchTextBoxKeyPressed;
             // 
             // ListingPopUpForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(695, 370);
-            Controls.Add(textBox1);
-            Controls.Add(button1);
-            Controls.Add(dataGridView1);
+            BackColor = Color.FromArgb(250, 250, 250);
+            ClientSize = new Size(859, 370);
+            Controls.Add(searchTextBox);
+            Controls.Add(okButton);
+            Controls.Add(grid);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             FormBorderStyle = FormBorderStyle.SizableToolWindow;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ListingPopUpForm";
             StartPosition = FormStartPosition.CenterParent;
-            Text = "LIstingPopUpForm";
+            Text = "Data";
             Load += ListingPopUpForm_Load;
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)grid).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private DataGridView dataGridView1;
-        private Button button1;
-        private TextBox textBox1;
+        private DataGridView grid;
+        private Button okButton;
+        private TextBox searchTextBox;
     }
 }

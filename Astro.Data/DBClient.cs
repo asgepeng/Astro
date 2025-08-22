@@ -1,40 +1,42 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml;
-using MySql.Data.MySqlClient;
 using System.Data.Common;
 using System.Globalization;
 using Npgsql;
 using System.Data;
+using Org.BouncyCastle.Tls;
 
 namespace Astro.Data
 {
-    public interface IDatabase
+    public interface IDBClient
     {
         DbParameter CreateParameter(string name, object? value);
         DbParameter CreateParameter(string name, object? value, DbType dbType);
 
         Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
-        Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters);
-        Task<bool> AnyRecordsAsync(string commandText, params DbParameter[] parameters);
         Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters);
-        Task<List<T>> CreateListAsync<T>(string commandText, params DbParameter[] parameters);
-        Task<Dictionary<TKey, TValue>> CreateDictionyAsync<TKey, TValue>(string commandText, params DbParameter[] parameters)
+        Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters);
+        Task<bool> HasRecordsAsync(string commandText, params DbParameter[] parameters);     
+        Task<List<T>> FetchListAsync<T>(string commandText, params DbParameter[] parameters);
+        Task<Dictionary<TKey, TValue>> FetchDictionaryAsync<TKey, TValue>(string commandText, params DbParameter[] parameters)
             where TKey : notnull where TValue : notnull;
 
         bool ExecuteNonQuery(string commandText, params DbParameter[] parameters);
-        T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters);
-        bool AnyRecords(string commandText, params DbParameter[] parameters);
         void ExecuteReader(Action<DbDataReader> handler, string commandText, params DbParameter[] parameters);
-        List<T> CreateList<T>(string commandText, params DbParameter[] parameters);
+        T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters);
+        bool HasRecords(string commandText, params DbParameter[] parameters);
+        List<T> FetchList<T>(string commandText, params DbParameter[] parameters);
+        Dictionary<TKey, TValue>FetchDictionary<TKey, TValue>(string commandText, params DbParameter[] parameters)
+            where TKey : notnull where TValue : notnull;
 
     }
-    public abstract class DatabaseClient : IDatabase
+    public abstract class DBClient : IDBClient
     {
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters);
         protected abstract (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters);
-     
-        public bool AnyRecords(string commandText, params DbParameter[] parameters)
+
+        public bool ExecuteNonQuery(string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
             using (conn) using (cmd)
@@ -42,49 +44,12 @@ namespace Astro.Data
                 try
                 {
                     conn.Open();
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        return reader.HasRows;
-                    }
-                }
-                catch { return false; }
-            }
-        }
-        public async Task<bool> AnyRecordsAsync(string commandText, params DbParameter[] parameters)
-        {
-            var (conn, cmd) = CreateConnection(commandText, parameters);
-            using (conn) using (cmd)
-            {
-                try
-                {
-                    await conn.OpenAsync();
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        return reader.HasRows;
-                    }
-                }
-                catch { return false; }
-            }
-        }
-        public bool ExecuteNonQuery(string commandText, params DbParameter[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-        public async Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters)
-        {
-            var (conn, cmd) = CreateConnection(commandText, parameters);
-            using (conn) using (cmd)
-            {
-                try
-                {
-                    await conn.OpenAsync();
-                    await cmd.ExecuteNonQueryAsync();
+                    cmd.ExecuteNonQuery();
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    File.WriteAllText(AppContext.BaseDirectory + "db.executeNonQuery.txt", commandText + "\r\n\r\n" +  ex.ToString());
-                    return false; 
+                    return false;
                 }
             }
         }
@@ -104,10 +69,47 @@ namespace Astro.Data
                 catch { }
             }
         }
-        public List<T> CreateList<T>(string commandText, params DbParameter[] parameters)
+        public T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters)
+        {
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn)
+            using (cmd)
+            {
+                try
+                {
+                    conn.Open();
+                    object? res = cmd.ExecuteScalar();
+                    if (res is null || res == DBNull.Value)
+                        return default(T);
+
+                    return (T)Convert.ChangeType(res, typeof(T))!;
+                }
+                catch
+                {
+                    return default(T);
+                }
+            }
+        }
+        public bool HasRecords(string commandText, params DbParameter[] parameters)
+        {
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    conn.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        return reader.HasRows;
+                    }
+                }
+                catch { return false; }
+            }
+        }
+        public List<T> FetchList<T>(string commandText, params DbParameter[] parameters)
         {
             var list = new List<T>();
-            ExecuteReader(async reader =>
+            ExecuteReader(reader =>
             {
                 while (reader.Read())
                 {
@@ -123,6 +125,43 @@ namespace Astro.Data
             }, commandText, parameters);
             return list;
         }
+        public Dictionary<TKey, TValue> FetchDictionary<TKey, TValue>(string commandText, params DbParameter[] parameters) where TKey : notnull where TValue : notnull
+        {
+            var dict = new Dictionary<TKey, TValue>();
+            ExecuteReader(reader =>
+            {
+                while (reader.Read())
+                {
+                    var okey = !reader.IsDBNull(0) ? (TKey)Convert.ChangeType(reader.GetValue(0), typeof(TKey))! : default!;
+                    var ovalue = !reader.IsDBNull(1) ? (TValue)Convert.ChangeType(reader.GetValue(1), typeof(TValue))! : default!;
+                    if (okey is not null && ovalue is not null)
+                    {
+                        dict.Add(okey, ovalue);
+                    }
+                }
+            }, commandText, parameters);
+            return dict;
+        }
+
+        public async Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters)
+        {
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    await cmd.ExecuteNonQueryAsync();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var logPath = Path.Combine(AppContext.BaseDirectory, "sql.log");
+                    System.IO.File.AppendAllText(logPath, commandText + "\n\n" +  ex.Message);
+                    return false;
+                }
+            }
+        }
         public async Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters)
         {
             var (conn, cmd) = CreateConnection(commandText, parameters);
@@ -136,13 +175,47 @@ namespace Astro.Data
                         await handler(reader);
                     }
                 }
-                catch(Exception ex) 
+                catch (Exception ex)
                 {
-                    File.WriteAllText(AppContext.BaseDirectory + "db.executeReaderAsync.txt", commandText + "\n" + ex.ToString());
+                    Console.WriteLine(ex.ToString());
                 }
             }
         }
-        public async Task<List<T>> CreateListAsync<T>(string commandText, params DbParameter[] parameters)
+        public async Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters)
+        {
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    object? result = await cmd.ExecuteScalarAsync();
+                    if (result is null || result == DBNull.Value)
+                    {
+                        return default;
+                    }
+                    return (T?)Convert.ChangeType(result, typeof(T));
+                }
+                catch { return default; }
+            }
+        }
+        public async Task<bool> HasRecordsAsync(string commandText, params DbParameter[] parameters)
+        {
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        return reader.HasRows;
+                    }
+                }
+                catch { return false; }
+            }
+        }        
+        public async Task<List<T>> FetchListAsync<T>(string commandText, params DbParameter[] parameters)
         {
             var list = new List<T>();
             await ExecuteReaderAsync(async reader =>
@@ -161,7 +234,7 @@ namespace Astro.Data
             }, commandText, parameters);
             return list;
         }
-        public async Task<Dictionary<TKey, TValue>> CreateDictionyAsync<TKey, TValue>(string commandText, params DbParameter[] parameters) where TKey : notnull where TValue : notnull
+        public async Task<Dictionary<TKey, TValue>> FetchDictionaryAsync<TKey, TValue>(string commandText, params DbParameter[] parameters) where TKey : notnull where TValue : notnull
         {
             var dict = new Dictionary<TKey, TValue>();
             await ExecuteReaderAsync(async reader =>
@@ -178,6 +251,10 @@ namespace Astro.Data
             }, commandText, parameters);
             return dict;
         }
+
+        public abstract DbParameter CreateParameter(string name, object? value);
+        public abstract DbParameter CreateParameter(string name, object? value, DbType dbType);
+
         public byte[] ExportToExcel(string commandText, params (string, object)[] parameters)
         {
             var data = Array.Empty<byte>();
@@ -281,47 +358,6 @@ namespace Astro.Data
             }
             return data;
         }
-        public T? ExecuteScalar<T>(string commandText, params DbParameter[] parameters)
-        {
-            var (conn, cmd) = CreateConnection(commandText, parameters);
-            using (conn)
-            using (cmd)
-            {
-                try
-                {
-                    conn.Open();
-                    object? res = cmd.ExecuteScalar();
-                    if (res is null || res == DBNull.Value)
-                        return default;
-
-                    return (T)Convert.ChangeType(res, typeof(T))!;
-                }
-                catch
-                {
-                    return default;
-                }
-            }
-        }
-
-        public async Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters)
-        {
-            var (conn, cmd) = CreateConnection(commandText, parameters);
-            using (conn) using (cmd)
-            {
-                try
-                {
-                    await conn.OpenAsync();
-                    object? result = await cmd.ExecuteScalarAsync();
-                    if (result is null || result == DBNull.Value)
-                    {
-                        return default;
-                    }
-                    return (T?)Convert.ChangeType(result, typeof(T));
-                }
-                catch { return default; }
-            }
-        }
-        //FUNCTION
         private Stylesheet GenerateStylesheet()
         {
             return new Stylesheet(
@@ -344,118 +380,6 @@ namespace Astro.Data
                     }
                 )
             );
-        }
-
-        public abstract DbParameter CreateParameter(string name, object? value);
-        public abstract DbParameter CreateParameter(string name, object? value, DbType dbType);
-    }
-    public sealed class MySqlDatabase : DatabaseClient
-    {
-        private readonly string connectionString;
-        public MySqlDatabase(string connstring)
-        {
-            this.connectionString = connstring;
-        }
-
-        public override DbParameter CreateParameter(string name, object? value)
-        {
-            return new MySqlParameter(name, value ?? DBNull.Value);
-        }
-
-        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
-        {
-            return new MySqlParameter(name, dbType)
-            {
-                Value = value ?? DBNull.Value
-            };
-        }
-
-        protected override (DbConnection, DbCommand) CreateConnection(string commandText, params DbParameter[] parameters)
-        {
-            var conn = new MySqlConnection(this.connectionString);
-            var cmd = new MySqlCommand(commandText, conn);
-            if (parameters != null) cmd.Parameters.AddRange(parameters);
-            return (conn, cmd);
-        }
-        protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters)
-        {
-            var dbparams = new MySqlParameter[parameters.Length];
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                dbparams[i] = new MySqlParameter(parameters[i].Item1, parameters[i].Item2);
-            }
-            return CreateConnection(commandText, dbparams);
-        }
-    }
-    public sealed class NpgsqlDatabase : DatabaseClient
-    {
-        private string connectionString;
-        public NpgsqlDatabase(string constring)
-        {
-            this.connectionString = constring;
-        }
-        protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters)
-        {
-            var conn = new NpgsqlConnection(this.connectionString);
-            var cmd = new NpgsqlCommand(commandText, conn);
-            cmd.Parameters.AddRange(parameters);
-            return (conn, cmd);
-        }
-        protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters)
-        {
-            var dbparams = new NpgsqlParameter[parameters.Length];
-            for (int i=0; i < parameters.Length; i++)
-            {
-                dbparams[i] = new NpgsqlParameter(parameters[i].Item1, parameters[i].Item2);
-            }
-            return CreateConnection(commandText, dbparams);
-        }
-        public void ChangeDatabase(string database)
-        {
-            var builder = new NpgsqlConnectionStringBuilder(this.connectionString);
-            builder.Database = database;
-            this.connectionString = builder.ToString();
-        }
-        public void ChangeUsernameAndPassword(string username, string password)
-        {
-            var builde = new NpgsqlConnectionStringBuilder(this.connectionString);
-            builde.Username = username;
-            builde.Password = password;
-            this.connectionString = builde.ToString();
-        }
-
-        public override DbParameter CreateParameter(string name, object? value)
-        {
-            return new NpgsqlParameter(name, value ?? DBNull.Value);
-        }
-
-        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
-        {
-            return new NpgsqlParameter(name, dbType)
-            {
-                Value = value ?? DBNull.Value
-            };
-        }
-    }
-    public sealed class SqlDatabase : DatabaseClient
-    {
-        public override DbParameter CreateParameter(string name, object? value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override DbParameter CreateParameter(string name, object? value, DbType dbType)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params DbParameter[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-        protected override (DbConnection conn, DbCommand cmd) CreateConnection(string commandText, params (string, object)[] parameters)
-        {
-            throw new NotImplementedException();
         }
     }
 }
