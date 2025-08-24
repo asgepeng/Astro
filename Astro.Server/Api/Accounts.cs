@@ -26,8 +26,16 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountDataTable(), "application/octet-stream");
-            return Results.Ok();
+            var commandText = """
+                SELECT acc.accountid, acc.accountname, acc.accountnumber, 
+                CASE ap.providertype WHEN 1 THEN 'Bank' WHEN 2 THEN 'E-Wallet' WHEN 3 THEN 'E-Money' ELSE '-' END AS accounttype, 
+                ap.name, u.fullname, acc.createddate, acc.editeddate
+                FROM accounts AS acc
+                INNER JOIN accountproviders AS ap ON acc.providerid = ap.providerid
+                INNER JOIN employees AS u ON acc.creatorid = u.employeeid
+                WHERE acc.isdeleted = false
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
@@ -38,36 +46,36 @@ namespace Astro.Server.Api
         {
             var commandText = """
                 insert into accounts
-                    (account_name, account_number, provider_id, creator_id)
+                    (accountname, accountnumber, providerid, creatorid)
                 values
-                    (@account_name, @account_number, @provider_id, @creator_id)
+                    (@accountname, @accountnumber, @providerid, @creatorid)
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("account_name", model.AccountName),
-                db.CreateParameter("account_number", model.AccountNumber),
-                db.CreateParameter("provider_id", model.Provider),
-                db.CreateParameter("creator_id", Extensions.Application.GetUserID(context))
+                db.CreateParameter("accountname", model.AccountName, DbType.AnsiString),
+                db.CreateParameter("accountnumber", model.AccountNumber, DbType.AnsiString),
+                db.CreateParameter("providerid", model.Provider, DbType.Int16),
+                db.CreateParameter("creatorid", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account created succesfully")) : Results.Problem("An error occured while creating account, please try again later.");
         }
         private static async Task<IResult> UpdateAsync(Account model, IDBClient db, HttpContext context)
         {
             var commandText = """
-                update accounts
-                set account_name =@account_name,
-                    account_number = @account_number,
-                    provider_id = @provider_id,
-                    editor_id = @editor_id,
-                    edited_date = current_timestamp
-                where account_id = @id;
+                UPDATE accounts
+                SET accountname =@accountname,
+                    accountnumber = @accountnumber,
+                    providerid = @providerid,
+                    editorid = @editorid,
+                    editeddate = current_timestamp
+                WHERE accountid = @id;
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("account_name", model.AccountName, DbType.String),
-                db.CreateParameter("account_number", model.AccountNumber, DbType.String),
-                db.CreateParameter("provider_id", model.Provider, DbType.Int16),
-                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("accountname", model.AccountName, DbType.AnsiString),
+                db.CreateParameter("accountnumber", model.AccountNumber, DbType.AnsiString),
+                db.CreateParameter("providerid", model.Provider, DbType.Int16),
+                db.CreateParameter("editorid", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("id", model.Id, DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ?
@@ -77,15 +85,15 @@ namespace Astro.Server.Api
         private static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
             var commandText = """
-                update accounts
-                set is_deleted = true,
-                    editor_id = @editor_id,
-                    edited_date = current_timestamp
-                where account_id = @id
+                UPDATE accounts
+                SET isdeleted = true,
+                    editorid = @editorid,
+                    editeddate = current_timestamp
+                WHERE accountid = @id
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16),
+                db.CreateParameter("editorid", Extensions.Application.GetUserID(context), DbType.Int16),
                 db.CreateParameter("id", id, DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ?

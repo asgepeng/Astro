@@ -17,7 +17,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var builder = new IO.Writer())
+            using (var builder = new Streams.Writer())
             {
                 var commandText = """
                     SELECT u.user_id, CONCAT(u.user_firstname, ' ', u.user_lastname) AS fullname

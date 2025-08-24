@@ -25,8 +25,11 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetAccountProviderTableAsync(), "application/octet-stream");
-            return Results.Ok();
+            var commandText = """
+                select providerid, name, case providertype when 1 then 'Bank' when 2 then 'E-Wallet' when 3 then 'E-Money' else '-' end as providertype
+                from accountproviders
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
@@ -36,9 +39,9 @@ namespace Astro.Server.Api
         private static async Task<IResult> CreateAsync(AccountProvider provider, IDBClient db, HttpContext context)
         {
             var sqlCheck = """
-                SELECT provider_name
-                FROM account_providers
-                WHERE provider_id=@id
+                SELECT name
+                FROM accountproviders
+                WHERE providerid=@id
                 """;
             var result = await db.ExecuteScalarAsync<string>(sqlCheck, db.CreateParameter("id", provider.Id));
             if (result != null)
@@ -46,30 +49,30 @@ namespace Astro.Server.Api
                 return Results.Problem("ID: " + provider.Id.ToString() + " currently being used by '" + result.ToString() + "', please use another id");
             }
             var commandText = """
-                INSERT INTO account_providers
-                    (provider_id, provider_name, provider_type)
-                VALUES (@provider_id, @provider_name, @provider_type)
+                INSERT INTO accountproviders
+                    (providerid, name, providertype)
+                VALUES (@providerid, @name, @providertype)
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("provider_id", provider.Id),
-                db.CreateParameter("provider_name", provider.Name),
-                db.CreateParameter("provider_type", provider.Type)
+                db.CreateParameter("providerid", provider.Id),
+                db.CreateParameter("name", provider.Name),
+                db.CreateParameter("providertype", provider.Type)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account provider was successfully created")) : Results.Problem("An error occured while creating account providers, please try again later");
         }
         private static async Task<IResult> UpdateAsync(AccountProvider provider, IDBClient db, HttpContext context)
         {
             var commandText = """
-                UPDATE account_providers
-                SET provider_name = @provider_name,
-                    provider_type = @provider_type
-                WHERE provider_id = @id
+                UPDATE accountproviders
+                SET name = @name,
+                    providertype = @providertype
+                WHERE providerid = @id
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("provider_name", provider.Name, System.Data.DbType.String),
-                db.CreateParameter("provider_type", provider.Type, System.Data.DbType.Int16),
+                db.CreateParameter("name", provider.Name, System.Data.DbType.String),
+                db.CreateParameter("providertype", provider.Type, System.Data.DbType.Int16),
                 db.CreateParameter("id", provider.Id, System.Data.DbType.Int16)
             };
             return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("Account provider was successfully created")) : Results.Problem("An error occured while creating account providers, please try again later");
@@ -79,7 +82,7 @@ namespace Astro.Server.Api
             var sqlCheck = """
                 SELECT COUNT(*) AS total
                 FROM accounts
-                WHERE provider_id = @id
+                WHERE providerid = @id
                 """;
             var accountUse = await db.ExecuteScalarAsync<int>(sqlCheck, db.CreateParameter("id", id));
             if (accountUse > 0)
@@ -87,8 +90,8 @@ namespace Astro.Server.Api
                 return Results.Problem("You cannot delete account provider that being used by account record");
             }
             var commandText = """
-                DELETE FROM account_providers
-                WHERE provider_id = @id
+                DELETE FROM accountproviders
+                WHERE providerid = @id
                 """;
             return await db.ExecuteNonQueryAsync(commandText, db.CreateParameter("id", id)) ? Results.Ok(CommonResult.Ok("Account provider was succesfully deleted")) : Results.Problem("An error occurred while deleting account provider, please try again later");
         }

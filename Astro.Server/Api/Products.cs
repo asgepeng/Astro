@@ -22,31 +22,19 @@ namespace Astro.Server.Api
             app.MapPut("/data/products", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/products/{id}", DeleteAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetAllAsync(
-            [FromQuery] int? pg,
-            [FromQuery] int? pgsize,
-            [FromQuery] int? order,
-            [FromQuery] int? sort,
-            [FromQuery] string? src,
-            IDBClient db, HttpContext context)
+        internal static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
 
-            var locationID = TokenStore.GetLocationId(context.Request.GetToken());
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetProductDataTable(locationID), "application/octet-stream");
-            else
-            {
-                var pagination = new Pagination()
-                {
-                    Page = pg.HasValue ? pg.Value : 1,
-                    PageSize = pgsize.HasValue ? pgsize.Value : 5,
-                    OrderBy = order.HasValue ? order.Value : 0,
-                    SortOrder = sort.HasValue ? sort.Value : 0,
-                    Search = src is null ? string.Empty : src.Trim()
-                };
-                var sb = new StringBuilder();
-                await sb.AppendProductTableAsync(db, pagination);
-                return Results.Content(sb.ToString(), "text/html");
-            }
+            var commandText = """
+                SELECT p.productid, p.name, p.sku, c.name AS categoryname, i.stock, u.name AS unitname, i.price, e.fullname, p.createddate
+                FROM products AS p
+                    INNER JOIN categories AS c ON p.categoryid = c.categoryid
+                    INNER JOIN units AS u ON p.unitid = u.unitid
+                    INNER JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @location
+                    INNER JOIN employees AS e ON p.creatorid = e.employeeid
+                WHERE p.isdeleted = false
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText, db.CreateParameter("location", context.Request.GetLocationID())), "application/octet-stream");
         }
         internal static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
@@ -59,7 +47,7 @@ namespace Astro.Server.Api
         internal static async Task<IResult> CreateAsync(IDBClient db, HttpContext context)
         {
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Streams.Reader(stream))
             {
                 var requestType = reader.ReadByte();
                 var locationId = reader.ReadInt16();
@@ -92,57 +80,57 @@ namespace Astro.Server.Api
                     {
                         var commandText = """
                         INSERT INTO products (
-                            product_name,
-                            product_description,
-                            product_sku,
-                            category_id,
-                            product_type,
-                            unit_id,
+                            name,
+                            description,
+                            sku,
+                            categoryid,
+                            producttype,
+                            unitid,
                             images,
-                            creator_id,
-                            created_date
+                            creatorid,
+                            createddate
                         )
                         VALUES (
-                            @product_name,
-                            @product_description,
-                            @product_sku,
-                            @category_id,
-                            @product_type,
+                            @productname,
+                            @description,
+                            @sku,
+                            @categoryid,
+                            @producttype,
                             @unit,
                             @images,
-                            @creator_id,
-                            @created_date
-                        ) RETURNING product_id;           
+                            @creatorid,
+                            @createddate
+                        ) RETURNING productid;           
                         """;
                         var parameters = new DbParameter[]
                         {
-                            db.CreateParameter("product_name", product.Name, DbType.String),
-                            db.CreateParameter("product_description", product.Description ?? string.Empty, DbType.String),
-                            db.CreateParameter("product_sku", product.Sku ?? string.Empty, DbType.String),
-                            db.CreateParameter("category_id", product.Category, DbType.Int16),
-                            db.CreateParameter("product_type", product.Type, DbType.Int16),
+                            db.CreateParameter("name", product.Name, DbType.String),
+                            db.CreateParameter("description", product.Description ?? string.Empty, DbType.String),
+                            db.CreateParameter("sku", product.Sku ?? string.Empty, DbType.String),
+                            db.CreateParameter("categoryid", product.Category, DbType.Int16),
+                            db.CreateParameter("producttype", product.Type, DbType.Int16),
                             db.CreateParameter("unit", product.Unit, DbType.Int16),
                             db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
-                            db.CreateParameter("creator_id", Extensions.Application.GetUserID(context), DbType.Int16),
-                            db.CreateParameter("created_date", DateTime.UtcNow, DbType.DateTime)
+                            db.CreateParameter("creatorid", Extensions.Application.GetUserID(context), DbType.Int16),
+                            db.CreateParameter("createddate", DateTime.UtcNow, DbType.DateTime)
                         };
                         product.ID = await db.ExecuteScalarAsync<short>(commandText, parameters);
                         if (product.ID == default(short)) return Results.Problem("An error occured while saving the product. Please try again later.");
 
                         commandText = """
                         INSERT INTO inventories
-                        (location_id, product_id, is_active, stock, min_stock, max_stock, price, cogs)
+                        (locationid, productid, isactive, stock, minstock, maxstock, price, cogs)
                         VALUES
-                        (@location, @product_id, @is_active, @stock, @min_stock, @max_stock, @price, @cogs);
+                        (@location, @productid, @isactive, @stock, @minstock, @maxstock, @price, @cogs);
                         """;
                         parameters = new DbParameter[]
                         {
                             db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16),
-                            db.CreateParameter("product_id", product.ID, DbType.Int16),
-                            db.CreateParameter("is_active", product.Active, DbType.Boolean),
+                            db.CreateParameter("productid", product.ID, DbType.Int16),
+                            db.CreateParameter("isactive", product.Active, DbType.Boolean),
                             db.CreateParameter("stock", product.Stock, DbType.Int32),
-                            db.CreateParameter("min_stock", product.MinStock, DbType.Int16),
-                            db.CreateParameter("max_stock", product.MaxStock, DbType.Int16),
+                            db.CreateParameter("minstock", product.MinStock, DbType.Int16),
+                            db.CreateParameter("maxstock", product.MaxStock, DbType.Int16),
                             db.CreateParameter("price", product.Price, DbType.Int64),
                             db.CreateParameter("cogs", product.COGs, DbType.Int64)
                         };
@@ -153,38 +141,38 @@ namespace Astro.Server.Api
                     {
                         var commandText = """
                             UPDATE products
-                            SET product_name = @product_name,
-                                product_description = @product_description,
-                                product_sku = @product_sku,
-                                category_id = @category_id,
-                                product_type = @product_type,
-                                unit_id = @unit_id,
+                            SET name = @name,
+                                description = @description,
+                                sku = @sku,
+                                categoryid = @categoryid,
+                                producttype = @producttype,
+                                unitid = @unitid,
                                 images = @images
-                            WHERE product_id = @product_id AND is_deleted = false;
+                            WHERE productid = @productid AND isdeleted = false;
                             UPDATE inventories
-                            SET is_active = @is_active,
+                            SET isactive = @isactive,
                                 stock = @stock,
-                                min_stock = @min_stock,
-                                max_stock = @max_stock,
+                                minstock = @minstock,
+                                maxstock = @maxstock,
                                 price = @price,
-                                cogs = @cost_average
-                            WHERE product_id = @product_id AND location_id = @location
+                                cogs = @costaverage
+                            WHERE productid = @productid AND locationid = @location
                             """;
                         var parameters = new DbParameter[]
                         {
-                            db.CreateParameter("product_id", product.ID, DbType.Int16),
-                            db.CreateParameter("product_name", product.Name, DbType.String),
-                            db.CreateParameter("product_description", product.Description ?? string.Empty, DbType.String),
-                            db.CreateParameter("product_sku", product.Sku ?? string.Empty, DbType.String),
-                            db.CreateParameter("category_id", product.Category, DbType.Int16),
-                            db.CreateParameter("product_type", product.Type, DbType.Int16),
-                            db.CreateParameter("is_active", product.Active, DbType.Boolean),
+                            db.CreateParameter("productid", product.ID, DbType.Int16),
+                            db.CreateParameter("name", product.Name, DbType.String),
+                            db.CreateParameter("description", product.Description ?? string.Empty, DbType.String),
+                            db.CreateParameter("sku", product.Sku ?? string.Empty, DbType.String),
+                            db.CreateParameter("categoryid", product.Category, DbType.Int16),
+                            db.CreateParameter("producttype", product.Type, DbType.Int16),
+                            db.CreateParameter("isactive", product.Active, DbType.Boolean),
                             db.CreateParameter("stock", product.Stock, DbType.Int32),
-                            db.CreateParameter("min_stock", product.MinStock, DbType.Int16),
-                            db.CreateParameter("max_stock", product.MaxStock, DbType.Int16),
-                            db.CreateParameter("unit_id", product.Unit, DbType.Int16),
+                            db.CreateParameter("minstock", product.MinStock, DbType.Int16),
+                            db.CreateParameter("maxstock", product.MaxStock, DbType.Int16),
+                            db.CreateParameter("unitid", product.Unit, DbType.Int16),
                             db.CreateParameter("price", product.Price, DbType.Int64),
-                            db.CreateParameter("cost_average", product.COGs, DbType.Int64),
+                            db.CreateParameter("costaverage", product.COGs, DbType.Int64),
                             db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
                             db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16)
                         };
@@ -205,38 +193,38 @@ namespace Astro.Server.Api
             if (await IsBarcodeUsed(db, product)) return Results.Ok(CommonResult.Fail($"Barcode '{product.Sku}' is already used by another product (id: {product.ID})."));
             var commandText = """
                 UPDATE products
-                SET product_name = @product_name,
-                    product_description = @product_description,
-                    product_sku = @product_sku,
-                    category_id = @category_id,
-                    product_type = @product_type,
-                    unit_id = @unit_id,
+                SET name = @name,
+                    description = @description,
+                    sku = @sku,
+                    categoryid = @categoryid,
+                    producttype = @producttype,
+                    unitid = @unitid,
                     images = @images
-                WHERE product_id = @product_id AND is_deleted = false;
+                WHERE productid = @productid AND isdeleted = false;
                 UPDATE inventories
-                SET is_active = @is_active,
+                SET isactive = @isactive,
                     stock = @stock,
-                    min_stock = @min_stock,
-                    max_stock = @max_stock,
+                    minstock = @minstock,
+                    maxstock = @maxstock,
                     price = @price,
-                    cogs = @cost_average
-                WHERE product_id = @product_id AND location_id = @location
+                    cogs = @costaverage
+                WHERE productid = @productid AND locationid = @location
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("product_id", product.ID, DbType.Int16),
-                db.CreateParameter("product_name", product.Name, DbType.String),
-                db.CreateParameter("product_description", product.Description ?? string.Empty, DbType.String),
-                db.CreateParameter("product_sku", product.Sku ?? string.Empty, DbType.String),
-                db.CreateParameter("category_id", product.Category, DbType.Int16),
-                db.CreateParameter("product_type", product.Type, DbType.Int16),
-                db.CreateParameter("is_active", product.Active, DbType.Boolean),
+                db.CreateParameter("productid", product.ID, DbType.Int16),
+                db.CreateParameter("name", product.Name, DbType.String),
+                db.CreateParameter("description", product.Description ?? string.Empty, DbType.String),
+                db.CreateParameter("sku", product.Sku ?? string.Empty, DbType.String),
+                db.CreateParameter("categoryid", product.Category, DbType.Int16),
+                db.CreateParameter("producttype", product.Type, DbType.Int16),
+                db.CreateParameter("isactive", product.Active, DbType.Boolean),
                 db.CreateParameter("stock", product.Stock, DbType.Int32),
-                db.CreateParameter("min_stock", product.MinStock, DbType.Int16),
-                db.CreateParameter("max_stock", product.MaxStock, DbType.Int16),
-                db.CreateParameter("unit_id", product.Unit, DbType.Int16),
+                db.CreateParameter("minstock", product.MinStock, DbType.Int16),
+                db.CreateParameter("maxstock", product.MaxStock, DbType.Int16),
+                db.CreateParameter("unitid", product.Unit, DbType.Int16),
                 db.CreateParameter("price", product.Price, DbType.Int64),
-                db.CreateParameter("cost_average", product.COGs, DbType.Int64),
+                db.CreateParameter("costaverage", product.COGs, DbType.Int64),
                 db.CreateParameter("images", product.Images ?? string.Empty, DbType.String),
                 db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16)
             };
@@ -246,11 +234,11 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> DeleteAsync(short id, IDBClient db, HttpContext context)
         {
-            var commandText = "update products set is_deleted = true, editor_id=@editor_id where product_id = @product_id";
+            var commandText = "UPDATE products SET isdeleted = true, editorid=@editorid WHERE productid = @productid";
             var parameter = new DbParameter[]
             {
-                db.CreateParameter("product_id", id, DbType.Int16),
-                db.CreateParameter("editor_id", Extensions.Application.GetUserID(context), DbType.Int16)
+                db.CreateParameter("productid", id, DbType.Int16),
+                db.CreateParameter("editorid", Extensions.Application.GetUserID(context), DbType.Int16)
             };
             var success = await db.ExecuteNonQueryAsync(commandText, parameter);
             return success ? Results.Ok(CommonResult.Ok("Product have benn succesfully deleted")) : Results.Problem("An error occurred while deleting the product. Please try again later.");
@@ -258,13 +246,14 @@ namespace Astro.Server.Api
         private static async Task<bool> IsBarcodeUsed(IDBClient db, Product product)
         {
             var commandText = """
-                select 1 from products
-                where product_sku = @product_sku and product_id != @product_id and is_deleted = false;
+                SELECT 1 FROM products
+                WHERE sku = @sku and productid != @productid 
+                AND isdeleted = false;
                 """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("product_id", product.ID, DbType.Int16),
-                db.CreateParameter("product_sku", product.Sku, DbType.String)
+                db.CreateParameter("productid", product.ID, DbType.Int16),
+                db.CreateParameter("sku", product.Sku, DbType.String)
             };
             return await db.HasRecordsAsync(commandText, parameters);
         }

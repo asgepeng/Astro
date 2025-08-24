@@ -21,13 +21,13 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            var isWinformApp = context.Request.IsDesktopAppRequest();
-            if (isWinformApp) return Results.File(await db.GetUnitDataTable(), "application/octet-stream");
-            else
-            {
-                var list = new List<Unit>();
-                return Results.Ok(list);
-            }
+            var commandText = """
+                SELECT u.unitid, u.name, u.createddate, c.fullname
+                FROM units AS u
+                INNER JOIN employees AS c on u.creatorid = c.employeeid
+                ORDER BY u.name
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {

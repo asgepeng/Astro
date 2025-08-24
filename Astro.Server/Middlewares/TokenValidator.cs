@@ -29,7 +29,7 @@ namespace Astro.Server.Middlewares
 
 
             using var stream = new MemoryStream(data);
-            using var reader = new IO.Reader(stream);
+            using var reader = new Streams.Reader(stream);
 
             var expiredDate = new DateTime(BitConverter.ToInt64(data, 0));
             if (expiredDate < DateTime.Now)

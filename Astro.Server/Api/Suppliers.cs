@@ -28,107 +28,149 @@ namespace Astro.Server.Api
 
         private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetContactDataTable(0), "application/octet-stream");
-            return Results.Ok();
+            var commandText = """
+                SELECT c.contactid, 
+                       c.name, 
+                       COALESCE(ca.streetaddress || ' ' || v.name || ' ' || d.name || ' ' || cty.name || ', ' || ca.zipcode, '') AS address,
+                       COALESCE(p.phonenumber, '') as phonenumber, 
+                       creator.fullname, 
+                       c.createddate
+                FROM contacts c
+                LEFT JOIN addresses ca 
+                       ON c.contactid = ca.contactid AND ca.isprimary = true
+                LEFT JOIN villages v 
+                       ON ca.villageid = v.villageid
+                LEFT JOIN districts d 
+                       ON v.districtid = d.districtid
+                LEFT JOIN cities cty 
+                       ON d.cityid = cty.cityid
+                LEFT JOIN phones p 
+                       ON c.contactid = p.contactid AND p.isprimary = true
+                INNER JOIN employees creator 
+                       ON c.creatorid = creator.employeeid
+                WHERE c.isdeleted = false 
+                  AND c.contacttype = 0;
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetContact(id));
-
-            var model = new Contact();
             var commandText = """
-                select contact_id, contact_name
-                from contacts
-                where contact_id = @contactId
-                and is_deleted = false
+                SELECT contactid, name
+                FROM contacts
+                WHERE contactid = @contactId
+                AND isdeleted = false
                 """;
-            await db.ExecuteReaderAsync(async reader =>
+            using (var writer = new Streams.Writer())
             {
-                if (await reader.ReadAsync())
+                bool contactExists = false;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    model.Id = reader.GetInt32(0);
-                    model.Name = reader.GetString(1);
-                }
-            }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
-            if (model.Id <= 0) return Results.NotFound("Supplier not found");
-
-            commandText = """
-                select a.address_id, a.street_address, a.city_id, c.city_name, c.state_id, s.state_name, a.address_type, a.is_primary, a.zip_code
-                from addresses as a
-                    inner join cities as c on a.city_id = c.city_id
-                    inner join states as s on c.state_id = s.state_id
-                where a.owner_id = @contactId
-                """;
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                while (await reader.ReadAsync())
-                {
-                    model.Addresses.Add(new Address()
+                    contactExists = reader.HasRows;
+                    writer.WriteBoolean(contactExists);
+                    if (await reader.ReadAsync())
                     {
-                        Id = reader.GetInt32(0),
-                        StreetAddress = reader.GetString(1),
-                        City = new City()
-                        {
-                            Id = reader.GetInt32(2),
-                            Name = reader.GetString(3)
-                        },
-                        StateOrProvince = new Province()
-                        {
-                            Id = reader.GetInt16(4),
-                            Name = reader.GetString(5)
-                        },
-                        Type = reader.GetInt16(6),
-                        IsPrimary = reader.GetBoolean(7),
-                        ZipCode = reader.GetString(8)
-                    });
-                }
-            }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                        writer.WriteInt16(reader.GetInt16(0));
+                        writer.WriteString(reader.GetString(1));
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                if (!contactExists) return Results.File(writer.ToArray(), "application/octet-stream");
 
-            commandText = """
-                select phone_id, phone_number, phone_type, is_primary
-                from phones as p
-                where owner_id = @contactId
+                commandText = """
+                SELECT a.addressid, a.streetaddress, v.villageid, v.name AS villagename, d.districtid, d.name AS districtname,
+                c.cityid, c.name AS cityname, s.stateid, s.name AS statename, a.addresstype, a.isprimary, a.zipcode
+                FROM addresses AS a
+                	INNER JOIN villages AS v ON a.villageid = v.villageid
+                	INNER JOIN districts AS d ON v.districtid = d.districtid
+                	INNER JOIN cities AS c on d.cityid = c.cityid
+                	INNER JOIN states AS s ON c.stateid = s.stateid	
+                WHERE a.contactid = @contactId
                 """;
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                while (await reader.ReadAsync())
+                var iPos = writer.ReserveInt32();
+                var iCount = 0;
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    model.Phones.Add(new Phone()
+                    while (await reader.ReadAsync())
                     {
-                        Id = reader.GetInt32(0),
-                        Number = reader.GetString(1),
-                        Type = reader.GetInt16(2),
-                        IsPrimary = reader.GetBoolean(3)
-                    });
-                }
-            }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                        //address id: int, streetaddress: string
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
 
-            commandText = """
-                    select email_id, email_address, email_type, is_primary
-                    from emails
-                    where owner_id = @contactId
+                        //village id: int64, villagename : string
+                        writer.WriteInt64(reader.GetInt64(2));
+                        writer.WriteString(reader.GetString(3));
+
+                        //district id: int, districtname : string
+                        writer.WriteInt32(reader.GetInt32(4));
+                        writer.WriteString(reader.GetString(5));
+
+                        //city id: int, cityname : string
+                        writer.WriteInt32(reader.GetInt32(6));
+                        writer.WriteString(reader.GetString(7));
+
+                        //state id: short, statename : string
+                        writer.WriteInt16(reader.GetInt16(8));
+                        writer.WriteString(reader.GetString(9));
+
+                        //address type, isprimary, zipcode
+                        writer.WriteInt16(reader.GetInt16(10));
+                        writer.WriteBoolean(reader.GetBoolean(11));
+                        writer.WriteString(reader.GetString(12));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                commandText = """
+                    select phoneid, phonenumber, phonetype, isprimary
+                    from phones as p
+                    where contactid = @contactId
                     """;
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                while (await reader.ReadAsync())
+
+                iCount = 0;
+                iPos = writer.ReserveInt32();
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    model.Emails.Add(new Email()
+                    while (await reader.ReadAsync())
                     {
-                        Id = reader.GetInt32(0),
-                        Address = reader.GetString(1),
-                        Type = reader.GetInt16(2),
-                        IsPrimary = reader.GetBoolean(3)
-                    });
-                }
-            }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
-            return Results.Ok(model);
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                        writer.WriteBoolean(reader.GetBoolean(3));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                iCount = 0;
+                iPos = writer.ReserveInt32();
+                commandText = """
+                    select emailid, emailaddress, emailtype, isprimary
+                    from emails
+                    where contactid = @contactId
+                    """;
+                await db.ExecuteReaderAsync(async reader =>
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        writer.WriteInt32(reader.GetInt32(0));
+                        writer.WriteString(reader.GetString(1));
+                        writer.WriteInt16(reader.GetInt16(2));
+                        writer.WriteBoolean(reader.GetBoolean(3));
+                        iCount++;
+                    }
+                }, commandText, db.CreateParameter("contactId", id, DbType.Int16));
+                writer.WriteInt32(iCount, iPos);
+
+                return Results.File(writer.ToArray(), "application/octet-stream");
+            }
         }
         private static async Task<IResult> CreateAsync(Contact contact, IDBClient db, HttpContext context)
         {
             var commandText = """
-                insert into contacts (contact_name, contact_type, creator_id)
-                values (@contactName, @contactType, @creatorId)
-                returning contact_id
+                INSERT INTO contacts (name, contacttype, creatorid)
+                VALUES (@contactName, @contactType, @creatorId)
+                RETURNING contactid
                 """;
             var parameters = new DbParameter[]
             {
@@ -152,7 +194,7 @@ namespace Astro.Server.Api
             if (contact.Addresses.Count > 0)
             {
                 sb.Append("""
-                    insert into addresses (owner_id, street_address, city_id, zip_code, address_type, is_primary)
+                    insert into addresses (contactid, streetaddress, villageid, zipcode, addresstype, isprimary)
                     values
                     """);
                 for (int i = 0; i < contact.Addresses.Count; i++)
@@ -160,7 +202,7 @@ namespace Astro.Server.Api
                     if (i > 0) sb.Append(",");
                     sb.Append("(@contactId, @a").Append(i).Append(",").Append("@c").Append(i).Append(",@t").Append(i).Append(",@p").Append(i).Append(")");
                     parameters2.Add(db.CreateParameter("a" + i, contact.Addresses[i].StreetAddress.Trim(), DbType.String));
-                    parameters2.Add(db.CreateParameter("c" + i, contact.Addresses[i].City, DbType.Int16));
+                    parameters2.Add(db.CreateParameter("c" + i, contact.Addresses[i].Village, DbType.Int64));
                     parameters2.Add(db.CreateParameter("t" + i, contact.Addresses[i].Type, DbType.Int16));
                     parameters2.Add(db.CreateParameter("p" + i, contact.Addresses[i].IsPrimary, DbType.Boolean));
                 }

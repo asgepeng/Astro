@@ -357,7 +357,7 @@ namespace Astro.Server.Api
                 FROM roles
                 ORDER BY role_name
                 """;
-            using (var builder = new IO.Writer())
+            using (var builder = new Streams.Writer())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {

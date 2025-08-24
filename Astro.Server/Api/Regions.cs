@@ -29,7 +29,7 @@ namespace Astro.Server.Api
                 """;
             if (context.Request.IsDesktopAppRequest())
             {
-                using (var builder = new IO.Writer())
+                using (var builder = new Streams.Writer())
                 {
                     await db.ExecuteReaderAsync(async reader =>
                     {
@@ -59,7 +59,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetStatesAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var builder = new IO.Writer())
+            using (var builder = new Streams.Writer())
             {
                 var commandText = """
                     select stateid, name
@@ -84,7 +84,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetCitiesAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var builder = new IO.Writer())
+            using (var builder = new Streams.Writer())
             {
                 var commandText = """
                     select cityid, name
@@ -109,7 +109,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetDistrictsAscync(int id, IDBClient db)
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 var commandText = """
                 SELECT districtid, name
@@ -134,7 +134,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetVillagesAsync(int id, IDBClient db)
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 var commandText = """
                     SELECT villageid, name

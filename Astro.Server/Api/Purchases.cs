@@ -22,7 +22,7 @@ namespace Astro.Server.Api
         {
             if (context.Request.IsDesktopAppRequest())
             {
-                using (var writer = new IO.Writer())
+                using (var writer = new Streams.Writer())
                 {
                     writer.WriteBoolean(true);
                     writer.WriteString("Transaksi pembelian sukses disimpan");
@@ -37,7 +37,7 @@ namespace Astro.Server.Api
                         (@id, @purchase_date, @supplier_id, @bruto, @discount, @cost, @tax, @tax_rate, @netto, @paid_amount, @paid_method_count, @user_id, @created_date);
                     """);
                 using (var stream = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Streams.Reader(stream))
                 {
                     var purchaseId = reader.ReadGuid();
                     var invoiceNumber = await db.ExecuteScalarAsync<string>("SELECT invoice_number FROM purchases WHERE purchase_id = @id", db.CreateParameter("id", purchaseId, DbType.Guid));
@@ -122,7 +122,7 @@ namespace Astro.Server.Api
             if (context.Request.IsDesktopAppRequest())
             {
                 using (var stream = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Streams.Reader(stream))
                 {
                     var dateStart = reader.ReadDateTime();
                     var dateEnd = reader.ReadDateTime();
@@ -135,7 +135,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetPurchaseItemByIdAsync(PurchaseItemRequest req, IDBClient db, HttpContext context)
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 var commandText = """
                     SELECT p.product_id, p.product_name, p.product_sku, u.unit_name, i.buyprice
@@ -169,7 +169,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetPurchaseItemBySkuAsync(PurchaseItemRequest req, IDBClient db, string sku)
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 var commandText = """
                     SELECT p.product_id, p.product_name, p.product_sku, u.unit_name, i.buyprice

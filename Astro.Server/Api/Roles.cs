@@ -22,14 +22,12 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            var isWinformApp = context.Request.IsDesktopAppRequest();
-            if (isWinformApp) return Results.File(await db.GetRoleDataTable(), "application/octet-stream");
-            else
-            {
-                var sb = new StringBuilder();
-                await sb.AppendRoleTableAsync(db);
-                return Results.Content(sb.ToString(), "text/html");
-            }
+            var commandText = """
+                SELECT r.roleid, r.name, CASE WHEN r.creatorid = 0 THEN 'System' else c.fullname END AS creator, r.createddate
+                FROM roles AS r
+                LEFT JOIN employees AS c ON r.creatorid = c.employeeid
+                """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         internal static async Task<IResult> GetByIdAsync(IDBClient db, short id, HttpContext context)
         {
@@ -38,7 +36,7 @@ namespace Astro.Server.Api
 
             Role? role = null;
             var commandText = """
-                select role_id, role_name
+                select roleid, rolename
                 from roles
                 where role_id = @id;
                 """;

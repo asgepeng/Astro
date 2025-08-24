@@ -22,7 +22,7 @@ namespace Astro.Server.Api
         }
         private static async Task<bool> CategoryNameExists(Category category, IDBClient db)
         {
-            var commandText = "select 1 from categories where category_name = @name and is_deleted = false and category_id != @id";
+            var commandText = "select 1 from categories where name = @name and isdeleted = false and categoryid != @id";
             var parameters = new DbParameter[]
             {
                 db.CreateParameter("name", category.Name, DbType.String),
@@ -33,11 +33,14 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetAllAsync(IDBClient db, HttpContext context)
         {
-            if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetCategoryDataTable(), "application/octet-stream");
-
-            var sb = new StringBuilder();
-            await sb.AppendCategoryTableAsync(db);
-            return Results.Content(sb.ToString(), "text/html");
+            var commandText = """
+                    SELECT c.categoryid, c.name, c.createddate, u.fullname
+                    FROM categories AS c
+                    INNER JOIN employees AS u on c.creatorid = u.employeeid
+                    WHERE c.isdeleted = false
+                    ORDER BY c.name
+                    """;
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {

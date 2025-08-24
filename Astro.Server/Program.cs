@@ -50,6 +50,8 @@ app.MapUnitEndPoints();
 
 app.MapSupplierEndPoints();
 app.MapCustomerEndPoints();
+app.MapEmployeeIendPoints();
+
 app.MapAccountEndPoints();
 app.MapAccountProviderEndPoints();
 

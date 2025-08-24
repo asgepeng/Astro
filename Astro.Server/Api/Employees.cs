@@ -17,12 +17,13 @@ namespace Astro.Server.Api
     {
         internal static void MapEmployeeIendPoints(this WebApplication app)
         {
+            app.MapGet("/data/employees", GetEmployeesAsync).RequireAuthorization();
             app.MapPost("/data/employees", HandlePostAsync).RequireAuthorization();
         }
         private static async Task<IResult> HandlePostAsync(IDBClient db, HttpContext context)
         {
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Streams.Reader(stream))
             {
                 var type = reader.ReadByte();
                 if (type == (byte)0)
@@ -42,17 +43,14 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetEmployeesAsync(IDBClient db, HttpContext context)
         {
-            using (var writer = new IO.Writer())
-            {
-                var commandText = """
-                SELECT * FROM employees
+            var commandText = """
+                SELECT e.fullname, e.streetaddress, e.email, e.phone, r.name AS rolename, CASE e.creatorid WHEN 0 THEN 'System' ELSE c.fullname END AS creator, e.createddate
+                FROM employees AS e
+                INNER JOIN roles AS r ON e.roleid = r.roleid
+                LEFT JOIN employees AS c ON e.creatorid = c.employeeid
+                WHERE e.isdeleted = false
                 """;
-                await db.ExecuteReaderAsync(async reader =>
-                {
-                    await writer.WriteDataTableAsync(reader);
-                }, commandText);
-                return Results.File(writer.ToArray(), "application/octet-stream");
-            }
+            return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
         }
         private static async Task<IResult> CreateAsync(Employee employee, IDBClient db, HttpContext context)
         {
@@ -74,7 +72,8 @@ namespace Astro.Server.Api
                     terminationdate,
                     payrolldate,
                     payrollmethod,
-                    notes
+                    notes,
+                    creatorid
                 ) VALUES (
                     @fullname,
                     @placeofbirth,
@@ -92,7 +91,8 @@ namespace Astro.Server.Api
                     @terminationdate,
                     @payrolldate,
                     @payrollmethod,
-                    @notes
+                    @notes,
+                    @creator
                 );
                 """;
             var parameters = new DbParameter[]

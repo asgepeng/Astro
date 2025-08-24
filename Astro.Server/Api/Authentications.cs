@@ -77,7 +77,7 @@ namespace Astro.Server.Api
 
             if (context.Request.IsDesktopAppRequest())
             {
-                using (var writer =new IO.Writer())
+                using (var writer =new Streams.Writer())
                 {
                     var commandText = """
                         SELECT e.fullname, e.roleid, r.name AS rolename
@@ -193,7 +193,7 @@ namespace Astro.Server.Api
             if (context.Request.IsDesktopAppRequest()) return Results.File(await db.GetUserPermissions(roleId), "application.octet-stream");
 
             var commandText = """
-                SELECT s.sectionid, s.title, m.menuid, m.title AS menutitle, rtm.allowcreate, rtm.allowread, rtm.allowupdate, rtm.allowdelete
+                SELECT s.sectionid, s.title, m.icon, m.menuid, m.title AS menutitle, rtm.allowcreate, rtm.allowread, rtm.allowupdate, rtm.allowdelete
                 FROM rolemenus rtm INNER JOIN
                     menus m ON rtm.menuid = m.menuid INNER JOIN
                     sections s ON m.sectionid = s.sectionid
@@ -379,7 +379,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetUserLocationsAsync(IDBClient db, HttpContext context)
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 var iCount = 0;
                 await db.ExecuteReaderAsync(async reader =>

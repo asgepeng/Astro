@@ -21,7 +21,7 @@ namespace Astro.Server.Api
         {
             var commandText = string.Empty;
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Streams.Reader(stream))
             {
                 var guid = reader.ReadGuid();
                 if (guid is null) return Results.BadRequest("Bad request: missing GUID.");
@@ -31,7 +31,7 @@ namespace Astro.Server.Api
                 commandText = encrypted.Decrypt(key);
             }
             var data = Array.Empty<byte>();
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
