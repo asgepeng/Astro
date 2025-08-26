@@ -30,4 +30,12 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="IO\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Astro.Stream\Astro.Stream.csproj" />
+  </ItemGroup>
 </Project>

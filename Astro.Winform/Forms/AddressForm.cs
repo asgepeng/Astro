@@ -108,7 +108,7 @@ namespace Astro.Winform.Forms
             else
             {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/states/360"))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var stateCount = reader.ReadInt32();
                     for (int i=0; i < stateCount; i++)
@@ -123,7 +123,7 @@ namespace Astro.Winform.Forms
                     }
                 }
                 using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + this.Address.StateOrProvince.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var cityCount = reader.ReadInt32();
                     for (int i=0; i < cityCount; i++)
@@ -139,7 +139,7 @@ namespace Astro.Winform.Forms
                 }
 
                 using (var stream = await WClient.GetStreamAsync("/data/regions/districts/" + this.Address.City.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var districtCount = reader.ReadInt32();
                     for (int i = 0; i < districtCount; i++)
@@ -154,7 +154,7 @@ namespace Astro.Winform.Forms
                     }
                 }
                 using (var stream = await WClient.GetStreamAsync("/data/regions/villages/" + this.Address.District.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var villageCount = reader.ReadInt32();
                     for (int i = 0; i < villageCount; i++)
@@ -187,7 +187,7 @@ namespace Astro.Winform.Forms
             if (this.stateComboBox.SelectedItem is Province province)
             {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + province.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var cityCount = reader.ReadInt32();
                     for (int i = 0; i < cityCount; i++)
@@ -215,7 +215,7 @@ namespace Astro.Winform.Forms
             if (this.cityComboBox.SelectedItem is City city)
             {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/districts/" + city.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var districtCount = reader.ReadInt32();
                     for (int i = 0; i < districtCount; i++)
@@ -241,7 +241,7 @@ namespace Astro.Winform.Forms
             if (districtComboBox.SelectedItem is District district)
             {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/villages/" + district.Id.ToString()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var villageCount = reader.ReadInt32();
                     for (int i = 0; i < villageCount; i++)

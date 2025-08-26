@@ -55,6 +55,7 @@
             searchLabel = new ToolStripLabel();
             toolStripButton1 = new ToolStripButton();
             sqlButton = new ToolStripButton();
+            test = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)navigator).BeginInit();
             navigator.SuspendLayout();
             SuspendLayout();
@@ -91,7 +92,7 @@
             navigator.GripMargin = new Padding(0);
             navigator.GripStyle = ToolStripGripStyle.Hidden;
             navigator.ImageScalingSize = new Size(24, 24);
-            navigator.Items.AddRange(new ToolStripItem[] { locationLabel, locationComboBox, refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1, sqlButton });
+            navigator.Items.AddRange(new ToolStripItem[] { locationLabel, locationComboBox, refreshButton, addNewButton, deleteButton, spr1, firstRowButton, previousRow, posTextBox, countLabel, spr2, nextRowButton, lastRecordButton, spr3, categortButton, unitButton, apButton, searchTextBox, searchLabel, toolStripButton1, sqlButton, test });
             navigator.Location = new Point(0, 24);
             navigator.MoveFirstItem = firstRowButton;
             navigator.MoveLastItem = lastRecordButton;
@@ -279,6 +280,16 @@
             sqlButton.Text = "Sql Execute";
             sqlButton.Click += sqlButton_Click;
             // 
+            // test
+            // 
+            test.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            test.Image = (Image)resources.GetObject("test.Image");
+            test.ImageTransparentColor = Color.Magenta;
+            test.Name = "test";
+            test.Size = new Size(28, 28);
+            test.Text = "toolStripButton2";
+            test.Click += test_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -328,5 +339,6 @@
         private ToolStripButton sqlButton;
         private ToolStripLabel locationLabel;
         private ToolStripComboBox locationComboBox;
+        private ToolStripButton test;
     }
 }

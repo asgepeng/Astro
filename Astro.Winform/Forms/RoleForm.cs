@@ -1,6 +1,7 @@
 ﻿using Astro.Models;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
+using ExCSS;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,8 +22,33 @@ namespace Astro.Winform.Forms
         }
         public Role? Role { get; set; }
 
-        private void HandleFormLoad(object sender, EventArgs e)
+        private async void HandleFormLoad(object sender, EventArgs e)
         {
+            using (var stream = await WClient.GetStreamAsync("/data/roles/" + (Tag is null ? "0" : Tag.ToString())))
+            using (var r = new Astro.Streams.Reader(stream))
+            {
+                Role = new Role();
+                var roleExists = r.ReadBoolean();
+                if (roleExists)
+                {
+                    Role.Id = r.ReadInt16();
+                    Role.Name = r.ReadString();
+                }
+                var iCount = r.ReadInt32();
+                while (iCount > 0)
+                {
+                    Role.Permissions.Add(new Permission()
+                    {
+                        Id = r.ReadInt16(),
+                        Name = "☰ " + r.ReadString(),
+                        AllowCreate = r.ReadBoolean(),
+                        AllowRead = r.ReadBoolean(),
+                        AllowEdit = r.ReadBoolean(),
+                        AllowDelete = r.ReadBoolean()
+                    });
+                    iCount--;
+                }
+            }
             if (Role != null)
             {
                 this.rolenameTextBox.Text = Role.Name;

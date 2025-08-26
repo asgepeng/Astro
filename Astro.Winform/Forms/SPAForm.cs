@@ -1,25 +1,26 @@
-﻿using Astro.Drawing.Extensions;
-using Astro.Forms.Controls;
+﻿using Astro.Forms.Controls;
 using Astro.Winform.Classes;
 using Astro.Winform.Controls;
-using Astro.Winform.Forms;
-using Astro.Winform.UserControls;
+using Astro.Winform.Extensions;
+using Svg;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Astro.Drawing.Extensions;
 
-namespace Astro.Winform
+namespace Astro.Winform.Forms
 {
-    public partial class StyledForm : Form
+    public partial class SPAForm : Form
     {
+        #region Winform
         private const int WM_NCLBUTTONDOWN = 0xA1;
         private const int HTCAPTION = 0x2;
         private const int HTCLIENT = 1;
@@ -29,6 +30,12 @@ namespace Astro.Winform
         private const uint TPM_RETURNCMD = 0x0100;
         private const uint TPM_RIGHTBUTTON = 0x0002;
         private const uint WM_SYSCOMMAND = 0x0112;
+
+        private const int AW_SLIDE = 0x00040000;
+        private const int AW_HIDE = 0x00010000;
+        private const int AW_BLEND = 0x00080000;
+        private const int AW_HOR_NEGATIVE = 0x00000002;
+        private const int AW_VER_NEGATIVE = 0x00000008;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
@@ -52,6 +59,9 @@ namespace Astro.Winform
         private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
         [DllImport("user32.dll")]
         private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("user32.dll")]
+        private static extern bool AnimateWindow(IntPtr hwnd, int dwTime, int dwFlags);
+
         public struct MARGINS
         {
             public int cxLeftWidth;
@@ -145,23 +155,22 @@ namespace Astro.Winform
                 case WM_LBUTTONDOWN:
                     {
                         Point pos = this.PointToClient(Cursor.Position);
-                        var hButtonLoc = this.ClientSize.Width - 144;
+                        var hButtonLoc = this.ClientSize.Width - 120;
                         if (pos.Y <= 40 && pos.X > hButtonLoc)
                         {
-                            this.topNavigator.ResetHover();
                             if (pos.X > hButtonLoc)
                             {
-                                if (pos.X <= hButtonLoc + 48)
+                                if (pos.X <= hButtonLoc + 40)
                                 {
                                     this.WindowState = FormWindowState.Minimized;
                                     return;
                                 }
-                                else if (pos.X <= hButtonLoc + 96)
+                                else if (pos.X <= hButtonLoc + 80)
                                 {
                                     ToggleMaximize();
                                     return;
                                 }
-                                else if (pos.X <= hButtonLoc + 144)
+                                else if (pos.X <= hButtonLoc + 120)
                                 {
                                     this.Close();
                                     return;
@@ -275,85 +284,106 @@ namespace Astro.Winform
                 Marshal.StructureToPtr(mmi, lParam, true);
             }
         }
-
-
-        private ToolTip toolTipGlobal;
-        private SideBar leftSideBar;
-        private Header topNavigator;
-        private MenuPanel menuPanel;
-        private VirtualControlCollection VirtualControls { get; } = new VirtualControlCollection();
-        public StyledForm()
+        private void ToggleMaximize()
+        {
+            if (this.WindowState == FormWindowState.Maximized)
+                this.WindowState = FormWindowState.Normal;
+            else
+                this.WindowState = FormWindowState.Maximized;
+        }
+        #endregion Winform
+        #region Members
+        private Point _mousePoint;
+        #endregion
+        public SPAForm()
         {
             InitializeComponent();
-            toolTipGlobal = new ToolTip();
-            this.DoubleBuffered = true;
-            this.SetStyle(ControlStyles.UserPaint |
-                          ControlStyles.AllPaintingInWmPaint |
-                          ControlStyles.OptimizedDoubleBuffer |
-                          ControlStyles.StandardDoubleClick, true);
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint
+                    | ControlStyles.UserPaint
+                    | ControlStyles.ResizeRedraw
+                    | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
-
-            //Top Navigator
-            this.topNavigator = new Header();
-
-            //Navigator
-            this.leftSideBar = new SideBar();
-
-            //Menu Panel
-            this.menuPanel = new MenuPanel();
-
-            this.VirtualControls.Add(topNavigator);
-            this.VirtualControls.Add(leftSideBar);
-            this.VirtualControls.Add(menuPanel);
         }
-        protected override async void OnLoad(EventArgs e)
+        private async void SPAForm_Load(object sender, EventArgs e)
         {
-            base.OnLoad(e);
-            var login = new LoginForm();
-            if (login.ShowDialog() == DialogResult.OK)
+            var home = sideBarPanel.Groups.Add("HOME");
+            home.Selected = true;
+            var dashboard = home.Items.Add(0, "Dashboard");
+            dashboard.Selected = true;
+            dashboard.Image = """
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3"  y="3"  width="8" height="8" rx="2" stroke="#fff" stroke-width="2"/>
+                  <rect x="13" y="3"  width="8" height="5" rx="2" stroke="#fff" stroke-width="2"/>
+                  <rect x="13" y="10" width="8" height="11" rx="2" stroke="#fff" stroke-width="2"/>
+                  <rect x="3"  y="13" width="8" height="8" rx="2" stroke="#fff" stroke-width="2"/>
+                </svg>                
+                """.ToImage();
+            using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
-                this.WindowState = FormWindowState.Maximized;
-                ApplyShadow();
-                using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
-                using (var reader = new Astro.Streams.Reader(stream))
+                var sectionLength = reader.ReadInt32();
+                while (sectionLength > 0)
                 {
-                    var sectionLength = reader.ReadInt32();
-                    while (sectionLength > 0)
+                    var sectionID = reader.ReadInt16();
+                    var sectionName = reader.ReadString();
+                    var parent = new Models.Section() { Title = sectionName };
+                    var group = sideBarPanel.Groups.Add(sectionName);
+                    int menuLength = reader.ReadInt32();
+                    while (menuLength > 0)
                     {
-                        var sectionID = reader.ReadInt16();
-                        var sectionName = reader.ReadString();
-                        var parent = new Models.Section() { Title = sectionName };
-                        menuPanel.Items.Add(parent);
-                        leftSideBar.Items.Add(parent.Title, global::Astro.Winform.Properties.Resources.data);
-                        int menuLength = reader.ReadInt32();
-                        int x = menuPanel.Bounds.X + 10, y = menuPanel.Bounds.Y + 50, w = menuPanel.Width - 20;
-                        while (menuLength > 0)
+                        var menuID = reader.ReadInt16();
+                        var menuTitle = reader.ReadString();
+                        var svg = reader.ReadString();
+                        
+                        var allowAdd = reader.ReadBoolean();
+                        var allowEdit = reader.ReadBoolean();
+                        var allowUpdate = reader.ReadBoolean();
+                        var allowDelete = reader.ReadBoolean();
+
+                        var menu = group.Items.Add(menuID, menuTitle);
+                        menu.SetUserAccess(allowAdd, allowEdit, allowUpdate, allowDelete);
+                        if (!string.IsNullOrWhiteSpace(svg))
                         {
-                            var menuID = reader.ReadInt16();
-                            var menuTitle = reader.ReadString();
-                            var menuIdentifier = reader.ReadInt32();
-                            var menu = new Models.Menu()
-                            {
-                                Id = menuID,
-                                Title = menuTitle,
-                                Bounds = new Rectangle(x, y, w, 40)
-                            };
-                            parent.Items.Add(menu);
-                            y += 40;
-                            menuLength--;
+                            menu.Image = svg.ToImage();
                         }
-                        sectionLength--;
+                        switch (menu.Id)
+                        {
+                            case 2:
+                                menu.Type = ListingData.Roles;
+                                menu.URL = "/data/roles";
+                                break;
+                            case 6:
+                                menu.Type = ListingData.Products;
+                                menu.URL = "/data/products";
+                                break;
+                            case 7:
+                                menu.Type = ListingData.Customers;
+                                menu.URL = "/data/customers";
+                                break;
+                            case 8:
+                                menu.Type = ListingData.Suppliers;
+                                menu.URL = "/data/suppliers";
+                                break;
+                            case 9:
+                                menu.Type = ListingData.Employee;
+                                menu.URL = "/data/employees";
+                                break;
+                            case 10:
+                                menu.Type = ListingData.Accounts;
+                                menu.URL = "/data/accounts";
+                                break;
+                        }
+                        menuLength--;
                     }
-                    if (leftSideBar.Items.Count> 0) leftSideBar.SelectedIndex = 0;
-                    if (menuPanel.Items.Count > 0) menuPanel.SelectedIndex = 0;
-                    this.Invalidate();
+                    sectionLength--;
                 }
+                this.sideBarPanel.RecalculateContent();
             }
-            else
-            {
-                this.Close();
-            }
+            this.WindowState = FormWindowState.Maximized;
+            ApplyShadow();
         }
+        #region Protected Area
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -364,147 +394,108 @@ namespace Astro.Winform
                 SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
             }
         }
-        private void ToggleMaximize()
-        {
-            if (this.WindowState == FormWindowState.Maximized)
-                this.WindowState = FormWindowState.Normal;
-            else
-                this.WindowState = FormWindowState.Maximized;
-        }
         protected override void OnPaint(PaintEventArgs e)
         {
-            this.topNavigator.IsMaximized = this.WindowState == FormWindowState.Maximized;
-            foreach (var item in this.VirtualControls)
+            base.OnPaint(e);
+            var brandRect = new Rectangle(0, 0, this.sideBarPanel.Width, this.Padding.Top);
+            var image = global::Astro.Winform.Properties.Resources.logo_bizmate;
+            var imageRectangle = new Rectangle(15, 8, 100, this.Padding.Top - 20);
+            using (var backBrush = new SolidBrush(this.sideBarPanel.BackColor))
             {
-                item.Draw(e.Graphics);
+                e.Graphics.FillRectangle(backBrush, brandRect);
             }
-        }
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            base.OnPaintBackground(e);
-            e.Graphics.DrawRectangle(Pens.Gainsboro, new Rectangle(0, 0, this.ClientSize.Width, this.ClientSize.Height));
-            var rect = new Rectangle(47, 40, this.ClientSize.Width - 48, this.ClientSize.Height - 40);
-            using (Brush fillColor = new SolidBrush(Color.FromArgb(250, 250, 250)))
-            using (Pen pen = new Pen(Color.Gainsboro))
-            {
-                e.Graphics.DrawTopLeftRoundedRectangle(rect, 8, fillColor, pen);
-                //e.Graphics.DrawLine(pen, new Point(menuPanel.Width + 48, 40), new Point(menuPanel.Width + 48, this.ClientSize.Height));
-            }
-        }
-        protected override void OnResize(EventArgs e)
-        {
-            if (leftSideBar != null) leftSideBar.MainFormResize(this.ClientSize);
-            if (topNavigator != null) topNavigator.MainFormResize(this.ClientSize);
-            if (menuPanel != null) menuPanel.MainFormResize(this.ClientSize);
+            e.Graphics.DrawImage(image, imageRectangle);
+            var textRect = new Rectangle(this.sideBarPanel.Width + 5, 0, 220, this.Padding.Top);
+            var sf = new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
+            e.Graphics.DrawString(this.Text, new Font("Segoe UI", 15.75F, FontStyle.Regular), Brushes.Black, textRect);
 
-            this.Invalidate();
-            base.OnResize(e);
+            var minimizeButton = new Rectangle(this.ClientSize.Width - 126, 0, 40, 24);
+            var maximizeButton = new Rectangle(this.ClientSize.Width - 83, 0, 40, 24);
+            var closeButton = new Rectangle(this.ClientSize.Width - 40, 0, 40, 24);
+            e.Graphics.DrawString("_", this.Font, Brushes.Black, minimizeButton, sf);
+            e.Graphics.DrawString("[]", this.Font, Brushes.Black, maximizeButton, sf);
+            if (closeButton.Contains(_mousePoint))
+            {
+                e.Graphics.FillRectangle(Brushes.Red, closeButton);
+            }
+            e.Graphics.DrawString("X", this.Font, Brushes.Black, closeButton, sf);
         }
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            if (leftSideBar.Bounds.Contains(e.Location))
+            var buttonArea = new Rectangle(this.ClientRectangle.Width - 126, 0, 126, 24);
+            if (buttonArea.Contains(e.Location))
             {
-                var anyHovered = leftSideBar.GetHoveredItem(e.Location);
-                if (anyHovered != null)
-                {
-                    if (anyHovered.Hovered)
-                    {
-                        this.toolTipGlobal.ToolTipTitle = anyHovered.Text;
-                        this.toolTipGlobal.Show(anyHovered.Text, this, new Point(anyHovered.Bounds.X + anyHovered.Bounds.Width + 10, anyHovered.Bounds.Y));
-                    }
-                    this.Invalidate(this.leftSideBar.Bounds);
-                }
-            }
-            else if (topNavigator.Bounds.Contains(e.Location))
-            {
-                var buttonHovered = topNavigator.GetHoveredButton(e.Location);
-                this.Invalidate(topNavigator.Bounds);
-            }
-            else if (menuPanel.Bounds.Contains(e.Location))
-            {
-                menuPanel.OnMouseMove(e.Location);
-                Invalidate(menuPanel.Bounds);
-            }
-            if (!leftSideBar.Items.AnyHoveredItem())
-            {
-                this.toolTipGlobal.Hide(this);
+                this._mousePoint = e.Location;
+                this.Invalidate(buttonArea);
             }
         }
-        protected override void OnMouseClick(MouseEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (leftSideBar.Bounds.Contains(e.Location))
-            {
-                var selected = leftSideBar.GetSelectedItem(e.Location);
-                if (selected != null)
-                {
-                    this.menuPanel.SelectedIndex = selected.Index;
-                    this.Invalidate(leftSideBar.Bounds);
-                    this.Invalidate(menuPanel.Bounds);
+            // tambahkan animasi close
+            AnimateWindow(this.Handle, 300, AW_BLEND | AW_HIDE);
+            base.OnFormClosing(e);
+        }
+        #endregion Protected Area
 
-                    var selectedItem = menuPanel.GetSelectedItem();
-                    if (selectedItem != null)
-                    {
-                        var control = this.FindControl(selectedItem.Id.ToString());
-                        if (control != null)
-                        {
-                            control.BringToFront();
-                            return;
-                        }
-                        this.AddControl(selectedItem.Id);
-                    }
-                    else
-                    {
-                        this.Controls.Clear();
-                    }
-                }
-            }
-            else if (menuPanel.Bounds.Contains(e.Location))
-            {
-                var clicked = menuPanel.GetClickedItem(e.Location);
-                if (clicked != null)
-                {
-                    var control = this.FindControl(clicked.Id.ToString());
-                    if (control != null)
-                    {
-                        control.BringToFront();
-                        return;
-                    }
-                    this.AddControl(clicked.Id);
-                    this.Invalidate(menuPanel.Bounds);
-                }
-            }
-        }
-        private void AddControl(short id)
+        private void sideBarPanel_Click(object sender, EventArgs e)
         {
-            if (id == 6)
-            {
 
-            }
-            else if (id == 13)
-            {
-                var purchase = new PurchaseControl();
-                purchase.Name = id.ToString();
-                purchase.Size = new Size(this.ClientSize.Width - this.menuPanel.Width - 49, this.ClientSize.Height - 41);
-                purchase.Location = new Point(this.menuPanel.Width + 48 + 1, 41);
-                purchase.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom | AnchorStyles.Right;
-                this.Controls.Add(purchase);
-                purchase.BringToFront();
-            }
-            else
-            {
-                this.Controls.Clear();
-            }
         }
-        private Control? FindControl(string key)
+        private Control? GetControl(string key)
         {
-            var ctrls = this.Controls.Find(key, false);
+            var ctrls = this.mainPanel.Controls.Find(key, false);
             if (ctrls.Length > 0) return ctrls[0];
             return null;
         }
-        protected override void OnMouseLeave(EventArgs e)
+        private async void sideBarPanel_MouseClick(object sender, MouseEventArgs e)
         {
-            base.OnMouseLeave(e);
-            this.topNavigator.ResetHover();
+            if (sideBarPanel.SelectedItem != null)
+            {
+                this.Text = sideBarPanel.SelectedItem.Title;
+                var headerArea = new Rectangle(0, 0, this.ClientSize.Width, 40);
+                this.Invalidate(headerArea);
+                Control? ctrl = GetControl(sideBarPanel.SelectedItem.Id.ToString());
+                if (ctrl != null)
+                {
+                    ctrl.BringToFront();
+                    if (ctrl is ListingControl listing)
+                    {
+                        await listing.ReloadDataTable();
+                    }
+                    return;
+                }
+                switch (sideBarPanel.SelectedItem.Id)
+                {
+                    case 1:
+                        //ctrl = new ListingControl(ListingData.Users, "/data/users");
+                        break;
+                    case 2:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                    case 6:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                    case 7:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                    case 8:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                    case 9:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                    case 10:
+                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
+                        break;
+                }
+                if (ctrl != null)
+                {
+                    ctrl.Name = sideBarPanel.SelectedItem.Id.ToString();
+                    ctrl.Dock = DockStyle.Fill;
+                    this.mainPanel.Controls.Add(ctrl);
+                    ctrl.BringToFront();
+                }
+            }
         }
     }
 }

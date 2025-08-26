@@ -21,4 +21,8 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Astro.Stream\Astro.Stream.csproj" />
+  </ItemGroup>
+
 </Project>

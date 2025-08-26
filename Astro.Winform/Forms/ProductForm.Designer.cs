@@ -66,9 +66,13 @@
             button2 = new Button();
             label4 = new Label();
             tabControl = new TabControl();
+            checkBox1 = new CheckBox();
+            numericUpDown1 = new NumericUpDown();
+            label8 = new Label();
             ((System.ComponentModel.ISupportInitialize)productImage).BeginInit();
             commanTabPage.SuspendLayout();
             tabControl.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             SuspendLayout();
             // 
             // tabPage1
@@ -85,7 +89,7 @@
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(19, 289);
+            label9.Location = new Point(19, 309);
             label9.Name = "label9";
             label9.Size = new Size(86, 17);
             label9.TabIndex = 106;
@@ -93,11 +97,11 @@
             // 
             // stockTextBox
             // 
-            stockTextBox.Location = new Point(150, 283);
+            stockTextBox.Location = new Point(150, 303);
             stockTextBox.MaxLength = 15;
             stockTextBox.Name = "stockTextBox";
             stockTextBox.Size = new Size(120, 25);
-            stockTextBox.TabIndex = 105;
+            stockTextBox.TabIndex = 7;
             // 
             // button4
             // 
@@ -115,11 +119,13 @@
             // 
             button3.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button3.FlatStyle = FlatStyle.Flat;
+            button3.Font = new Font("Segoe UI Symbol", 9.75F);
+            button3.ForeColor = Color.MidnightBlue;
             button3.Location = new Point(893, 401);
             button3.Name = "button3";
-            button3.Size = new Size(26, 26);
+            button3.Size = new Size(26, 25);
             button3.TabIndex = 103;
-            button3.Text = "▶";
+            button3.Text = "⏩";
             button3.UseVisualStyleBackColor = true;
             button3.Click += button3_Click;
             // 
@@ -148,7 +154,7 @@
             // isactiveCheckBox
             // 
             isactiveCheckBox.AutoSize = true;
-            isactiveCheckBox.Location = new Point(150, 391);
+            isactiveCheckBox.Location = new Point(150, 405);
             isactiveCheckBox.Name = "isactiveCheckBox";
             isactiveCheckBox.Size = new Size(95, 21);
             isactiveCheckBox.TabIndex = 11;
@@ -158,7 +164,7 @@
             // label11
             // 
             label11.AutoSize = true;
-            label11.Location = new Point(310, 369);
+            label11.Location = new Point(310, 374);
             label11.Name = "label11";
             label11.Size = new Size(92, 17);
             label11.TabIndex = 26;
@@ -166,11 +172,11 @@
             // 
             // maxstockTextBox
             // 
-            maxstockTextBox.Location = new Point(430, 360);
+            maxstockTextBox.Location = new Point(430, 365);
             maxstockTextBox.MaxLength = 15;
             maxstockTextBox.Name = "maxstockTextBox";
             maxstockTextBox.Size = new Size(120, 25);
-            maxstockTextBox.TabIndex = 9;
+            maxstockTextBox.TabIndex = 12;
             // 
             // label10
             // 
@@ -187,12 +193,12 @@
             minstockTextBox.MaxLength = 15;
             minstockTextBox.Name = "minstockTextBox";
             minstockTextBox.Size = new Size(120, 25);
-            minstockTextBox.TabIndex = 8;
+            minstockTextBox.TabIndex = 11;
             // 
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new Point(310, 289);
+            label7.Location = new Point(310, 309);
             label7.Name = "label7";
             label7.Size = new Size(93, 17);
             label7.TabIndex = 16;
@@ -201,16 +207,17 @@
             // unitComboBox
             // 
             unitComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            unitComboBox.Location = new Point(430, 283);
+            unitComboBox.Location = new Point(430, 303);
             unitComboBox.Name = "unitComboBox";
             unitComboBox.Size = new Size(120, 25);
-            unitComboBox.TabIndex = 4;
+            unitComboBox.TabIndex = 10;
             // 
             // button6
             // 
             button6.BackColor = Color.FromArgb(250, 250, 250);
             button6.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button6.FlatStyle = FlatStyle.Flat;
+            button6.ForeColor = Color.MidnightBlue;
             button6.Location = new Point(248, 517);
             button6.Name = "button6";
             button6.Size = new Size(173, 32);
@@ -223,6 +230,7 @@
             loginButton.BackColor = Color.FromArgb(250, 250, 250);
             loginButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             loginButton.FlatStyle = FlatStyle.Flat;
+            loginButton.ForeColor = Color.MidnightBlue;
             loginButton.Location = new Point(13, 517);
             loginButton.Name = "loginButton";
             loginButton.Size = new Size(103, 32);
@@ -254,7 +262,7 @@
             basicpriceTextBox.MaxLength = 15;
             basicpriceTextBox.Name = "basicpriceTextBox";
             basicpriceTextBox.Size = new Size(120, 25);
-            basicpriceTextBox.TabIndex = 100;
+            basicpriceTextBox.TabIndex = 8;
             basicpriceTextBox.TabStop = false;
             basicpriceTextBox.Enter += BasicPriceTextBoxEnter;
             basicpriceTextBox.Leave += BasicPriceTextBoxLeave;
@@ -262,7 +270,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(16, 369);
+            label3.Location = new Point(16, 374);
             label3.Name = "label3";
             label3.Size = new Size(87, 17);
             label3.TabIndex = 8;
@@ -270,11 +278,11 @@
             // 
             // priceTextBox
             // 
-            priceTextBox.Location = new Point(150, 360);
+            priceTextBox.Location = new Point(150, 365);
             priceTextBox.MaxLength = 15;
             priceTextBox.Name = "priceTextBox";
             priceTextBox.Size = new Size(120, 25);
-            priceTextBox.TabIndex = 6;
+            priceTextBox.TabIndex = 9;
             priceTextBox.Enter += BasicPriceTextBoxEnter;
             priceTextBox.Leave += BasicPriceTextBoxLeave;
             // 
@@ -333,6 +341,7 @@
             button5.BackColor = Color.FromArgb(250, 250, 250);
             button5.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button5.FlatStyle = FlatStyle.Flat;
+            button5.ForeColor = Color.MidnightBlue;
             button5.Location = new Point(122, 517);
             button5.Name = "button5";
             button5.Size = new Size(120, 32);
@@ -342,6 +351,9 @@
             // 
             // commanTabPage
             // 
+            commanTabPage.Controls.Add(label8);
+            commanTabPage.Controls.Add(numericUpDown1);
+            commanTabPage.Controls.Add(checkBox1);
             commanTabPage.Controls.Add(label5);
             commanTabPage.Controls.Add(typeComboBox);
             commanTabPage.Controls.Add(button10);
@@ -399,12 +411,13 @@
             typeComboBox.Location = new Point(150, 189);
             typeComboBox.Name = "typeComboBox";
             typeComboBox.Size = new Size(400, 25);
-            typeComboBox.TabIndex = 111;
+            typeComboBox.TabIndex = 4;
             // 
             // button10
             // 
             button10.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button10.FlatStyle = FlatStyle.Flat;
+            button10.Font = new Font("Segoe UI Symbol", 9.75F);
             button10.Location = new Point(672, 401);
             button10.Name = "button10";
             button10.Size = new Size(28, 26);
@@ -417,11 +430,13 @@
             // 
             button9.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button9.FlatStyle = FlatStyle.Flat;
+            button9.Font = new Font("Segoe UI Symbol", 9.75F);
+            button9.ForeColor = Color.MidnightBlue;
             button9.Location = new Point(576, 401);
             button9.Name = "button9";
             button9.Size = new Size(26, 26);
             button9.TabIndex = 109;
-            button9.Text = "◀";
+            button9.Text = "⏮";
             button9.UseVisualStyleBackColor = true;
             button9.Click += button9_Click;
             // 
@@ -429,11 +444,13 @@
             // 
             button8.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button8.FlatStyle = FlatStyle.Flat;
+            button8.Font = new Font("Segoe UI Symbol", 9.75F);
+            button8.ForeColor = Color.MidnightBlue;
             button8.Location = new Point(925, 401);
             button8.Name = "button8";
             button8.Size = new Size(26, 26);
             button8.TabIndex = 108;
-            button8.Text = "▶|";
+            button8.Text = "⏭";
             button8.UseVisualStyleBackColor = true;
             button8.Click += button8_Click;
             // 
@@ -441,6 +458,7 @@
             // 
             button7.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button7.FlatStyle = FlatStyle.Flat;
+            button7.Font = new Font("Segoe UI Symbol", 9.75F);
             button7.Location = new Point(640, 401);
             button7.Name = "button7";
             button7.Size = new Size(26, 26);
@@ -453,11 +471,13 @@
             // 
             button2.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button2.FlatStyle = FlatStyle.Flat;
+            button2.Font = new Font("Segoe UI Symbol", 9.75F);
+            button2.ForeColor = Color.MidnightBlue;
             button2.Location = new Point(608, 401);
             button2.Name = "button2";
             button2.Size = new Size(26, 26);
             button2.TabIndex = 102;
-            button2.Text = "◀";
+            button2.Text = "⏪";
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
             // 
@@ -483,6 +503,32 @@
             tabControl.Size = new Size(979, 485);
             tabControl.TabIndex = 8;
             // 
+            // checkBox1
+            // 
+            checkBox1.AutoSize = true;
+            checkBox1.Location = new Point(150, 225);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(165, 21);
+            checkBox1.TabIndex = 5;
+            checkBox1.Text = "Produk dikenakan pajak";
+            checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // numericUpDown1
+            // 
+            numericUpDown1.Location = new Point(150, 252);
+            numericUpDown1.Name = "numericUpDown1";
+            numericUpDown1.Size = new Size(56, 25);
+            numericUpDown1.TabIndex = 6;
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Location = new Point(19, 254);
+            label8.Name = "label8";
+            label8.Size = new Size(61, 17);
+            label8.TabIndex = 115;
+            label8.Text = "Nilai DPP";
+            // 
             // ProductForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -504,6 +550,7 @@
             commanTabPage.ResumeLayout(false);
             commanTabPage.PerformLayout();
             tabControl.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             ResumeLayout(false);
         }
 
@@ -547,5 +594,8 @@
         private Button button10;
         private Label label5;
         private ComboBox typeComboBox;
+        private CheckBox checkBox1;
+        private Label label8;
+        private NumericUpDown numericUpDown1;
     }
 }

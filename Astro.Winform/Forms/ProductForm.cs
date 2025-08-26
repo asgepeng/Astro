@@ -71,7 +71,7 @@ namespace Astro.Winform.Forms
             var productId = this.Tag != null ? this.Tag.ToString() : "0";
             this.DisableAllControls(true);
             using (var stream = await WClient.GetStreamAsync("/data/products/" + productId))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 if (stream is null || stream.Length == 0) return;
                 Product? product = null;
@@ -164,7 +164,7 @@ namespace Astro.Winform.Forms
             short.TryParse(maxstockTextBox.Text, out short maxStock);
 
             var productId = this.Model.Product != null ? this.Model.Product.ID : (short)0;
-            using (var writer = new IO.Writer())
+            using (var writer = new Astro.Streams.Writer())
             {
                 writer.WriteByte(1);
                 writer.WriteInt16(this.BranchId);

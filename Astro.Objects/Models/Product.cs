@@ -29,7 +29,7 @@ namespace Astro.Models
             COGs = reader.GetInt64(12);
             Images = reader.GetString(13);
         }
-        private Product(IO.Reader reader)
+        private Product(Streams.Reader reader)
         {
             ID = reader.ReadInt16();
             Name = reader.ReadString();
@@ -78,6 +78,6 @@ namespace Astro.Models
         public string Images { get; set; } = string.Empty;
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.Product);
         public static Product? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.Product);
-        public static Product Create(IO.Reader reader) => new Product(reader);
+        public static Product Create(Streams.Reader reader) => new Product(reader);
     }
 }

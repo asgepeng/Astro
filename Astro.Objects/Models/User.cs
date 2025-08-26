@@ -36,7 +36,7 @@ namespace Astro.Models
             PasswordExpirationDate = reader.IsDBNull(23) ? null : reader.GetDateTime(23);
             _passwordStored = reader.GetString(24);
         }
-        private User(IO.Reader reader)
+        private User(Streams.Reader reader)
         {
             Id = reader.ReadInt16();
             FirstName = reader.ReadString();
@@ -146,7 +146,7 @@ namespace Astro.Models
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.User);
         public static User? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.User);
         public static User Create(DbDataReader reader) => new User(reader);
-        public static User Create(IO.Reader reader) => new User(reader);
+        public static User Create(Streams.Reader reader) => new User(reader);
     }
 
     public class Password

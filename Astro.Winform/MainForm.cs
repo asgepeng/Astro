@@ -1,9 +1,10 @@
 using Astro.Models;
-using Astro.IO;
 using Astro.Winform.Classes;
 using Astro.Winform.Forms;
 using Astro.Winform.Helpers;
 using PointOfSale.Drawing;
+using Svg;
+using System.IO;
 
 namespace PointOfSale
 {
@@ -28,7 +29,7 @@ namespace PointOfSale
             if (form.ShowDialog() == DialogResult.OK)
             {
                 using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
-                using (var reader = new Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var sectionLength = reader.ReadInt32();
                     while (sectionLength > 0)
@@ -39,6 +40,16 @@ namespace PointOfSale
                         while (menuLength > 0)
                         {
                             var child = new ToolStripMenuItem() { Tag = reader.ReadInt16(), Text = reader.ReadString() };
+                            var svg = reader.ReadString();
+                            if (!string.IsNullOrWhiteSpace(svg))
+                            {
+                                SvgDocument doc;
+                                using (var str = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(svg)))
+                                {
+                                    doc = SvgDocument.Open<SvgDocument>(str);
+                                }
+                                child.Image = doc.Draw(24, 24);
+                            }
                             reader.ReadInt32();
 
                             child.Click += this.HandleMenuClicked;
@@ -109,6 +120,9 @@ namespace PointOfSale
                     break;
                 case 8:
                     OpenOrCreateListingForm(ListingData.Suppliers);
+                    break;
+                case 9:
+                    OpenOrCreateListingForm(ListingData.Employee);
                     break;
                 case 10:
                     OpenOrCreateListingForm(ListingData.Accounts);
@@ -235,6 +249,14 @@ namespace PointOfSale
         {
             var form = new SqlExecuteForm();
             form.ShowDialog();
+        }
+
+        private void test_Click(object sender, EventArgs e)
+        {
+            using (var form = new SPAForm())
+            {
+                form.ShowDialog();
+            }
         }
     }
 }

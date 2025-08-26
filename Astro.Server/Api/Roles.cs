@@ -121,12 +121,12 @@ namespace Astro.Server.Api
             sb.Append(""""
                 update roles
                 set 
-                    role_name = @rolename, 
-                    editor_id = @editor, 
-                    edited_date = current_timestamp
-                where role_id = @id;
-                insert into role_to_menus
-                    (role_id, menu_id, allow_create, allow_read, allow_update, allow_delete)
+                    name = @rolename, 
+                    editorid = @editor, 
+                    editeddate = current_timestamp
+                where roleid = @id;
+                insert into rolemenus
+                    (roleid, menuid, allowcreate, allowread, allowupdate, allowdelete)
                 values
                 """");
             var parameters = new List<DbParameter>
@@ -152,12 +152,12 @@ namespace Astro.Server.Api
                 parameters.Add(db.CreateParameter("d" + i, item.AllowDelete, DbType.Boolean));
             }
             sb.Append("""
-                on conflict (role_id, menu_id) 
+                on conflict (roleid, menuid) 
                 do update 
-                set allow_create = excluded.allow_create, 
-                    allow_read = excluded.allow_read, 
-                    allow_update = excluded.allow_update, 
-                    allow_delete = excluded.allow_delete;
+                set allowcreate = excluded.allowcreate, 
+                    allowread = excluded.allowread, 
+                    allowupdate = excluded.allowupdate, 
+                    allowdelete = excluded.allowdelete;
                 """);
             var success = await db.ExecuteNonQueryAsync(sb.ToString(), parameters.ToArray());
             return success ? Results.Ok(CommonResult.Ok("Role updated successfully.")) : Results.Problem("Failed to update role permissions.");

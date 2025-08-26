@@ -22,14 +22,38 @@ namespace Astro.Winform.Forms
         internal BindingSource BindingSource { get; } = new BindingSource();
         internal ListingData ListingType { get; } = ListingData.Users;
         private List<string> filters = new List<string>();
-
+        private readonly string sourceUrl;
         internal ListingForm(ListingData type)
         {
             InitializeComponent();
             this.ListingType = type;
+            switch (this.ListingType)
+            {
+                case ListingData.Roles:
+                    sourceUrl = "/data/roles";
+                    break;
+                case ListingData.Products:
+                    sourceUrl = "/data/products";
+                    break;
+                case ListingData.Suppliers:
+                    sourceUrl = "/data/suppliers";
+                    break;
+                case ListingData.Customers:
+                    sourceUrl = "/data/customers";
+                    break;
+                case ListingData.Accounts:
+                    sourceUrl = "/data/accounts";
+                    break;
+                case ListingData.Employee:
+                    sourceUrl = "/data/employees";
+                    break;
+                default:
+                    sourceUrl = "";
+                    break;
+            }
             InitializeGridColumns();
         }
-        private async Task<Form> CreatePopupDialog(short id = 0)
+        private async Task<Form> CreatePopupDialog(int id = 0)
         {
             var objectBuilder = new ObjectBuilder();
             switch (this.ListingType)
@@ -37,11 +61,11 @@ namespace Astro.Winform.Forms
                 case ListingData.Users:
                     var userForm = new UserForm()
                     {
-                        UserView = await objectBuilder.CreateUserViewModel(id)
+                        UserView = await objectBuilder.CreateUserViewModel((short)id)
                     };
                     return userForm;
                 case ListingData.Roles:
-                    var roleForm = new RoleForm() { Role = await objectBuilder.CreateRoleViewModel(id) };
+                    var roleForm = new RoleForm() { Role = await objectBuilder.CreateRoleViewModel((short)id) };
                     return roleForm;
                 case ListingData.Products:
                     var productForm = new ProductForm() { Tag = id };
@@ -60,7 +84,7 @@ namespace Astro.Winform.Forms
                     var supplierForm = new ContactForm() { Text = text };
                     if (id > 0)
                     {
-                        var contact = ListingType == ListingData.Suppliers ? await objectBuilder.CreateSupplier(id) : await objectBuilder.CreateCustomer(id);
+                        var contact = ListingType == ListingData.Suppliers ? await objectBuilder.CreateSupplier((short)id) : await objectBuilder.CreateCustomer((short)id);
                         if (contact != null) supplierForm.Contact = contact;
                     }
 
@@ -68,7 +92,7 @@ namespace Astro.Winform.Forms
                 case ListingData.Accounts:
                     var accountForm = new AccountForm()
                     {
-                        Model = await objectBuilder.CreateAccountViewModel(id)
+                        Model = await objectBuilder.CreateAccountViewModel((short)id)
                     };
                     return accountForm;
                 default:
@@ -96,12 +120,19 @@ namespace Astro.Winform.Forms
         }
         internal async Task LoadDataAsync()
         {
-            var table = GetDataTable();
-            await table.LoadAsync();
-            this.BindingSource.DataSource = table;
-            if (this.filters.Count == 0)
+            using (var stream = await WClient.GetStreamAsync(sourceUrl))
+            using (var reader = new Streams.Reader(stream))
             {
-                this.filters = table.GetStringColumns();
+                var result = reader.ReadByte();
+                if (result == 0x00)
+                {
+                    this.BindingSource.DataSource = null;
+                    return;
+                }
+                if (stream.Length > 0)
+                {
+                    this.BindingSource.DataSource = reader.ReadDataTable();
+                }
             }
         }
         internal async Task AddRecordAsync()
@@ -204,7 +235,7 @@ namespace Astro.Winform.Forms
                         new DataTableColumnInfo("Email Address", "email", 250, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Role", "role_name", 120),
                         new DataTableColumnInfo("Created By", "creator", 150),
-                        new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
+                        new DataTableColumnInfo("Created Date", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
                     break;
                 case ListingData.Roles:
@@ -212,7 +243,7 @@ namespace Astro.Winform.Forms
                     {
                         new DataTableColumnInfo("Role Name", "name", 300),
                         new DataTableColumnInfo("Created By", "creator", 200),
-                        new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
+                        new DataTableColumnInfo("Created Date", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
                     break;
                 case ListingData.Products:
@@ -221,12 +252,12 @@ namespace Astro.Winform.Forms
                         //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Name", "name", 300),
                         new DataTableColumnInfo("SKU", "sku", 100),
-                        new DataTableColumnInfo("Category", "category", 150),
+                        new DataTableColumnInfo("Category", "categoryname", 150),
                         new DataTableColumnInfo("Stock", "stock", 80, DataGridViewContentAlignment.MiddleRight, "N0"),
-                        new DataTableColumnInfo("Unit", "unit", 100),
+                        new DataTableColumnInfo("Unit", "unitname", 100),
                         new DataTableColumnInfo("Price", "price", 120, DataGridViewContentAlignment.MiddleRight, "N0"),
-                        new DataTableColumnInfo("Created By", "creator", 200),
-                        new DataTableColumnInfo("Created Date", "created_date", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
+                        new DataTableColumnInfo("Created By", "fullname", 200),
+                        new DataTableColumnInfo("Created Date", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
                     break;
                 case ListingData.Suppliers:
@@ -237,7 +268,19 @@ namespace Astro.Winform.Forms
                         //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo(headerText, "name", 300),
                         new DataTableColumnInfo("Address", "address", 300),
+                        new DataTableColumnInfo("Phone Number", "phonenumber", 120),
+                        new DataTableColumnInfo("Created By", "creator", 180),
+                        new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
+                    }, this.BindingSource);
+                    break;
+                case ListingData.Employee:
+                    GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
+                    {
+                        //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
+                        new DataTableColumnInfo("Nama Pegawai", "fullname", 300),
+                        new DataTableColumnInfo("Alamat", "address", 300),
                         new DataTableColumnInfo("Phone Number", "phone", 120),
+                        new DataTableColumnInfo("Jabatan", "rolename", 200),
                         new DataTableColumnInfo("Created By", "creator", 180),
                         new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
@@ -264,7 +307,7 @@ namespace Astro.Winform.Forms
 
             flagDoubleClickHandled = true;
             this.Cursor = Cursors.WaitCursor;
-            var id = (short)((DataRowView)this.BindingSource.Current)[0];
+            var id = (int)((DataRowView)this.BindingSource.Current)[0];
             var dialog = await CreatePopupDialog(id);
             if (dialog.ShowDialog()== DialogResult.OK)
             {
@@ -274,13 +317,14 @@ namespace Astro.Winform.Forms
             flagDoubleClickHandled = false;
         }
     }
-    internal enum ListingData
+    public enum ListingData
     {
         Users = 0,
         Roles = 1,
         Products = 2,
         Suppliers = 3,
         Customers = 4,
-        Accounts = 5
+        Accounts = 5,
+        Employee = 6
     }
 }

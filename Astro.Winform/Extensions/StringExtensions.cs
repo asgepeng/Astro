@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Svg;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,15 @@ namespace Astro.Winform.Extensions
         {
             if (values is null || !values.Any()) return string.Empty;
             return string.Join(separator, values);
+        }
+        internal static Image ToImage(this string value)
+        {
+            SvgDocument doc;
+            using (var str = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(value)))
+            {
+                doc = SvgDocument.Open<SvgDocument>(str);
+            }
+            return doc.Draw(20, 20);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Astro.Winform.Helpers
         {
             var list = new ListOption();
             using (var stream = await WClient.GetStreamAsync("/data/regions/countries"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {
@@ -26,7 +26,7 @@ namespace Astro.Winform.Helpers
         {
             var list = new ListOption();
             using (var stream = await WClient.GetStreamAsync("/data/regions/states/" + countryId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {
@@ -43,7 +43,7 @@ namespace Astro.Winform.Helpers
         {
             var list = new ListOption();
             using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + stateId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {
@@ -60,7 +60,7 @@ namespace Astro.Winform.Helpers
         {
             var list = new ListOption();
             using (var stream = await WClient.GetStreamAsync("/data/users/role-options"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {

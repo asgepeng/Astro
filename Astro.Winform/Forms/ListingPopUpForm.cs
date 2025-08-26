@@ -33,13 +33,13 @@ namespace Astro.Winform.Forms
         {
             var key = guid.ToByteArray();
             var encrypted = Encryption.Encrypt(commandText, key);
-            using (var writer = new IO.Writer())
+            using (var writer = new Astro.Streams.Writer())
             {
                 writer.WriteGuid(guid);
                 writer.WriteString(encrypted);
 
                 using (var stream = await WClient.PostStreamAsync("/api/sql", writer.ToArray()))
-                using (var reader = new IO.Reader(stream))
+                using (var reader = new Astro.Streams.Reader(stream))
                 {
                     var result = reader.ReadByte();
                     if (result == 1)

@@ -34,7 +34,7 @@ namespace Astro.Winform.Forms
             this.Cursor = Cursors.WaitCursor;
             if (table.Rows.Count > 0) table.Rows.Clear();
             using (var stream = await WClient.GetStreamAsync("/data/categories"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {
@@ -82,7 +82,7 @@ namespace Astro.Winform.Forms
             var id = (short)((DataRowView)this.bs.Current)[0];
             var form = new CategoryForm() { Category = new Models.Category() };
             using (var stream = await WClient.GetStreamAsync($"/data/categories/{id}"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 if (reader.Read())
                 {

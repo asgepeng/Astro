@@ -15,7 +15,7 @@ namespace Astro.Winform.Helpers
         {
             UserViewModel? uvm = null;
             using (var stream = await WClient.GetStreamAsync("/data/users/" + userId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var userExists = reader.ReadBoolean();
                 if (userExists)
@@ -87,7 +87,7 @@ namespace Astro.Winform.Helpers
         {
             var role = new Role();
             using (var stream = await WClient.GetStreamAsync("/data/roles/" + roleId.ToString()))
-            using (var r = new IO.Reader(stream))
+            using (var r = new Astro.Streams.Reader(stream))
             {
                 var roleExists = r.ReadBoolean();
                 if (roleExists)
@@ -116,7 +116,7 @@ namespace Astro.Winform.Helpers
         {
             var model = new ProductViewModel();
             using (var stream = await WClient.GetStreamAsync("/data/products/" + productId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var productExist = reader.ReadBoolean();
                 if (productExist)
@@ -151,7 +151,7 @@ namespace Astro.Winform.Helpers
         {
             var contact = new Contact();
             using (var stream = await WClient.GetStreamAsync("/data/suppliers/" + contactId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var supplierExist = reader.ReadBoolean();
                 if (supplierExist)
@@ -223,7 +223,7 @@ namespace Astro.Winform.Helpers
         {
             var contact = new Contact();
             using (var stream = await WClient.GetStreamAsync("/data/customers/" + contactId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var supplierExist = reader.ReadBoolean();
                 if (supplierExist)
@@ -295,7 +295,7 @@ namespace Astro.Winform.Helpers
         {
             var cvm = new AccountViewModel();
             using (var stream = await WClient.GetStreamAsync("/data/accounts/" + accountId.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var accountExists = reader.ReadBoolean();
                 if (accountExists)

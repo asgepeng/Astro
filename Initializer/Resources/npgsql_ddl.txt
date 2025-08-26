@@ -138,6 +138,7 @@ CREATE TABLE menus (
     menuid              SMALLSERIAL     PRIMARY KEY,
     sectionid           SMALLINT        NOT NULL DEFAULT 0,
     title               VARCHAR(100)    NOT NULL DEFAULT '',
+    icon                TEXT            NOT NULL DEFAULT '',
     tooltiptext         VARCHAR(250)    NOT NULL DEFAULT '',
     disabled            BOOLEAN         NOT NULL DEFAULT false
 );

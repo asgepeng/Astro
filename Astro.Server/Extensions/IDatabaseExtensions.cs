@@ -497,10 +497,10 @@ namespace Astro.Server.Binaries
         internal static async Task<byte[]> GetAccount(this IDBClient db, short id)
         {
             var commandText = """
-                select a.account_id, a.account_name, a.account_number, a.provider_id, p.provider_type
+                select a.accountid, a.accountname, a.accountnumber, a.providerid, p.providertype
                 from accounts as a
-                inner join account_providers as p on a.provider_id = p.provider_id
-                where a.account_id = @id and a.is_deleted = false
+                inner join accountproviders as p on a.providerid = p.providerid
+                where a.accountid = @id and a.isdeleted = false
                 """;
             var data = Array.Empty<byte>();
             using (var writer = new Streams.Writer())
@@ -521,8 +521,8 @@ namespace Astro.Server.Binaries
                 var iCount = 0;
                 var iPos = writer.ReserveInt32();
                 commandText = """
-                    select provider_id, provider_name, provider_type
-                    from account_providers
+                    SELECT providerid, name, providertype
+                    FROM accountproviders
                     """;
                 await db.ExecuteReaderAsync(async reader =>
                 {

@@ -1,12 +1,8 @@
-﻿using Astro.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using System.Text;
-using System.Threading.Tasks;
+using Astro.Extensions;
 
-namespace Astro.IO
+namespace Astro.Streams
 {
     public class Reader : IDisposable
     {

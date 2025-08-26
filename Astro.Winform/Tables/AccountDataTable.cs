@@ -25,7 +25,7 @@ namespace Astro.Winform.Tables
         {
             if (this.Rows.Count > 0) this.Rows.Clear();
             using (var stream = await WClient.GetStreamAsync("/data/accounts"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {

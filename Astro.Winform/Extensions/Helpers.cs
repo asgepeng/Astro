@@ -33,6 +33,13 @@ namespace WinformApp.Data
                 }
             }
         }
+        public static void SetEnableControls(this Form form, bool enabled)
+        {
+            foreach (Control ctrl in form.Controls)
+            {
+                ctrl.Enabled = enabled;
+            }
+        }
         /*
         public static void SetFilterSetting(DataTable table, ColumnFilterCollection filters)
         {

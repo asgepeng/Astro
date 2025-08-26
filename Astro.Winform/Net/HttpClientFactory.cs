@@ -35,7 +35,7 @@ namespace Astro.Winform.Classes
                 if (response.IsSuccessStatusCode)
                 {
                     using (var stream = await response.Content.ReadAsStreamAsync())
-                    using (var reader = new IO.Reader(stream))
+                    using (var reader = new Astro.Streams.Reader(stream))
                     {
                         My.Application.User = new UserInfo(reader.ReadInt16(), reader.ReadString(), new Role() { Id = reader.ReadInt16(), Name = reader.ReadString() });
                         My.Application.ApiToken = reader.ReadString();

@@ -29,14 +29,14 @@ namespace Astro.Winform.Tables
         {
             if (this.Rows.Count > 0) this.Rows.Clear();
             var requestData = Array.Empty<byte>();
-            using (var writer = new IO.Writer())
+            using (var writer = new Astro.Streams.Writer())
             {
                 writer.WriteByte(0);
                 writer.WriteInt16(this.BranchId);
                 requestData = writer.ToArray();
             }
             using (var stream = await WClient.PostStreamAsync("/data/products", requestData))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {

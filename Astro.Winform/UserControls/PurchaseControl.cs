@@ -130,7 +130,7 @@ namespace Astro.Winform.UserControls
         {
             this.purchaseItemBindingSource.DataSource = this.Purchase.Items;
             using (var stream = await WClient.GetStreamAsync("/auth/stores"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var count = reader.ReadInt32();
                 for (int i = 0; i < count; i++)
@@ -199,7 +199,7 @@ namespace Astro.Winform.UserControls
                 Location = GetLocationID()
             };
             using (var stream = await WClient.PostStreamAsync("/trans/purchases/get-item", req.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 if (reader.ReadBoolean())
                 {
@@ -311,7 +311,7 @@ namespace Astro.Winform.UserControls
                 }
             }
             using (var stream = await WClient.PostStreamAsync("/trans/purchases", this.Purchase.ToByteArray()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 var success = reader.ReadBoolean();
                 if (success)

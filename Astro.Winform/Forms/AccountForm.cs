@@ -21,8 +21,32 @@ namespace Astro.Winform.Forms
         }
         public AccountViewModel Model { get; set; } = new AccountViewModel();
 
-        private void AccountForm_Load(object sender, EventArgs e)
+        private async void AccountForm_Load(object sender, EventArgs e)
         {
+            using (var stream = await WClient.GetStreamAsync("/data/accounts/" + (Tag is null ? "0" :  Tag.ToString())))
+            using (var reader = new Astro.Streams.Reader(stream))
+            {
+                var accountExists = reader.ReadBoolean();
+                if (accountExists)
+                {
+                    Model.Account.Id = reader.ReadInt16();
+                    Model.Account.AccountName = reader.ReadString();
+                    Model.Account.AccountNumber = reader.ReadString();
+                    Model.Account.Provider = reader.ReadInt16();
+                    Model.Account.AccountType = reader.ReadInt16();
+                }
+                var iCount = reader.ReadInt32();
+                while (iCount > 0)
+                {
+                    Model.Providers.Add(new AccountProvider()
+                    {
+                        Id = reader.ReadInt16(),
+                        Name = reader.ReadString(),
+                        Type = reader.ReadInt16()
+                    });
+                    iCount--;
+                }
+            }
             this.textBox1.Text = Model.Account.AccountName;
             this.textBox2.Text = Model.Account.AccountNumber;
             this.comboBox1.SelectedIndex = Model.Account.AccountType - 1;

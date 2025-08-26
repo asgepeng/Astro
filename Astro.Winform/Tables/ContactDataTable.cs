@@ -24,7 +24,7 @@ namespace Astro.Winform.Tables
         {
             if (this.Rows.Count > 0) this.Rows.Clear();
             using (var stream = await WClient.GetStreamAsync(ContactType == 0 ? "/data/suppliers" : "/data/customers"))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 while (reader.Read())
                 {

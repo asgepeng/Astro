@@ -50,7 +50,7 @@ namespace Astro.Models.Transactions
         }
         public byte[] ToByteArray()
         {
-            using (var writer = new IO.Writer())
+            using (var writer = new Streams.Writer())
             {
                 writer.WriteInt16(this.Location);
                 writer.WriteGuid(this.Id);

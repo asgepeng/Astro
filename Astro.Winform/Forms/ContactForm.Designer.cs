@@ -68,7 +68,7 @@
             tabControl1.Name = "tabControl1";
             tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(610, 509);
+            tabControl1.Size = new Size(610, 522);
             tabControl1.TabIndex = 0;
             // 
             // tabPage1
@@ -87,15 +87,18 @@
             tabPage1.Location = new Point(4, 32);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(602, 473);
+            tabPage1.Size = new Size(602, 486);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
             // 
             // deleteButton
             // 
+            deleteButton.BackColor = Color.FromArgb(250, 250, 250);
             deleteButton.Enabled = false;
-            deleteButton.FlatAppearance.BorderSize = 0;
+            deleteButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            deleteButton.FlatStyle = FlatStyle.Flat;
+            deleteButton.ForeColor = Color.MidnightBlue;
             deleteButton.Location = new Point(553, 123);
             deleteButton.Name = "deleteButton";
             deleteButton.Size = new Size(30, 30);
@@ -113,7 +116,7 @@
             listView1.LargeImageList = imageList1;
             listView1.Location = new Point(120, 51);
             listView1.Name = "listView1";
-            listView1.Size = new Size(427, 369);
+            listView1.Size = new Size(427, 383);
             listView1.TabIndex = 2;
             listView1.TileSize = new Size(380, 56);
             listView1.UseCompatibleStateImageBehavior = false;
@@ -136,7 +139,7 @@
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(375, 429);
+            label6.Location = new Point(375, 443);
             label6.Name = "label6";
             label6.Size = new Size(55, 17);
             label6.TabIndex = 17;
@@ -144,7 +147,7 @@
             // 
             // textBox3
             // 
-            textBox3.Location = new Point(436, 426);
+            textBox3.Location = new Point(436, 440);
             textBox3.Name = "textBox3";
             textBox3.Size = new Size(111, 25);
             textBox3.TabIndex = 16;
@@ -152,7 +155,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(40, 429);
+            label5.Location = new Point(40, 443);
             label5.Name = "label5";
             label5.Size = new Size(74, 17);
             label5.TabIndex = 15;
@@ -160,15 +163,18 @@
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(120, 426);
+            textBox2.Location = new Point(120, 440);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(126, 25);
             textBox2.TabIndex = 14;
             // 
             // editButton
             // 
+            editButton.BackColor = Color.FromArgb(250, 250, 250);
             editButton.Enabled = false;
-            editButton.FlatAppearance.BorderSize = 0;
+            editButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            editButton.FlatStyle = FlatStyle.Flat;
+            editButton.ForeColor = Color.MidnightBlue;
             editButton.Location = new Point(553, 87);
             editButton.Name = "editButton";
             editButton.Size = new Size(30, 30);
@@ -179,7 +185,10 @@
             // 
             // addButton
             // 
-            addButton.FlatAppearance.BorderSize = 0;
+            addButton.BackColor = Color.FromArgb(250, 250, 250);
+            addButton.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            addButton.FlatStyle = FlatStyle.Flat;
+            addButton.ForeColor = Color.MidnightBlue;
             addButton.Location = new Point(553, 51);
             addButton.Name = "addButton";
             addButton.Size = new Size(30, 30);
@@ -218,7 +227,7 @@
             tabPage2.Location = new Point(4, 30);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(602, 475);
+            tabPage2.Size = new Size(602, 488);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "🕒 Transaction Histories";
             tabPage2.UseVisualStyleBackColor = true;
@@ -228,19 +237,22 @@
             tabPage3.Location = new Point(4, 30);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(602, 475);
+            tabPage3.Size = new Size(602, 488);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "\U0001f9fe Account Payable";
             tabPage3.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 527);
+            button1.BackColor = Color.FromArgb(250, 250, 250);
+            button1.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
+            button1.FlatStyle = FlatStyle.Flat;
+            button1.Location = new Point(12, 540);
             button1.Name = "button1";
             button1.Size = new Size(105, 32);
             button1.TabIndex = 1;
             button1.Text = "Simpan";
-            button1.UseVisualStyleBackColor = true;
+            button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
             // 
             // contextMenuStrip1
@@ -274,15 +286,15 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(634, 571);
-            Controls.Add(button1);
+            ClientSize = new Size(633, 584);
             Controls.Add(tabControl1);
+            Controls.Add(button1);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ContactForm";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "Supplier";
             Load += ContactForm_Load;
             tabControl1.ResumeLayout(false);

@@ -1,12 +1,12 @@
-﻿using Astro.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Astro.Extensions;
 
-namespace Astro.IO
+namespace Astro.Streams
 {
     public class Writer : IDisposable
     {
@@ -78,11 +78,11 @@ namespace Astro.IO
             var types = new DbType[colCount];
             if (colCount > 0)
             {
-                WriteByte(1);
+                WriteByte(0x01);
             }
             else 
             {
-                WriteByte(0);
+                WriteByte(0x00);
                 return;
             }
             WriteByte((byte)colCount);

@@ -3,9 +3,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml;
 using System.Data.Common;
 using System.Globalization;
-using Npgsql;
 using System.Data;
-using Org.BouncyCastle.Tls;
+using System.Text;
 
 namespace Astro.Data
 {
@@ -21,6 +20,8 @@ namespace Astro.Data
         Task<List<T>> FetchListAsync<T>(string commandText, params DbParameter[] parameters);
         Task<Dictionary<TKey, TValue>> FetchDictionaryAsync<TKey, TValue>(string commandText, params DbParameter[] parameters)
             where TKey : notnull where TValue : notnull;
+        Task<byte[]> ExecuteBinaryTableAsync(string commandText, params DbParameter[] parameters);
+        Task<string> ExecuteHtmlTableAsync(string commandText, params DbParameter[] parameters);
 
         bool ExecuteNonQuery(string commandText, params DbParameter[] parameters);
         void ExecuteReader(Action<DbDataReader> handler, string commandText, params DbParameter[] parameters);
@@ -142,6 +143,27 @@ namespace Astro.Data
             }, commandText, parameters);
             return dict;
         }
+        public async Task<byte[]> ExecuteBinaryTableAsync(string commandText, params DbParameter[] parameters)
+        {
+            using var writer = new Astro.Streams.Writer();
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        await writer.WriteDataTableAsync(reader);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            return writer.ToArray();
+        }
 
         public async Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters)
         {
@@ -214,7 +236,31 @@ namespace Astro.Data
                 }
                 catch { return false; }
             }
-        }        
+        }
+        public async Task<string> ExecuteHtmlTableAsync(string commandText, params DbParameter[] parameters)
+        {
+            var sb = new StringBuilder();
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+            return sb.ToString();
+        }
         public async Task<List<T>> FetchListAsync<T>(string commandText, params DbParameter[] parameters)
         {
             var list = new List<T>();

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinformApp.Data;
 
 namespace Astro.Winform.Forms
 {
@@ -91,12 +92,84 @@ namespace Astro.Winform.Forms
             }
         }
 
-        private void ContactForm_Load(object sender, EventArgs e)
+        private async void ContactForm_Load(object sender, EventArgs e)
         {
+            this.SetEnableControls(false);
             this.label1.Text = this.Text + " Name";
             if (this.Text == "Customer") this.tabControl1.TabPages[2].Text = "🧾 Account Receivable";
+            if (this.Tag != null)
+            {
+                using (var stream = await WClient.GetStreamAsync("/data/suppliers/" + Tag.ToString()))
+                using (var reader = new Astro.Streams.Reader(stream))
+                {
+                    var supplierExist = reader.ReadBoolean();
+                    if (supplierExist)
+                    {
+                        Contact.Id = reader.ReadInt16();
+                        Contact.Name = reader.ReadString();
+                    }
+                    var iCount = reader.ReadInt32();
+                    while (iCount > 0)
+                    {
+                        Contact.Addresses.Add(new Address()
+                        {
+                            Id = reader.ReadInt32(),
+                            StreetAddress = reader.ReadString(),
+                            Village = new Village()
+                            {
+                                Id = reader.ReadInt64(),
+                                Name = reader.ReadString()
+                            },
+                            District = new District()
+                            {
+                                Id = reader.ReadInt32(),
+                                Name = reader.ReadString()
+                            },
+                            City = new City()
+                            {
+                                Id = reader.ReadInt32(),
+                                Name = reader.ReadString()
+                            },
+                            StateOrProvince = new Province()
+                            {
+                                Id = reader.ReadInt16(),
+                                Name = reader.ReadString()
+                            },
+                            Type = reader.ReadInt16(),
+                            IsPrimary = reader.ReadBoolean(),
+                            ZipCode = reader.ReadString()
+                        });
+                        iCount--;
+                    }
+                    iCount = reader.ReadInt32();
+                    while (iCount > 0)
+                    {
+                        Contact.Phones.Add(new Phone()
+                        {
+                            Id = reader.ReadInt32(),
+                            Number = reader.ReadString(),
+                            Type = reader.ReadInt16(),
+                            IsPrimary = reader.ReadBoolean()
+                        });
+                        iCount--;
+                    }
+                    iCount = reader.ReadInt32();
+                    while (iCount > 0)
+                    {
+                        Contact.Emails.Add(new Email()
+                        {
+                            Id = reader.ReadInt32(),
+                            Address = reader.ReadString(),
+                            Type = reader.ReadInt16(),
+                            IsPrimary = reader.ReadBoolean()
+                        });
+                        iCount--;
+                    }
+                }
+            }
             this.textBox1.Text = this.Contact.Name;
             FillAddressBox();
+            this.SetEnableControls(true);
         }
 
         private void button2_Click(object sender, EventArgs e)

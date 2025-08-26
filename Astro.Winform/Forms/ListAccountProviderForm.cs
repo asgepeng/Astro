@@ -68,7 +68,7 @@ namespace Astro.Winform.Forms
             var form = new AccountProviderForm();
             var id = (short)((DataRowView)this.bs.Current)[0];
             using (var stream = await WClient.GetStreamAsync("/data/account-providers/" + id.ToString()))
-            using (var reader = new IO.Reader(stream))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
                 if (reader.ReadBoolean())
                 {
