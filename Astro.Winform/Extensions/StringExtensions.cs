@@ -14,14 +14,14 @@ namespace Astro.Winform.Extensions
             if (values is null || !values.Any()) return string.Empty;
             return string.Join(separator, values);
         }
-        internal static Image ToImage(this string value)
+        internal static Image ToImage(this string value, int width = 20, int height = 20)
         {
             SvgDocument doc;
             using (var str = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(value)))
             {
                 doc = SvgDocument.Open<SvgDocument>(str);
             }
-            return doc.Draw(20, 20);
+            return doc.Draw(width, height);
         }
     }
 }

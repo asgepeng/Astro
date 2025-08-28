@@ -13,39 +13,29 @@ namespace Astro.Winform.Forms
 {
     public partial class ListCategoryForm : Form
     {
-        private readonly DataTable table;
         private readonly BindingSource bs = new BindingSource();
         public ListCategoryForm()
         {
             InitializeComponent();
 
-            table = new DataTable();
-            table.Columns.Add("id", typeof(short));
-            table.Columns.Add("name", typeof(string));
-            table.Columns.Add("dateAdd", typeof(DateTime));
-            table.Columns.Add("addedBy", typeof(string));
-
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.DataSource = bs;
-            bs.DataSource = table;
         }
         private async Task LoadDataAsync()
         {
             this.Cursor = Cursors.WaitCursor;
-            if (table.Rows.Count > 0) table.Rows.Clear();
             using (var stream = await WClient.GetStreamAsync("/data/categories"))
             using (var reader = new Astro.Streams.Reader(stream))
             {
-                while (reader.Read())
+                var result = reader.ReadByte();
+                if (result == 0x00)
                 {
-                    var values = new object[]
-                    {
-                        reader.ReadInt16(),
-                        "🏷️ " + reader.ReadString(),
-                        reader.ReadDateTime(),
-                        reader.ReadString()
-                    };
-                    table.Rows.Add(values);
+                    this.bs.DataSource = null;
+                    return;
+                }
+                if (stream.Length > 0)
+                {
+                    this.bs.DataSource = reader.ReadDataTable();
                 }
             }
             this.Cursor = Cursors.Default;

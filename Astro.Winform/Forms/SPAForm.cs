@@ -61,6 +61,11 @@ namespace Astro.Winform.Forms
         private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")]
         private static extern bool AnimateWindow(IntPtr hwnd, int dwTime, int dwFlags);
+        [DllImport("user32.dll")]
+        private static extern IntPtr WindowFromPoint(POINT pt);
+
+        private enum HitButton { None, Minimize, Maximize, Close }
+        private HitButton hitButton = HitButton.None;
 
         public struct MARGINS
         {
@@ -126,12 +131,31 @@ namespace Astro.Winform.Forms
             const int HTBOTTOMLEFT = 16;
 
             const int RESIZE_HANDLE_SIZE = 3;
+            const int WM_LBUTTONUP = 0x0202;
 
             switch (m.Msg)
             {
                 case WM_GETMINMAXINFO:
                     WmGetMinMaxInfo(m.HWnd, m.LParam);
                     return;
+                case WM_LBUTTONUP:
+                    {
+                        Point pos = this.PointToClient(Cursor.Position);
+                        var hButtonLoc = this.ClientSize.Width - 126;
+
+                        if (pos.Y <= 24 && pos.X > hButtonLoc)
+                        {
+                            if (hitButton == HitButton.Minimize && pos.X <= hButtonLoc + 40)
+                                this.WindowState = FormWindowState.Minimized;
+                            else if (hitButton == HitButton.Maximize && pos.X >= hButtonLoc + 43 && pos.X <= hButtonLoc + 83)
+                                ToggleMaximize();
+                            else if (hitButton == HitButton.Close && pos.X >= hButtonLoc + 86 && pos.X <= hButtonLoc + 126)
+                                this.Close();
+                        }
+
+                        hitButton = HitButton.None;
+                        return;
+                    }
                 case WM_RBUTTONUP:
                     {
                         Point pos = this.PointToClient(Cursor.Position);
@@ -155,78 +179,98 @@ namespace Astro.Winform.Forms
                 case WM_LBUTTONDOWN:
                     {
                         Point pos = this.PointToClient(Cursor.Position);
-                        var hButtonLoc = this.ClientSize.Width - 120;
-                        if (pos.Y <= 40 && pos.X > hButtonLoc)
+                        var hButtonLoc = this.ClientSize.Width - 126;
+
+                        if (pos.Y <= 24 && pos.X > hButtonLoc)
                         {
-                            if (pos.X > hButtonLoc)
-                            {
-                                if (pos.X <= hButtonLoc + 40)
-                                {
-                                    this.WindowState = FormWindowState.Minimized;
-                                    return;
-                                }
-                                else if (pos.X <= hButtonLoc + 80)
-                                {
-                                    ToggleMaximize();
-                                    return;
-                                }
-                                else if (pos.X <= hButtonLoc + 120)
-                                {
-                                    this.Close();
-                                    return;
-                                }
-                            }
-                            ReleaseCapture();
-                            SendMessage(this.Handle, 0xA1, 0x2, 0);
-                            return;
+                            if (pos.X <= hButtonLoc + 40)
+                                hitButton = HitButton.Minimize;
+                            else if (pos.X >= hButtonLoc + 43 && pos.X <= hButtonLoc + 83)
+                                hitButton = HitButton.Maximize;
+                            else if (pos.X >= hButtonLoc + 86 && pos.X <= hButtonLoc + 126)
+                                hitButton = HitButton.Close;
+
+                            return; // jangan eksekusi dulu, tunggu MouseUp
                         }
-                        break;
+
+                        // drag move window
+                        ReleaseCapture();
+                        SendMessage(this.Handle, 0xA1, 0x2, 0);
+                        return;
                     }
 
                 case WM_NCHITTEST:
                     {
-                        Point cursor = this.PointToClient(Cursor.Position);
-                        if (cursor.Y <= 40 && cursor.Y > RESIZE_HANDLE_SIZE &&
-                            cursor.X > RESIZE_HANDLE_SIZE && cursor.X < this.ClientSize.Width - RESIZE_HANDLE_SIZE)
+                        if (this.WindowState == FormWindowState.Maximized)
                         {
                             m.Result = (IntPtr)HTCLIENT;
                             return;
                         }
-                        // ?? Resize hit area
-                        if (cursor.X <= RESIZE_HANDLE_SIZE)
-                        {
-                            if (cursor.Y <= RESIZE_HANDLE_SIZE)
-                                m.Result = (IntPtr)HTTOPLEFT;
-                            else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
-                                m.Result = (IntPtr)HTBOTTOMLEFT;
-                            else
-                                m.Result = (IntPtr)HTLEFT;
 
-                            return;
-                        }
-                        else if (cursor.X >= this.ClientSize.Width - RESIZE_HANDLE_SIZE)
+                        Point cursor = this.PointToClient(Cursor.Position);
+
+                        // --- 1. RESIZE HANDLE ---
+                        bool left = cursor.X <= RESIZE_HANDLE_SIZE;
+                        bool right = cursor.X >= this.ClientSize.Width - RESIZE_HANDLE_SIZE;
+                        bool top = cursor.Y <= RESIZE_HANDLE_SIZE;
+                        bool bottom = cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE;
+
+                        if (left && right && top && bottom && this.WindowState != FormWindowState.Maximized)
                         {
-                            if (cursor.Y <= RESIZE_HANDLE_SIZE)
-                                m.Result = (IntPtr)HTTOPRIGHT;
-                            else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
-                                m.Result = (IntPtr)HTBOTTOMRIGHT;
-                            else
-                                m.Result = (IntPtr)HTRIGHT;
                             return;
                         }
-                        else if (cursor.Y <= RESIZE_HANDLE_SIZE)
+                        if (left && top)
+                        {
+                            m.Result = (IntPtr)HTTOPLEFT;
+                            return;
+                        }
+                        if (right && top)
+                        {
+                            m.Result = (IntPtr)HTTOPRIGHT;
+                            return;
+                        }
+                        if (left && bottom)
+                        {
+                            m.Result = (IntPtr)HTBOTTOMLEFT;
+                            return;
+                        }
+                        if (right && bottom)
+                        {
+                            m.Result = (IntPtr)HTBOTTOMRIGHT;
+                            return;
+                        }
+                        if (left)
+                        {
+                            m.Result = (IntPtr)HTLEFT;
+                            return;
+                        }
+                        if (right)
+                        {
+                            m.Result = (IntPtr)HTRIGHT;
+                            return;
+                        }
+                        if (top)
                         {
                             m.Result = (IntPtr)HTTOP;
                             return;
                         }
-                        else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
+                        if (bottom)
                         {
                             m.Result = (IntPtr)HTBOTTOM;
                             return;
                         }
 
+                        // --- 2. TITLEBAR AREA (drag support) ---
+                        if (cursor.Y <= 40)
+                        {
+                            m.Result = (IntPtr)HTCAPTION; // drag window kamu tangani sendiri di WM_LBUTTONDOWN
+                            return;
+                        }
+
+                        // --- 3. DEFAULT ---
                         break;
                     }
+
             }
             base.WndProc(ref m);
         }
@@ -294,6 +338,9 @@ namespace Astro.Winform.Forms
         #endregion Winform
         #region Members
         private Point _mousePoint;
+        private readonly Font _controlFont = new Font("Segoe MDL2 Assets", 7.75F, FontStyle.Regular);
+        private readonly Font _labelFont = new Font("Segoe UI", 15.75F, FontStyle.Regular);
+        private readonly StringFormat _center = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
         #endregion
         public SPAForm()
         {
@@ -397,7 +444,7 @@ namespace Astro.Winform.Forms
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            var brandRect = new Rectangle(0, 0, this.sideBarPanel.Width, this.Padding.Top);
+            var brandRect = new Rectangle(0, 0, this.sideBarPanel.Width + this.Padding.Left, e.ClipRectangle.Width);
             var image = global::Astro.Winform.Properties.Resources.logo_bizmate;
             var imageRectangle = new Rectangle(15, 8, 100, this.Padding.Top - 20);
             using (var backBrush = new SolidBrush(this.sideBarPanel.BackColor))
@@ -405,28 +452,48 @@ namespace Astro.Winform.Forms
                 e.Graphics.FillRectangle(backBrush, brandRect);
             }
             e.Graphics.DrawImage(image, imageRectangle);
-            var textRect = new Rectangle(this.sideBarPanel.Width + 5, 0, 220, this.Padding.Top);
+            var textRect = new Rectangle(this.sideBarPanel.Width +  this.Padding.Left + 8, 0, 220, this.Padding.Top);
             var sf = new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-            e.Graphics.DrawString(this.Text, new Font("Segoe UI", 15.75F, FontStyle.Regular), Brushes.Black, textRect);
+            e.Graphics.DrawString(this.Text, _labelFont, Brushes.Black, textRect);
 
-            var minimizeButton = new Rectangle(this.ClientSize.Width - 126, 0, 40, 24);
-            var maximizeButton = new Rectangle(this.ClientSize.Width - 83, 0, 40, 24);
-            var closeButton = new Rectangle(this.ClientSize.Width - 40, 0, 40, 24);
-            e.Graphics.DrawString("_", this.Font, Brushes.Black, minimizeButton, sf);
-            e.Graphics.DrawString("[]", this.Font, Brushes.Black, maximizeButton, sf);
-            if (closeButton.Contains(_mousePoint))
+            //draw control buttons
+            int x = this.ClientRectangle.Width - 126, y = 0, width = 40, height = 24;
+            var chrs = new string[]{ "\uE921", "\uE922", "\uE8BB", "\uE923" };
+            for (int i = 0; i < 3; i++)
             {
-                e.Graphics.FillRectangle(Brushes.Red, closeButton);
+                var r = new Rectangle(x, y, width, height);
+                if (r.Contains(_mousePoint))
+                {
+                    using (var brush = new SolidBrush(i == 2 ? Color.Red : Color.LightGray))
+                    {
+                        e.Graphics.FillRectangle(brush, r);
+                    }
+                }
+                if (i == 2 && r.Contains(_mousePoint))
+                {
+                    e.Graphics.DrawString(chrs[i], _controlFont, Brushes.White, r, _center);
+                }
+                else
+                {
+                    var cindex = i == 1 && this.WindowState == FormWindowState.Maximized ? 3 : i;
+                    e.Graphics.DrawString(chrs[cindex], _controlFont, Brushes.Black, r, _center);
+                }
+                x += 43;
             }
-            e.Graphics.DrawString("X", this.Font, Brushes.Black, closeButton, sf);
+        }
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _mousePoint = new Point(-1, -1);
+            Invalidate();
         }
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            var buttonArea = new Rectangle(this.ClientRectangle.Width - 126, 0, 126, 24);
-            if (buttonArea.Contains(e.Location))
+            var headerArea = new Rectangle(this.sideBarPanel.Width, 0, this.ClientSize.Width - this.sideBarPanel.Width, this.Padding.Top);
+            if (headerArea.Contains(e.Location))
             {
                 this._mousePoint = e.Location;
-                this.Invalidate(buttonArea);
+                this.Invalidate(headerArea);
             }
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -436,11 +503,6 @@ namespace Astro.Winform.Forms
             base.OnFormClosing(e);
         }
         #endregion Protected Area
-
-        private void sideBarPanel_Click(object sender, EventArgs e)
-        {
-
-        }
         private Control? GetControl(string key)
         {
             var ctrls = this.mainPanel.Controls.Find(key, false);

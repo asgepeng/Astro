@@ -15,20 +15,31 @@ namespace Astro.Winform.Forms
 {
     public partial class ListAccountProviderForm : Form
     {
-        private readonly AccountProviderDataTable table;
         private readonly BindingSource bs;
         public ListAccountProviderForm()
         {
             InitializeComponent();
             dataGridView1.AutoGenerateColumns = false;
-            table = new AccountProviderDataTable();
             bs = new BindingSource();
-            dataGridView1.DataSource = bs;
         }
         private async Task LoadDataAsync()
         {
-            await table.LoadAsync();
-            if (bs.DataSource is null) bs.DataSource = table;
+            this.Cursor = Cursors.WaitCursor;
+            using (var stream = await WClient.GetStreamAsync("/data/account-providers"))
+            using (var reader = new Astro.Streams.Reader(stream))
+            {
+                var result = reader.ReadByte();
+                if (result == 0x00)
+                {
+                    this.bs.DataSource = null;
+                    return;
+                }
+                if (stream.Length > 0)
+                {
+                    this.bs.DataSource = reader.ReadDataTable();
+                }
+            }
+            this.Cursor = Cursors.Default;
         }
 
         private async void ListAccountProviderForm_Load(object sender, EventArgs e)

@@ -1,4 +1,6 @@
-﻿namespace Astro.Winform.Forms
+﻿using Astro.Winform.Controls;
+
+namespace Astro.Winform.Forms
 {
     partial class ContactForm
     {
@@ -30,7 +32,7 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ContactForm));
-            tabControl1 = new TabControl();
+            tabControl1 = new FlatTabControl();
             tabPage1 = new TabPage();
             deleteButton = new Button();
             listView1 = new ListView();
@@ -54,22 +56,31 @@
             addressToolStripMenuItem = new ToolStripMenuItem();
             phoneToolStripMenuItem = new ToolStripMenuItem();
             emailToolStripMenuItem = new ToolStripMenuItem();
+            panel1 = new Panel();
+            label3 = new Label();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             contextMenuStrip1.SuspendLayout();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // tabControl1
             // 
+            tabControl1.ActiveColor = Color.DeepSkyBlue;
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
             tabControl1.Controls.Add(tabPage3);
-            tabControl1.Location = new Point(12, 12);
+            tabControl1.Dock = DockStyle.Fill;
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl1.InactiveColor = Color.LightGray;
+            tabControl1.ItemSize = new Size(120, 40);
+            tabControl1.Location = new Point(5, 40);
             tabControl1.Name = "tabControl1";
             tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(610, 522);
+            tabControl1.Size = new Size(603, 546);
             tabControl1.TabIndex = 0;
+            tabControl1.TextColor = Color.Black;
             // 
             // tabPage1
             // 
@@ -84,10 +95,10 @@
             tabPage1.Controls.Add(label2);
             tabPage1.Controls.Add(label1);
             tabPage1.Controls.Add(textBox1);
-            tabPage1.Location = new Point(4, 32);
+            tabPage1.Location = new Point(4, 44);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(602, 486);
+            tabPage1.Size = new Size(595, 498);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
@@ -116,7 +127,7 @@
             listView1.LargeImageList = imageList1;
             listView1.Location = new Point(120, 51);
             listView1.Name = "listView1";
-            listView1.Size = new Size(427, 383);
+            listView1.Size = new Size(427, 410);
             listView1.TabIndex = 2;
             listView1.TileSize = new Size(380, 56);
             listView1.UseCompatibleStateImageBehavior = false;
@@ -138,8 +149,9 @@
             // 
             // label6
             // 
+            label6.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label6.AutoSize = true;
-            label6.Location = new Point(375, 443);
+            label6.Location = new Point(349, 470);
             label6.Name = "label6";
             label6.Size = new Size(55, 17);
             label6.TabIndex = 17;
@@ -147,15 +159,17 @@
             // 
             // textBox3
             // 
-            textBox3.Location = new Point(436, 440);
+            textBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            textBox3.Location = new Point(410, 467);
             textBox3.Name = "textBox3";
-            textBox3.Size = new Size(111, 25);
+            textBox3.Size = new Size(137, 25);
             textBox3.TabIndex = 16;
             // 
             // label5
             // 
+            label5.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label5.AutoSize = true;
-            label5.Location = new Point(40, 443);
+            label5.Location = new Point(40, 470);
             label5.Name = "label5";
             label5.Size = new Size(74, 17);
             label5.TabIndex = 15;
@@ -163,7 +177,8 @@
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(120, 440);
+            textBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            textBox2.Location = new Point(120, 467);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(126, 25);
             textBox2.TabIndex = 14;
@@ -224,32 +239,33 @@
             // 
             // tabPage2
             // 
-            tabPage2.Location = new Point(4, 30);
+            tabPage2.Location = new Point(4, 44);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(602, 488);
+            tabPage2.Size = new Size(592, 498);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "🕒 Transaction Histories";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabPage3
             // 
-            tabPage3.Location = new Point(4, 30);
+            tabPage3.Location = new Point(4, 44);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(602, 488);
+            tabPage3.Size = new Size(592, 498);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "\U0001f9fe Account Payable";
             tabPage3.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
+            button1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             button1.BackColor = Color.FromArgb(250, 250, 250);
             button1.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button1.FlatStyle = FlatStyle.Flat;
-            button1.Location = new Point(12, 540);
+            button1.Location = new Point(9, 588);
             button1.Name = "button1";
-            button1.Size = new Size(105, 32);
+            button1.Size = new Size(121, 32);
             button1.TabIndex = 1;
             button1.Text = "Simpan";
             button1.UseVisualStyleBackColor = false;
@@ -282,31 +298,59 @@
             emailToolStripMenuItem.Text = "Email Address";
             emailToolStripMenuItem.Click += button5_Click;
             // 
+            // panel1
+            // 
+            panel1.Anchor = AnchorStyles.None;
+            panel1.BackColor = Color.FromArgb(250, 250, 250);
+            panel1.BorderStyle = BorderStyle.FixedSingle;
+            panel1.Controls.Add(label3);
+            panel1.Controls.Add(tabControl1);
+            panel1.Controls.Add(button1);
+            panel1.Location = new Point(210, 57);
+            panel1.Name = "panel1";
+            panel1.Padding = new Padding(5, 40, 5, 40);
+            panel1.Size = new Size(615, 628);
+            panel1.TabIndex = 2;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label3.Location = new Point(5, 7);
+            label3.Name = "label3";
+            label3.Size = new Size(125, 32);
+            label3.TabIndex = 2;
+            label3.Text = "Pelanggan";
+            // 
             // ContactForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(633, 584);
-            Controls.Add(tabControl1);
-            Controls.Add(button1);
+            BackColor = Color.Red;
+            ClientSize = new Size(1037, 713);
+            Controls.Add(panel1);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ContactForm";
+            ShowIcon = false;
+            ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
             Text = "Supplier";
+            TransparencyKey = Color.Red;
             Load += ContactForm_Load;
+            Click += ContactForm_Click;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
             contextMenuStrip1.ResumeLayout(false);
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
         }
 
         #endregion
-
-        private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;
         private ListView listView1;
@@ -330,5 +374,8 @@
         private ToolStripMenuItem phoneToolStripMenuItem;
         private ToolStripMenuItem emailToolStripMenuItem;
         private Button deleteButton;
+        private Panel panel1;
+        private FlatTabControl tabControl1;
+        private Label label3;
     }
 }

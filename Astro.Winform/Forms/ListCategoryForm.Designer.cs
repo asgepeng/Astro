@@ -31,11 +31,11 @@
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             dataGridView1 = new DataGridView();
+            button1 = new Button();
+            button2 = new Button();
             col_01 = new DataGridViewTextBoxColumn();
             col_02 = new DataGridViewTextBoxColumn();
             col_03 = new DataGridViewTextBoxColumn();
-            button1 = new Button();
-            button2 = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
@@ -71,33 +71,6 @@
             dataGridView1.TabIndex = 1;
             dataGridView1.CellDoubleClick += HandleGridCellDoubleCLicked;
             // 
-            // col_01
-            // 
-            col_01.DataPropertyName = "name";
-            col_01.HeaderText = "Category Name";
-            col_01.Name = "col_01";
-            col_01.ReadOnly = true;
-            col_01.Width = 250;
-            // 
-            // col_02
-            // 
-            col_02.DataPropertyName = "dateAdd";
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle1.Format = "dd-MM-yyyy HH:mm";
-            col_02.DefaultCellStyle = dataGridViewCellStyle1;
-            col_02.HeaderText = "Date Added";
-            col_02.Name = "col_02";
-            col_02.ReadOnly = true;
-            col_02.Width = 120;
-            // 
-            // col_03
-            // 
-            col_03.DataPropertyName = "addedBy";
-            col_03.HeaderText = "Added By";
-            col_03.Name = "col_03";
-            col_03.ReadOnly = true;
-            col_03.Width = 200;
-            // 
             // button1
             // 
             button1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
@@ -119,6 +92,33 @@
             button2.Text = "❌ Delete";
             button2.UseVisualStyleBackColor = true;
             button2.Click += HandleDeleteButtonClicked;
+            // 
+            // col_01
+            // 
+            col_01.DataPropertyName = "name";
+            col_01.HeaderText = "Category Name";
+            col_01.Name = "col_01";
+            col_01.ReadOnly = true;
+            col_01.Width = 250;
+            // 
+            // col_02
+            // 
+            col_02.DataPropertyName = "createddate";
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "dd-MM-yyyy HH:mm";
+            col_02.DefaultCellStyle = dataGridViewCellStyle1;
+            col_02.HeaderText = "Date Added";
+            col_02.Name = "col_02";
+            col_02.ReadOnly = true;
+            col_02.Width = 120;
+            // 
+            // col_03
+            // 
+            col_03.DataPropertyName = "fullname";
+            col_03.HeaderText = "Added By";
+            col_03.Name = "col_03";
+            col_03.ReadOnly = true;
+            col_03.Width = 200;
             // 
             // ListCategoryForm
             // 
@@ -144,9 +144,9 @@
 
         private DataGridView dataGridView1;
         private Button button1;
+        private Button button2;
         private DataGridViewTextBoxColumn col_01;
         private DataGridViewTextBoxColumn col_02;
         private DataGridViewTextBoxColumn col_03;
-        private Button button2;
     }
 }

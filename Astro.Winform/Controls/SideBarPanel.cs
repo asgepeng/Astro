@@ -1,14 +1,6 @@
 ﻿using Astro.Drawing.Extensions;
 using Astro.Winform.Forms;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 
 namespace Astro.Winform.Controls
 {
@@ -56,6 +48,7 @@ namespace Astro.Winform.Controls
             public Image? Image { get; set; }
             public bool Selected { get; set; }
             public bool Hovered { get; set; }
+            public bool MouseHit { get; set; } = false;
             public Rectangle Bounds { get; set; }
             public string URL { get; set; } = string.Empty;
             public ListingData Type { get; set; }
@@ -157,60 +150,14 @@ namespace Astro.Winform.Controls
         protected override void OnMouseLeave(EventArgs e)
         {
             this._mousePoint = new Point(-1, -1);
+            foreach (var g in this.Groups)
+            {
+                foreach (var i in g.Items)
+                {
+                    i.MouseHit = false;
+                }
+            }
             this.Invalidate();
-        }
-        protected override void OnMouseClick(MouseEventArgs e)
-        {
-            var loc = e.Location;
-            Menu? selectedItem = null;
-            this.SelectedItem = null;
-            foreach (var group in this.Groups)
-            {
-                if (group.Bounds.Contains(loc))
-                {
-                    if (group.IsCollapsed)
-                    {
-                        group.Expand();
-                        RecalculateContent();
-                        return;
-                    }
-                    else
-                    {
-                        group.Collapse();
-                        RecalculateContent();
-                        return;
-                    }
-                }
-                foreach (var item in group.Items)
-                {
-                    if (item.Selected)
-                    {
-                        selectedItem = item;
-                    }
-                    else
-                    {
-                        if (!group.IsCollapsed && item.Bounds.Contains(loc))
-                        {
-                            item.Selected = true;
-                            this.SelectedItem = item;
-                        }
-                    }
-                }
-            }
-            if (this.SelectedItem != null)
-            {
-                this.SelectedItem.Group.Selected = true;
-                if (selectedItem != null)
-                {
-                    if (!selectedItem.Group.Equals(this.SelectedItem.Group))
-                    {
-                        selectedItem.Group.Selected = false;
-                    }
-                    selectedItem.Selected = false;
-                }
-                this.Invalidate();
-                base.OnMouseClick(e);
-            }
         }
         public Menu? SelectedItem { get; private set; }
         protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -247,7 +194,14 @@ namespace Astro.Winform.Controls
                 {
                     foreach (var m in g.Items)
                     {
-                        if (m.Selected || m.Bounds.Contains(_mousePoint))
+                        if (!m.Selected && m.MouseHit)
+                        {
+                            using (var selectedItemBrush = new SolidBrush(Color.FromArgb(56,56,56)))
+                            {
+                                e.Graphics.DrawRoundedRectangle(m.Bounds, 8, selectedItemBrush);
+                            }
+                        }
+                        else if (m.Selected || m.Bounds.Contains(_mousePoint))
                         {
                             using (var selectedItemBrush = new SolidBrush(Color.FromArgb(187, 0, 0, 0)))
                             {
@@ -339,6 +293,17 @@ namespace Astro.Winform.Controls
                 _dragging = true;
                 _dragOffsetY = e.Y - thumbRect.Y;
             }
+            else
+            {
+                foreach (var g in this.Groups)
+                {
+                    foreach(var item in g.Items)
+                    {
+                        item.MouseHit = item.Bounds.Contains(e.Location);
+                    }
+                }
+                Invalidate();
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -365,6 +330,57 @@ namespace Astro.Winform.Controls
         {
             base.OnMouseUp(e);
             _dragging = false;
+
+            var loc = e.Location;
+            Menu? selectedItem = null;
+            this.SelectedItem = null;
+            foreach (var group in this.Groups)
+            {
+                if (group.Bounds.Contains(loc))
+                {
+                    if (group.IsCollapsed)
+                    {
+                        group.Expand();
+                        RecalculateContent();
+                        return;
+                    }
+                    else
+                    {
+                        group.Collapse();
+                        RecalculateContent();
+                        return;
+                    }
+                }
+                foreach (var item in group.Items)
+                {
+                    if (item.Selected)
+                    {
+                        selectedItem = item;
+                    }
+                    else
+                    {
+                        if (!group.IsCollapsed && item.Bounds.Contains(loc) && item.MouseHit)
+                        {
+                            item.Selected = true;
+                            this.SelectedItem = item;
+                        }
+                    }
+                }
+            }
+            if (this.SelectedItem != null)
+            {
+                this.SelectedItem.Group.Selected = true;
+                if (selectedItem != null)
+                {
+                    if (!selectedItem.Group.Equals(this.SelectedItem.Group))
+                    {
+                        selectedItem.Group.Selected = false;
+                    }
+                    selectedItem.Selected = false;
+                }
+                this.Invalidate();
+                base.OnMouseClick(e);
+            }
         }
     }
 }

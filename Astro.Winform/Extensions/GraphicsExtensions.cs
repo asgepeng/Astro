@@ -8,17 +8,20 @@ namespace Astro.Drawing.Extensions
         {
             using (GraphicsPath path = new GraphicsPath())
             {
+                int diameter = cornerRadius * 2;
+
                 path.StartFigure();
-                path.AddArc(rect.Left, rect.Top, cornerRadius, cornerRadius, 180, 90);
-                path.AddArc(rect.Right - cornerRadius, rect.Top, cornerRadius, cornerRadius, 270, 90);
-                path.AddArc(rect.Right - cornerRadius, rect.Bottom - cornerRadius, cornerRadius, cornerRadius, 0, 90);
-                path.AddArc(rect.Left, rect.Bottom - cornerRadius, cornerRadius, cornerRadius, 90, 90);
+                path.AddArc(rect.Left, rect.Top, diameter, diameter, 180, 90); // kiri atas
+                path.AddArc(rect.Right - diameter, rect.Top, diameter, diameter, 270, 90); // kanan atas
+                path.AddArc(rect.Right - diameter, rect.Bottom - diameter, diameter, diameter, 0, 90); // kanan bawah
+                path.AddArc(rect.Left, rect.Bottom - diameter, diameter, diameter, 90, 90); // kiri bawah
                 path.CloseFigure();
 
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.FillPath(fillColor, path);
             }
         }
+
         internal static void DrawRoundedHalf(this Graphics g, Rectangle bounds, int radius)
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;

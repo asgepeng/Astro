@@ -6,6 +6,7 @@ using Astro.Winform.Forms;
 using Astro.Winform.Tables;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -28,13 +29,12 @@ namespace Astro.Forms.Controls
             public Size Size { get; set; } = new Size(80, 30);
             public string Text { get; set; } = "";
             public Point Location { get; set; } = new Point(10, 0);
-            public Rectangle Bounds
-            {
-                get
-                {
-                    return new Rectangle(this.Location, this.Size);
-                }
-            }
+            public Rectangle Bounds => new Rectangle(this.Location, this.Size);
+            public int X => this.Location.X;
+            public int Y => this.Location.Y;
+            public int Width => this.Size.Width;
+            public int Height => this.Size.Height;
+            public Action? OnClick = null;
             public Color BackColor { get; set; } = Color.Navy;
             public Color HoveredBackColor { get; set; } = Color.Blue;
             public Font Font { get; set; } = new Font("Segoe UI", 9.75F, FontStyle.Regular);
@@ -44,9 +44,10 @@ namespace Astro.Forms.Controls
             {
                 Hovered = new Rectangle(this.Location, this.Size).Contains(location);
             }
+            public void ResetHover() => Hovered = false;
             public void Draw(Graphics g)
             {
-                using (var brush = new SolidBrush(this.MouseHit ? Color.Red : this.Hovered ? this.HoveredBackColor : this.BackColor))
+                using (var brush = new SolidBrush(this.MouseHit ? Color.SteelBlue : this.Hovered ? this.HoveredBackColor : this.BackColor))
                 {
                     var sf = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                     g.DrawRoundedRectangle(new Rectangle(this.Location, this.Size), 10, brush);
@@ -54,35 +55,58 @@ namespace Astro.Forms.Controls
                 }
             }
         }
+        public class ButtonCollection : Collection<Button>
+        {
+            public Button Add(string text)
+            {
+                var button = new Button()
+                {
+                    Text = text,
+                    Location = this.Count > 0 ? new Point(this[this.Count - 1].X + this[this.Count - 1].Width + 5, 0) : new Point(10, 0)
+                };
+                base.Add(button);
+                return button;
+            }
+            public void Draw (Graphics g)
+            {
+                foreach (var button in this)
+                {
+                    button.Draw(g);
+                }
+            }
+        }
         #endregion
         private BindingSource BindingSource { get; } = new BindingSource();
-        private ListingControl.Button? addButton = null, deleteButton = null;
+        private ButtonCollection buttons = new ButtonCollection();
         private Point _mouseHitPoint;
         private bool _mouseHit = false;
         public ListingControl(SideBarPanel.Menu _menu)
         {
             InitializeComponent();
-            this.Menu = _menu;
-            if (this.Menu.AllowAdd)
-            {
-                this.addButton = new Button();
-                this.addButton.Text = "+ Baru";
-            }
-            if (this.Menu.AllowDelete)
-            {
-                this.deleteButton = new Button();
-                this.deleteButton.Text = "Hapus Terpilih";
-                this.deleteButton.Size = new Size(150, 30);
-                if (this.addButton != null)
-                {
-                    this.deleteButton.Location = new Point(this.addButton.Location.X + this.addButton.Size.Width + 5, this.addButton.Location.Y);
-                }
-            }
             this.SetStyle(ControlStyles.AllPaintingInWmPaint
                 | ControlStyles.UserPaint
                 | ControlStyles.ResizeRedraw
                 | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
+
+            this.Menu = _menu;
+            if (this.Menu.AllowAdd)
+            {
+                var add = this.buttons.Add("Baru");
+                add.OnClick = async () =>
+                {
+                    await this.OpenObjectDetail();
+                };
+            }
+            if (this.Menu.AllowDelete)
+            {
+                var del = this.buttons.Add("Hapus Terpilih");
+                del.Size = new Size(120, 30);
+                del.OnClick = async () =>
+                {
+                    await DeleteRecordAsync();
+                };
+            }
             switch (this.Menu.Type)
             {
                 case ListingData.Users:
@@ -114,9 +138,24 @@ namespace Astro.Forms.Controls
                         new DataTableColumnInfo("Satuan", "unitname", 80),
                         new DataTableColumnInfo("Harga", "price", 120, DataGridViewContentAlignment.MiddleRight, "N0"),
                         new DataTableColumnInfo("Dibuat Oleh", "fullname", 200),
-                        new DataTableColumnInfo("Dibuat Tggl", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
+                        new DataTableColumnInfo("Tanggal Dibuat", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd/MM/yyyy HH:mm")
                     }, this.BindingSource);
                     this.dataGridView1.Columns[0].DefaultCellStyle.BackColor = Color.FromArgb(244,244,244);
+
+                    var manageButton = this.buttons.Add("Manage Kategori");
+                    manageButton.Size = new Size(130, 30);
+                    manageButton.OnClick = () =>
+                    {
+                        var form = new ListCategoryForm();
+                        form.ShowDialog();
+                    };
+                    var unitButton = this.buttons.Add("Manage Satuan");
+                    unitButton.Size = new Size(130, 30);
+                    unitButton.OnClick = () =>
+                    {
+                        var form = new ListUnitForm();
+                        form.ShowDialog();
+                    };
                     break;
                 case ListingData.Suppliers:
                 case ListingData.Customers:
@@ -155,73 +194,62 @@ namespace Astro.Forms.Controls
                         new DataTableColumnInfo("Created Date", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm"),
                         new DataTableColumnInfo("Last Modified", "lastModified", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
+                    var accountButton = this.buttons.Add("Account Provider");
+                    accountButton.Size = new Size(130, 30);
+                    accountButton.OnClick = () =>
+                    {
+                        var form = new ListAccountProviderForm();
+                        form.ShowDialog();
+                    };
                     break;
             }
         }
         public SideBarPanel.Menu Menu { get; }
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            foreach (var button in buttons)
+            {
+                button.OnMouseMove(e.Location);
+            }
             base.OnMouseMove(e);
-            if (this.Menu.AllowAdd && this.addButton != null)
-            {
-                this.addButton.OnMouseMove(e.Location);
-            }
-            if (this.Menu.AllowDelete && this.deleteButton != null)
-            {
-                this.deleteButton.OnMouseMove(e.Location);
-            }
-            this.Invalidate();
+            Invalidate();
         }
-        protected async override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
+            foreach (var button in this.buttons)
+            {
+                if (button.MouseHit && button.Bounds.Contains(e.Location))
+                {
+                    if (button.OnClick != null) button.OnClick.Invoke();
+                    button.MouseHit = false;
+                }
+            }
             base.OnMouseUp(e);
-            if (this.addButton != null && this.addButton.MouseHit && this.addButton.Bounds.Contains(e.Location))
-            {
-                await OpenObjectDetail();
-            }
-            if (this.deleteButton != null && this.deleteButton.MouseHit && this.deleteButton.Bounds.Contains(e.Location))
-            {
-                await DeleteRecordAsync();
-            }
-            if (this.addButton != null) this.addButton.MouseHit = false;
-            if (this.deleteButton != null) this.deleteButton.MouseHit = false;
             Invalidate();
         }
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            foreach (var button in this.buttons)
+            {
+                button.MouseHit = button.Bounds.Contains(e.Location);
+            }
             base.OnMouseDown(e);
-            if (this.addButton != null && this.addButton.Bounds.Contains(e.Location))
-            {
-                this.addButton.MouseHit = true;
-                this.Invalidate();
-                return;
-            }
-            if (this.deleteButton != null && this.deleteButton.Bounds.Contains(e.Location))
-            {
-                this.deleteButton.MouseHit = true;
-                this.Invalidate();
-            }
+            Invalidate();
         }
         protected override void OnMouseLeave(EventArgs e)
         {
+            foreach (var button in buttons)
+            {
+                button.ResetHover();
+            }
             base.OnMouseLeave(e);
-            if (this.addButton != null) this.addButton.OnMouseMove(new Point(-1, -1));
-            if (this.deleteButton != null) this.deleteButton.OnMouseMove(new Point(-1, -1));
             Invalidate();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            var sf = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-            if (Menu.AllowAdd && this.addButton != null)
-            {
-                this.addButton.Draw(e.Graphics);
-            }
-            if (Menu.AllowDelete && this.deleteButton != null)
-            {
-                this.deleteButton.Draw(e.Graphics);
-            }
+            buttons.Draw(e.Graphics);
         }
         internal async Task ReloadDataTable()
         {
@@ -258,6 +286,9 @@ namespace Astro.Forms.Controls
                 case ListingData.Customers:
                 case ListingData.Suppliers:
                     form = new ContactForm();
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = this.FindForm().Location;
+                    form.Size = this.FindForm().Size;
                     form.Text = this.Menu.Type == ListingData.Customers ? "Supplier" : "Customer";
                     break;
                 case ListingData.Employee:
