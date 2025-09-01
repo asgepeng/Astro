@@ -87,7 +87,7 @@ namespace Astro.Winform.Controls
                     _isSet = true;
                 }
             }
-            if (_isSet)
+            else
             {
                 if (_nameTag.Contains(_mouseLoc))
                 {
@@ -139,9 +139,25 @@ namespace Astro.Winform.Controls
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            if (this.OnAccountButtonClick != null)
+            {
+                if (this._nameTag.Contains(_mousehitLoc) && this._nameTag.Contains(e.Location))
+                {
+                    this.OnAccountButtonClick.Invoke(1);
+                }
+                else if (this._emailRect.Contains(_mousehitLoc) && this._emailRect.Contains(e.Location))
+                {
+                    this.OnAccountButtonClick.Invoke(2);
+                }
+                else if (this._cashflowRect.Contains(_mousehitLoc) && this._cashflowRect.Contains(e.Location))
+                {
+                    this.OnAccountButtonClick.Invoke(3);
+                }
+            }
             this._mouseHit = false;
             Invalidate();
         }
+        public Action<int>? OnAccountButtonClick = null;
         private void InitializeComponent()
         {
             SuspendLayout();

@@ -218,7 +218,7 @@ namespace Astro.Data
                     }
                     return (T?)Convert.ChangeType(result, typeof(T));
                 }
-                catch { return default; }
+                catch { return default(T); }
             }
         }
         public async Task<bool> HasRecordsAsync(string commandText, params DbParameter[] parameters)

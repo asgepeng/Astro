@@ -16,15 +16,9 @@ namespace Astro.Winform.Forms
         {
             InitializeComponent();
         }
-        protected override void OnLoad(EventArgs e)
+        private void OverlayForm_Click(object sender, EventArgs e)
         {
-            base.OnLoad(e);
-            var parent = this.ParentForm; ;
-            if (parent != null)
-            {
-                this.Size = parent.Size;
-                this.Location = parent.Location;
-            }
+            this.Close();
         }
     }
 }

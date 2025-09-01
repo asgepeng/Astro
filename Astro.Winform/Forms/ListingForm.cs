@@ -64,9 +64,6 @@ namespace Astro.Winform.Forms
                         UserView = await objectBuilder.CreateUserViewModel((short)id)
                     };
                     return userForm;
-                case ListingData.Roles:
-                    var roleForm = new RoleForm() { Role = await objectBuilder.CreateRoleViewModel((short)id) };
-                    return roleForm;
                 case ListingData.Products:
                     var productForm = new ProductForm() { Tag = id };
                     if (this.MdiParent != null)
@@ -77,7 +74,7 @@ namespace Astro.Winform.Forms
                             productForm.BranchId = branch.Id;
                         }
                     }
-                    return productForm;
+                    throw new NotSupportedException("Unsupported listing data type.");
                 case ListingData.Suppliers:
                 case ListingData.Customers:
                     var text = ListingType == ListingData.Suppliers ? "Supplier" : "Customer";
@@ -88,13 +85,10 @@ namespace Astro.Winform.Forms
                         if (contact != null) supplierForm.Contact = contact;
                     }
 
-                    return supplierForm;
+                    throw new NotSupportedException("Unsupported listing data type.");
                 case ListingData.Accounts:
-                    var accountForm = new AccountForm()
-                    {
-                        Model = await objectBuilder.CreateAccountViewModel((short)id)
-                    };
-                    return accountForm;
+                    var accountForm = new AccountForm();
+                    throw new NotSupportedException("Unsupported listing data type.");
                 default:
                     throw new NotSupportedException("Unsupported listing data type.");
             }

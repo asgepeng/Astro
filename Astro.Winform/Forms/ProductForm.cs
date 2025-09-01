@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace Astro.Winform.Forms
 {
-    public partial class ProductForm : Form
+    public partial class ProductForm : UserControl
     {
         public ProductForm()
         {
@@ -25,7 +25,7 @@ namespace Astro.Winform.Forms
             }
         }
         public short BranchId { get; set; } = 1;
-        public ProductViewModel? Model { get; set; } = null;
+        public Product? Product { get; private set; }
         private List<string> ImageURLs { get; } = new List<string>();
         private int SelectedImage = 0;
         private async Task DisplayImage()
@@ -74,22 +74,28 @@ namespace Astro.Winform.Forms
             using (var reader = new Astro.Streams.Reader(stream))
             {
                 if (stream is null || stream.Length == 0) return;
-                Product? product = null;
                 if (reader.ReadBoolean())
                 {
-                    product = Product.Create(reader);
+                    this.saveButton.Text = "Simpan Perubahan";
+                    this.titleLabel.Text = "Detil Produk";
 
-                    this.skuTextBox.Text = product.Sku;
-                    this.nameTextBox.Text = product.Name;
-                    this.descriptionTextBox.Text = product.Description;
-                    this.stockTextBox.Text = product.Stock.ToString("N0");
-                    this.basicpriceTextBox.Text = product.COGs.ToDecimalFormat();
-                    this.priceTextBox.Text = product.Price.ToDecimalFormat();
-                    this.minstockTextBox.Text = product.MinStock.ToString();
-                    this.maxstockTextBox.Text = product.MaxStock.ToString();
-                    this.typeComboBox.SelectedIndex = product.Type - 1;
-                    this.isactiveCheckBox.Checked = product.Active;
-                    var arrImage = product.Images.Split(';');
+                    Product = Product.Create(reader);
+
+                    this.skuTextBox.Text = Product.Sku;
+                    this.nameTextBox.Text = Product.Name;
+                    this.descriptionTextBox.Text = Product.Description;
+                    this.stockTextBox.Text = Product.Stock.ToString("N0");
+                    this.basicpriceTextBox.Text = Product.COGs.ToDecimalFormat();
+                    this.priceTextBox.Text = Product.Price.ToDecimalFormat();
+                    this.marginTextBox.Text = Product.Margin.ToString("N0");
+                    this.minstockTextBox.Text = Product.MinStock.ToString();
+                    this.maxstockTextBox.Text = Product.MaxStock.ToString();
+                    this.typeComboBox.SelectedIndex = Product.Type;
+                    this.isactiveCheckBox.Checked = Product.Active;
+                    this.taxableCheckBox.Checked = Product.Taxable;
+                    this.taxFactorNumericUpDown.Value = Product.TaxFactor;
+
+                    var arrImage = Product.Images.Trim().Split(';');
                     foreach (var image in arrImage)
                     {
                         if (!string.IsNullOrWhiteSpace(image))
@@ -108,7 +114,7 @@ namespace Astro.Winform.Forms
                         Text = reader.ReadString()
                     };
                     this.categoryComboBox.Items.Add(categoryItem);
-                    if (product != null && product.Category == categoryItem.Id) this.categoryComboBox.SelectedIndex = this.categoryComboBox.Items.Count - 1;
+                    if (Product != null && Product.Category == categoryItem.Id) this.categoryComboBox.SelectedIndex = this.categoryComboBox.Items.Count - 1;
                     iCount--;
                 }
                 iCount = reader.ReadInt32();
@@ -120,7 +126,7 @@ namespace Astro.Winform.Forms
                         Text = reader.ReadString()
                     };
                     this.unitComboBox.Items.Add(unitItem);
-                    if (product != null && product.Unit == unitItem.Id) this.unitComboBox.SelectedIndex = this.unitComboBox.Items.Count - 1;
+                    if (Product != null && Product.Unit == unitItem.Id) this.unitComboBox.SelectedIndex = this.unitComboBox.Items.Count - 1;
                     iCount--;
                 }
                 if (this.ImageURLs.Count > 0)
@@ -128,12 +134,14 @@ namespace Astro.Winform.Forms
                     await DisplayImage();
                 }
                 this.DisableAllControls(false);
+                this.nameTextBox.Focus();
             }
         }
 
         private async void loginButton_Click(object sender, EventArgs e)
         {
-            if (this.Model is null) return;
+            var mainForm = this.FindForm();
+            if (mainForm is null) return;
 
             if (string.IsNullOrWhiteSpace(this.nameTextBox.Text))
             {
@@ -159,15 +167,13 @@ namespace Astro.Winform.Forms
                 unitComboBox.Focus();
                 return;
             }
-            int.TryParse(stockTextBox.Text, out int productStock);
             short.TryParse(minstockTextBox.Text, out short minStock);
             short.TryParse(maxstockTextBox.Text, out short maxStock);
 
-            var productId = this.Model.Product != null ? this.Model.Product.ID : (short)0;
+            var productId = this.Product != null ? this.Product.ID : (short)0;
             using (var writer = new Astro.Streams.Writer())
             {
-                writer.WriteByte(1);
-                writer.WriteInt16(this.BranchId);
+                writer.WriteByte(0x01);
                 writer.WriteInt16(productId);
                 writer.WriteString(this.nameTextBox.Text.Trim());
                 writer.WriteString(this.descriptionTextBox.Text.Trim());
@@ -176,13 +182,15 @@ namespace Astro.Winform.Forms
                 writer.WriteInt16((short)typeComboBox.SelectedIndex);
                 writer.WriteInt16((short)((Option)this.unitComboBox.SelectedItem).Id);
                 writer.WriteString(string.Join(";", this.ImageURLs));
-                writer.WriteInt32(productStock);
+                writer.WriteBoolean(this.taxableCheckBox.Checked);
+                writer.WriteDecimal(this.taxFactorNumericUpDown.Value);
+
                 writer.WriteInt16(minStock);
                 writer.WriteInt16(maxStock);
                 writer.WriteInt64(this.priceTextBox.Text.ToInt64());
-                writer.WriteInt64(this.basicpriceTextBox.Text.ToInt64());
+                writer.WriteBoolean(this.isactiveCheckBox.Checked);
 
-                var result = await WClient.PostAsync("/data/products", writer.ToArray());
+                var result = productId == 0 ? await WClient.PostAsync("/data/products", writer.ToArray()) : await WClient.PutAsync("/data/products", writer.ToArray());
                 var commonResult = CommonResult.Create(result);
                 if (commonResult != null)
                 {
@@ -196,8 +204,8 @@ namespace Astro.Winform.Forms
                         {
                             this.Tag = null;
                         }
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
+                        mainForm.DialogResult = DialogResult.OK;
+                        mainForm.Close();
                     }
                     else
                     {
@@ -230,7 +238,7 @@ namespace Astro.Winform.Forms
                 var result = await WClient.UploadDocument("/documents/upload", bytes);
                 if (!string.IsNullOrWhiteSpace(result))
                 {
-                    if (this.Model != null)
+                    if (this.Product != null)
                     {
                         this.ImageURLs.Add(result);
                         this.SelectedImage = this.ImageURLs.Count - 1;
@@ -331,6 +339,16 @@ namespace Astro.Winform.Forms
                 }
                 await DisplayImage();
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void priceTextBox_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

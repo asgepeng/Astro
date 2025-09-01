@@ -45,6 +45,8 @@ namespace Astro.Models
             Price = reader.ReadInt64();
             COGs = reader.ReadInt64();
             Images = reader.ReadString();
+            Taxable = reader.ReadBoolean();
+            TaxFactor = reader.ReadDecimal();
         }
         [JsonConstructor] public Product() { }
         [JsonPropertyName("id")]
@@ -74,8 +76,14 @@ namespace Astro.Models
         [JsonPropertyName("costAverage")]
         [DisplayName("Cost Average")]
         public long COGs { get; set; }
+        [JsonIgnore]
+        public long Margin => Price - COGs;
         [JsonPropertyName("images")]
         public string Images { get; set; } = string.Empty;
+        [JsonPropertyName("taxable")]
+        public bool Taxable { get; set; } = false;
+        [JsonPropertyName("taxFactor")]
+        public decimal TaxFactor { get; set; } = 0.0M;
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.Product);
         public static Product? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.Product);
         public static Product Create(Streams.Reader reader) => new Product(reader);

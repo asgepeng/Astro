@@ -54,7 +54,7 @@
             // 
             splitContainer1.Panel2.Controls.Add(richTextBox1);
             splitContainer1.Size = new Size(800, 450);
-            splitContainer1.SplitterDistance = 315;
+            splitContainer1.SplitterDistance = 269;
             splitContainer1.TabIndex = 0;
             // 
             // dataGridView1
@@ -84,15 +84,16 @@
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.RowTemplate.Height = 26;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView1.Size = new Size(800, 315);
+            dataGridView1.Size = new Size(800, 269);
             dataGridView1.TabIndex = 2;
             // 
             // richTextBox1
             // 
             richTextBox1.Dock = DockStyle.Fill;
+            richTextBox1.Font = new Font("Cascadia Mono", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             richTextBox1.Location = new Point(0, 0);
             richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new Size(800, 131);
+            richTextBox1.Size = new Size(800, 177);
             richTextBox1.TabIndex = 0;
             richTextBox1.Text = "";
             richTextBox1.KeyDown += richTextBox1_KeyDown;

@@ -13,13 +13,14 @@ using WinformApp.Data;
 
 namespace Astro.Winform.Forms
 {
-    public partial class ContactForm : Form
+    public partial class ContactForm : UserControl
     {
         string[] phoneTypes = { "Home", "Mobile", "Whatsapp", "Chat" };
         public ContactForm()
         {
             InitializeComponent();            
         }
+        public short ContactType { get; set; } = 0;
         private string GetPhoneType(short type)
         {
             if (type < phoneTypes.Length) return phoneTypes[type];
@@ -67,34 +68,63 @@ namespace Astro.Winform.Forms
                 return;
             }
             this.Contact.Name = this.textBox1.Text.Trim();
-            var json = string.Empty;
-            if (this.Contact.Id == 0)
-            {
-                json = await WClient.PostAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
-            }
-            else
-            {
-                json = await WClient.PutAsync(this.Text == "Supplier" ? "/data/suppliers" : "/data/customers", this.Contact.ToString());
-            }
-            var commonResult = CommonResult.Create(json);
-            if (commonResult != null)
-            {
-                if (commonResult.Success)
-                {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show(commonResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            var mainForm = this.FindForm();
+            if (mainForm is null) return;
 
+            using (var writer = new Streams.Writer())
+            {
+                writer.WriteByte(0x01);
+                writer.WriteInt32(this.Contact.Id);
+                writer.WriteString(this.Contact.Name);
+                writer.WriteInt32(this.Contact.Addresses.Count);
+                for (int i = 0; i < this.Contact.Addresses.Count; i++)
+                {
+                    var address = this.Contact.Addresses[i];
+                    writer.WriteString(address.StreetAddress.Trim());
+                    writer.WriteInt64(address.Village.Id);
+                    writer.WriteString(address.ZipCode.Trim());
+                    writer.WriteInt16(address.Type);
+                    writer.WriteBoolean(address.IsPrimary);
+                }
+                writer.WriteInt32(this.Contact.Phones.Count);
+                for (int i = 0; i < this.Contact.Phones.Count; i++)
+                {
+                    var phone = this.Contact.Phones[i];
+                    writer.WriteString(phone.Number.Trim());
+                    writer.WriteInt16(phone.Type);
+                    writer.WriteBoolean(phone.IsPrimary);
+                }
+                writer.WriteInt32(this.Contact.Emails.Count);
+                for (int i = 0; i < this.Contact.Emails.Count; i++)
+                {
+                    var email = this.Contact.Emails[i];
+                    writer.WriteString(email.Address.Trim());
+                    writer.WriteInt16(email.Type);
+                    writer.WriteBoolean(email.IsPrimary);
+                }
+                var endpoint = this.ContactType == 0 ? "/data/suppliers" : "/data/customers";
+                var result = this.Contact.Id > 0 ? await WClient.PutAsync(endpoint, writer.ToArray()) : await WClient.PostAsync(endpoint, writer.ToArray());
+                var commonResult = CommonResult.Create(result);
+                if (commonResult != null)
+                {
+                    if (commonResult.Success)
+                    {
+                        mainForm.DialogResult = DialogResult.OK;
+                        mainForm.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(commonResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
 
         private async void ContactForm_Load(object sender, EventArgs e)
         {
-            this.SetEnableControls(false);
+            var mainForm = this.FindForm();
+            if (mainForm != null) mainForm.SetEnableControls(false);
+
             this.label1.Text = this.Text + " Name";
             if (this.Text == "Customer") this.tabControl1.TabPages[2].Text = "🧾 Account Receivable";
             if (this.Tag != null)
@@ -169,7 +199,7 @@ namespace Astro.Winform.Forms
             }
             this.textBox1.Text = this.Contact.Name;
             FillAddressBox();
-            this.SetEnableControls(true);
+            if (mainForm != null) mainForm.SetEnableControls(true);
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -366,11 +396,6 @@ namespace Astro.Winform.Forms
                     this.FillAddressBox();
                 }
             }
-        }
-
-        private void ContactForm_Click(object sender, EventArgs e)
-        {
-            this.Close();
         }
     }
 }

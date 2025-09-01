@@ -201,73 +201,45 @@ namespace Astro.Winform.Forms
 
                 case WM_NCHITTEST:
                     {
-                        if (this.WindowState == FormWindowState.Maximized)
-                        {
-                            m.Result = (IntPtr)HTCLIENT;
-                            return;
-                        }
-
                         Point cursor = this.PointToClient(Cursor.Position);
 
-                        // --- 1. RESIZE HANDLE ---
-                        bool left = cursor.X <= RESIZE_HANDLE_SIZE;
-                        bool right = cursor.X >= this.ClientSize.Width - RESIZE_HANDLE_SIZE;
-                        bool top = cursor.Y <= RESIZE_HANDLE_SIZE;
-                        bool bottom = cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE;
-
-                        if (left && right && top && bottom && this.WindowState != FormWindowState.Maximized)
+                        if (cursor.X <= RESIZE_HANDLE_SIZE)
                         {
+                            if (cursor.Y <= RESIZE_HANDLE_SIZE)
+                                m.Result = (IntPtr)HTTOPLEFT;
+                            else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
+                                m.Result = (IntPtr)HTBOTTOMLEFT;
+                            else
+                                m.Result = (IntPtr)HTLEFT;
                             return;
                         }
-                        if (left && top)
+                        else if (cursor.X >= this.ClientSize.Width - RESIZE_HANDLE_SIZE)
                         {
-                            m.Result = (IntPtr)HTTOPLEFT;
+                            if (cursor.Y <= RESIZE_HANDLE_SIZE)
+                                m.Result = (IntPtr)HTTOPRIGHT;
+                            else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
+                                m.Result = (IntPtr)HTBOTTOMRIGHT;
+                            else
+                                m.Result = (IntPtr)HTRIGHT;
                             return;
                         }
-                        if (right && top)
-                        {
-                            m.Result = (IntPtr)HTTOPRIGHT;
-                            return;
-                        }
-                        if (left && bottom)
-                        {
-                            m.Result = (IntPtr)HTBOTTOMLEFT;
-                            return;
-                        }
-                        if (right && bottom)
-                        {
-                            m.Result = (IntPtr)HTBOTTOMRIGHT;
-                            return;
-                        }
-                        if (left)
-                        {
-                            m.Result = (IntPtr)HTLEFT;
-                            return;
-                        }
-                        if (right)
-                        {
-                            m.Result = (IntPtr)HTRIGHT;
-                            return;
-                        }
-                        if (top)
+                        else if (cursor.Y <= RESIZE_HANDLE_SIZE)
                         {
                             m.Result = (IntPtr)HTTOP;
                             return;
                         }
-                        if (bottom)
+                        else if (cursor.Y >= this.ClientSize.Height - RESIZE_HANDLE_SIZE)
                         {
                             m.Result = (IntPtr)HTBOTTOM;
                             return;
                         }
 
-                        // --- 2. TITLEBAR AREA (drag support) ---
                         if (cursor.Y <= 40)
                         {
-                            m.Result = (IntPtr)HTCAPTION; // drag window kamu tangani sendiri di WM_LBUTTONDOWN
+                            m.Result = (IntPtr)HTCLIENT;
                             return;
                         }
 
-                        // --- 3. DEFAULT ---
                         break;
                     }
 
@@ -304,30 +276,25 @@ namespace Astro.Winform.Forms
         }
         private void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
         {
-            const int MONITOR_DEFAULTTONEAREST = 0x00000002;
+            MINMAXINFO mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
 
-            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            // pastikan max size & position sesuai monitor aktif
+            Screen screen = Screen.FromHandle(hwnd);
+            Rectangle workingArea = screen.WorkingArea;
+            Rectangle monitorArea = screen.Bounds;
 
-            if (monitor != IntPtr.Zero)
-            {
-                MONITORINFO monitorInfo = new MONITORINFO();
-                monitorInfo.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
-                GetMonitorInfo(monitor, ref monitorInfo);
+            mmi.ptMaxPosition.x = workingArea.Left - monitorArea.Left;
+            mmi.ptMaxPosition.y = workingArea.Top - monitorArea.Top;
+            mmi.ptMaxSize.x = workingArea.Width;
+            mmi.ptMaxSize.y = workingArea.Height;
 
-                MINMAXINFO mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            // optional: set min size biar gak bisa terlalu kecil
+            mmi.ptMinTrackSize.x = this.MinimumSize.Width;
+            mmi.ptMinTrackSize.y = this.MinimumSize.Height;
 
-                RECT work = monitorInfo.rcWork;
-                RECT monitorArea = monitorInfo.rcMonitor;
-
-                mmi.ptMaxPosition.x = work.Left - monitorArea.Left;
-                mmi.ptMaxPosition.y = work.Top - monitorArea.Top;
-
-                mmi.ptMaxSize.x = work.Right - work.Left;
-                mmi.ptMaxSize.y = (work.Bottom - work.Top) - 1;
-
-                Marshal.StructureToPtr(mmi, lParam, true);
-            }
+            Marshal.StructureToPtr(mmi, lParam, true);
         }
+
         private void ToggleMaximize()
         {
             if (this.WindowState == FormWindowState.Maximized)
@@ -339,7 +306,7 @@ namespace Astro.Winform.Forms
         #region Members
         private Point _mousePoint;
         private readonly Font _controlFont = new Font("Segoe MDL2 Assets", 7.75F, FontStyle.Regular);
-        private readonly Font _labelFont = new Font("Segoe UI", 15.75F, FontStyle.Regular);
+        private readonly Font _labelFont = new Font("Segoe UI", 17.75F, FontStyle.Regular);
         private readonly StringFormat _center = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
         #endregion
         public SPAForm()
@@ -350,6 +317,7 @@ namespace Astro.Winform.Forms
                     | ControlStyles.ResizeRedraw
                     | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
+            this.userPanel1.OnAccountButtonClick = this.HandleOnUserPanelClick;
         }
         private async void SPAForm_Load(object sender, EventArgs e)
         {
@@ -396,29 +364,29 @@ namespace Astro.Winform.Forms
                         }
                         switch (menu.Id)
                         {
-                            case 2:
-                                menu.Type = ListingData.Roles;
-                                menu.URL = "/data/roles";
-                                break;
-                            case 6:
+                            case 1:
                                 menu.Type = ListingData.Products;
                                 menu.URL = "/data/products";
                                 break;
-                            case 7:
+                            case 3:
                                 menu.Type = ListingData.Customers;
                                 menu.URL = "/data/customers";
                                 break;
-                            case 8:
+                            case 2:
                                 menu.Type = ListingData.Suppliers;
                                 menu.URL = "/data/suppliers";
                                 break;
-                            case 9:
+                            case 4:
                                 menu.Type = ListingData.Employee;
                                 menu.URL = "/data/employees";
                                 break;
-                            case 10:
+                            case 5:
                                 menu.Type = ListingData.Accounts;
                                 menu.URL = "/data/accounts";
+                                break;
+                            case 21:
+                                menu.Type = ListingData.Roles;
+                                menu.URL = "/data/roles";
                                 break;
                         }
                         menuLength--;
@@ -522,31 +490,20 @@ namespace Astro.Winform.Forms
                     ctrl.BringToFront();
                     if (ctrl is ListingControl listing)
                     {
-                        await listing.ReloadDataTable();
+                        await listing.LoadDataAsync();
                     }
                     return;
                 }
                 switch (sideBarPanel.SelectedItem.Id)
                 {
                     case 1:
-                        //ctrl = new ListingControl(ListingData.Users, "/data/users");
-                        break;
                     case 2:
-                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
-                        break;
+                    case 3:
+                    case 4:
+                    case 5:
                     case 6:
-                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
-                        break;
-                    case 7:
-                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
-                        break;
-                    case 8:
-                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
-                        break;
-                    case 9:
-                        ctrl = new ListingControl(sideBarPanel.SelectedItem);
-                        break;
                     case 10:
+                    case 21:
                         ctrl = new ListingControl(sideBarPanel.SelectedItem);
                         break;
                 }
@@ -558,6 +515,20 @@ namespace Astro.Winform.Forms
                     ctrl.BringToFront();
                 }
             }
+        }
+        private void HandleOnUserPanelClick(int code)
+        {
+            var overlay = new OverlayForm();
+            overlay.StartPosition = FormStartPosition.Manual;
+            overlay.Size = this.Size;
+
+            var panel = new Panel();
+            panel.BorderStyle = BorderStyle.FixedSingle;
+            panel.BackColor = Color.FromArgb(250, 250, 250);
+            panel.Size = new Size(300, 200);
+            panel.Dock = DockStyle.Right;
+            overlay.Controls.Add(panel);
+            overlay.ShowDialog(this);
         }
     }
 }

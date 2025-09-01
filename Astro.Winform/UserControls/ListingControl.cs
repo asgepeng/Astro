@@ -1,21 +1,9 @@
-﻿using Astro.DataTables;
-using Astro.Drawing.Extensions;
+﻿using Astro.Drawing.Extensions;
 using Astro.Winform.Classes;
 using Astro.Winform.Controls;
 using Astro.Winform.Forms;
-using Astro.Winform.Tables;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using WinformApp.Data;
 
 namespace Astro.Forms.Controls
@@ -35,8 +23,8 @@ namespace Astro.Forms.Controls
             public int Width => this.Size.Width;
             public int Height => this.Size.Height;
             public Action? OnClick = null;
-            public Color BackColor { get; set; } = Color.Navy;
-            public Color HoveredBackColor { get; set; } = Color.Blue;
+            public Color BackColor { get; set; } = Color.Blue;
+            public Color HoveredBackColor { get; set; } = Color.DarkBlue;
             public Font Font { get; set; } = new Font("Segoe UI", 9.75F, FontStyle.Regular);
             public bool Hovered { get; private set; }
             public bool MouseHit { get; set; }
@@ -50,8 +38,15 @@ namespace Astro.Forms.Controls
                 using (var brush = new SolidBrush(this.MouseHit ? Color.SteelBlue : this.Hovered ? this.HoveredBackColor : this.BackColor))
                 {
                     var sf = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawRoundedRectangle(new Rectangle(this.Location, this.Size), 10, brush);
-                    g.DrawString(this.Text, this.Font, Brushes.White, new Rectangle(this.Location, this.Size), sf);
+                    g.DrawRoundedRectangle(new Rectangle(this.Location, this.Size), 5, brush);
+                    TextRenderer.DrawText(
+                        g,
+                        this.Text,
+                        this.Font,
+                        new Rectangle(this.Location, this.Size),
+                        Color.White,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis
+                    );
                 }
             }
         }
@@ -64,11 +59,14 @@ namespace Astro.Forms.Controls
                     Text = text,
                     Location = this.Count > 0 ? new Point(this[this.Count - 1].X + this[this.Count - 1].Width + 5, 0) : new Point(10, 0)
                 };
+                var w = TextRenderer.MeasureText(button.Text, button.Font).Width + 16;
+                button.Size = new Size(w, 30);
                 base.Add(button);
                 return button;
             }
             public void Draw (Graphics g)
             {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 foreach (var button in this)
                 {
                     button.Draw(g);
@@ -88,11 +86,15 @@ namespace Astro.Forms.Controls
                 | ControlStyles.ResizeRedraw
                 | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
-
+            var refreshButton = this.buttons.Add("\u21BA Refresh");
+            refreshButton.OnClick = async () =>
+            {
+                await LoadDataAsync();
+            };
             this.Menu = _menu;
             if (this.Menu.AllowAdd)
             {
-                var add = this.buttons.Add("Baru");
+                var add = this.buttons.Add("\u2795 Baru");
                 add.OnClick = async () =>
                 {
                     await this.OpenObjectDetail();
@@ -100,8 +102,7 @@ namespace Astro.Forms.Controls
             }
             if (this.Menu.AllowDelete)
             {
-                var del = this.buttons.Add("Hapus Terpilih");
-                del.Size = new Size(120, 30);
+                var del = this.buttons.Add("\u274C Hapus");
                 del.OnClick = async () =>
                 {
                     await DeleteRecordAsync();
@@ -112,7 +113,7 @@ namespace Astro.Forms.Controls
                 case ListingData.Users:
                     GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
                     {
-                        new DataTableColumnInfo("Name", "fullname", 320, DataGridViewContentAlignment.MiddleLeft, ""),
+                        new DataTableColumnInfo("Nama Pegawai", "fullname", 320, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Email Address", "email", 250, DataGridViewContentAlignment.MiddleLeft, ""),
                         new DataTableColumnInfo("Role", "role_name", 120),
                         new DataTableColumnInfo("Created By", "creator", 150),
@@ -143,14 +144,12 @@ namespace Astro.Forms.Controls
                     this.dataGridView1.Columns[0].DefaultCellStyle.BackColor = Color.FromArgb(244,244,244);
 
                     var manageButton = this.buttons.Add("Manage Kategori");
-                    manageButton.Size = new Size(130, 30);
                     manageButton.OnClick = () =>
                     {
                         var form = new ListCategoryForm();
                         form.ShowDialog();
                     };
                     var unitButton = this.buttons.Add("Manage Satuan");
-                    unitButton.Size = new Size(130, 30);
                     unitButton.OnClick = () =>
                     {
                         var form = new ListUnitForm();
@@ -159,15 +158,15 @@ namespace Astro.Forms.Controls
                     break;
                 case ListingData.Suppliers:
                 case ListingData.Customers:
-                    var headerText = this.Menu.Type == ListingData.Suppliers ? "Supplier Name" : "Customer Name";
+                    var headerText = this.Menu.Type == ListingData.Suppliers ? "Nama Supplier" : "Nama Pelanggan";
                     GridHelpers.InitializeDataGridColumns(this.dataGridView1, new DataTableColumnInfo[]
                     {
                         new DataTableColumnInfo("Kode", "contactid", 70, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo(headerText, "name", 300),
                         new DataTableColumnInfo("Alamat", "address", 300),
                         new DataTableColumnInfo("Telepon", "phonenumber", 120),
-                        new DataTableColumnInfo("Created By", "creator", 180),
-                        new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
+                        new DataTableColumnInfo("Dibuat Oleh", "creator", 180),
+                        new DataTableColumnInfo("Dibuat Tanggal", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
                     this.dataGridView1.Columns[0].DefaultCellStyle.BackColor = Color.FromArgb(244, 244, 244);
                     break;
@@ -177,7 +176,7 @@ namespace Astro.Forms.Controls
                         //new DataTableColumnInfo("ID", "id", 60, DataGridViewContentAlignment.MiddleCenter, "00000"),
                         new DataTableColumnInfo("Nama Pegawai", "fullname", 300),
                         new DataTableColumnInfo("Alamat", "address", 300),
-                        new DataTableColumnInfo("Phone Number", "phone", 120),
+                        new DataTableColumnInfo("Telepon", "phone", 120),
                         new DataTableColumnInfo("Jabatan", "rolename", 200),
                         new DataTableColumnInfo("Created By", "creator", 180),
                         new DataTableColumnInfo("Created At", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
@@ -189,13 +188,12 @@ namespace Astro.Forms.Controls
                         new DataTableColumnInfo("Account Name", "accountName", 200),
                         new DataTableColumnInfo("Account Number", "accountNumber", 200),
                         new DataTableColumnInfo("Account Type", "accountType", 120),
-                        new DataTableColumnInfo("Provider Name", "providerName", 180),
-                        new DataTableColumnInfo("Created By", "createdBy", 200),
-                        new DataTableColumnInfo("Created Date", "createdDate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm"),
-                        new DataTableColumnInfo("Last Modified", "lastModified", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
+                        new DataTableColumnInfo("Provider Name", "name", 180),
+                        new DataTableColumnInfo("Created By", "fullname", 200),
+                        new DataTableColumnInfo("Created Date", "createddate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm"),
+                        new DataTableColumnInfo("Last Modified", "aditeddate", 120, DataGridViewContentAlignment.MiddleRight, "dd-MM-yyyy HH:mm")
                     }, this.BindingSource);
                     var accountButton = this.buttons.Add("Account Provider");
-                    accountButton.Size = new Size(130, 30);
                     accountButton.OnClick = () =>
                     {
                         var form = new ListAccountProviderForm();
@@ -251,59 +249,71 @@ namespace Astro.Forms.Controls
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             buttons.Draw(e.Graphics);
         }
-        internal async Task ReloadDataTable()
+        internal async Task LoadDataAsync()
         {
-            using (var stream = await WClient.GetStreamAsync(this.Menu.URL))
+            using (var stream = await WClient.PostStreamAsync(this.Menu.URL, new byte[] { 0x00, 0x00 }))
             using (var reader = new Streams.Reader(stream))
             {
+                if (stream.Length == 0) return;
+
                 var result = reader.ReadByte();
                 if (result == 0x00)
                 {
                     this.BindingSource.DataSource = null;
                     return;
                 }
-                if (stream.Length > 0)
-                {
-                    this.BindingSource.DataSource = reader.ReadDataTable();
-                }
+                this.BindingSource.DataSource = reader.ReadDataTable();
             }
         }
         private async void ListingControl_Load(object sender, EventArgs e)
         {
-            await ReloadDataTable();
+            await LoadDataAsync();
         }
         private async Task OpenObjectDetail(object? id = null)
         {
-            Form? form = null;
+            Control? control = null;
             switch (this.Menu.Type)
             {
                 case ListingData.Roles:
-                    form = new RoleForm();
+                    control = new RoleForm();
                     break;
                 case ListingData.Products:
-                    form = new ProductForm();
+                    control = new ProductForm();
                     break;
                 case ListingData.Customers:
                 case ListingData.Suppliers:
-                    form = new ContactForm();
-                    form.StartPosition = FormStartPosition.Manual;
-                    form.Location = this.FindForm().Location;
-                    form.Size = this.FindForm().Size;
-                    form.Text = this.Menu.Type == ListingData.Customers ? "Supplier" : "Customer";
+                    control = new ContactForm()
+                    {
+                        ContactType = this.Menu.Type == ListingData.Suppliers ? (short)0 : (short)1,
+                        Text = this.Menu.Type == ListingData.Suppliers ? "Supplier" : "Customer"
+                    };
                     break;
                 case ListingData.Employee:
-                    form = new EmployeeForm();
+                    control = new EmployeeForm();
                     break;
                 case ListingData.Accounts:
-                    form = new AccountForm();
+                    control = new AccountForm();
                     break;
             }
-            if (form != null)
+            if (control != null)
             {
-                form.Tag = id;
-                if (form.ShowDialog() == DialogResult.OK)
+                var mainForm = this.FindForm();
+                if (mainForm is null) return;
+
+                using (OverlayForm form = new OverlayForm())
                 {
-                    await this.ReloadDataTable();
+                    control.Tag = id;
+                    control.Dock = DockStyle.Right;
+
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Size = mainForm.Size;
+                    form.Location = mainForm.Location;
+                    form.Padding = new Padding(1, 1, 1, 1);
+                    form.Controls.Add(control);
+                    if (form.ShowDialog() == DialogResult.OK)
+                    {
+                        await LoadDataAsync();
+                    }
                 }
             }
         }
@@ -316,7 +326,7 @@ namespace Astro.Forms.Controls
                     var row = (DataRowView)this.BindingSource.Current;
                     var id = row[0]?.ToString();
                     var result = await WClient.DeleteAsync(this.Menu.URL + "/" + id);
-                    await this.ReloadDataTable();
+                    await this.LoadDataAsync();
                 }
             }
         }

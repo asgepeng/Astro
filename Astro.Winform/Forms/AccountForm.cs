@@ -13,14 +13,14 @@ using System.Windows.Forms;
 
 namespace Astro.Winform.Forms
 {
-    public partial class AccountForm : Form
+    public partial class AccountForm : UserControl
     {
         public AccountForm()
         {
             InitializeComponent();
         }
-        public AccountViewModel Model { get; set; } = new AccountViewModel();
-
+        public List<AccountProvider> Providers { get; } = new List<AccountProvider>();
+        public Account Account { get; set; } = new Account();
         private async void AccountForm_Load(object sender, EventArgs e)
         {
             using (var stream = await WClient.GetStreamAsync("/data/accounts/" + (Tag is null ? "0" :  Tag.ToString())))
@@ -29,52 +29,53 @@ namespace Astro.Winform.Forms
                 var accountExists = reader.ReadBoolean();
                 if (accountExists)
                 {
-                    Model.Account.Id = reader.ReadInt16();
-                    Model.Account.AccountName = reader.ReadString();
-                    Model.Account.AccountNumber = reader.ReadString();
-                    Model.Account.Provider = reader.ReadInt16();
-                    Model.Account.AccountType = reader.ReadInt16();
+                    this.Account.Id = reader.ReadInt16();
+                    this.Account.AccountName = reader.ReadString();
+                    this.Account.AccountNumber = reader.ReadString();
+                    this.Account.Provider = reader.ReadInt16();
+                    this.Account.AccountType = reader.ReadInt16();
                 }
                 var iCount = reader.ReadInt32();
-                while (iCount > 0)
+                for (int i=0; i < iCount; i++)
                 {
-                    Model.Providers.Add(new AccountProvider()
+                    var provider = new AccountProvider()
                     {
                         Id = reader.ReadInt16(),
                         Name = reader.ReadString(),
                         Type = reader.ReadInt16()
-                    });
-                    iCount--;
+                    };
+                    this.Providers.Add(provider);
                 }
             }
-            this.textBox1.Text = Model.Account.AccountName;
-            this.textBox2.Text = Model.Account.AccountNumber;
-            this.comboBox1.SelectedIndex = Model.Account.AccountType - 1;
-            foreach (var item in Model.Providers)
+            this.label5.Text = this.Account.Id > 0 ? "Detil Rekening" : "Tambah Rekening";
+            this.accountNameTextBox.Text = this.Account.AccountName;
+            this.accountNumberTextBox.Text = this.Account.AccountNumber;
+            this.accountTypeComboBox.SelectedIndex = this.Account.AccountType - 1;
+            foreach (var item in this.Providers)
             {
-                if (item.Type == Model.Account.AccountType)
+                if (item.Type == this.Account.AccountType)
                 {
-                    this.comboBox2.Items.Add(item);
-                    if (item.Id == Model.Account.Provider)
+                    this.accountProviderComboBox.Items.Add(item);
+                    if (item.Id == this.Account.Provider)
                     {
-                        this.comboBox2.SelectedIndex = this.comboBox2.Items.Count - 1;
+                        this.accountProviderComboBox.SelectedIndex = this.accountProviderComboBox.Items.Count - 1;
                     }
                 }
             }
-            this.comboBox1.SelectedIndexChanged += new EventHandler(this.AccountTypeChanged);
+            this.accountTypeComboBox.SelectedIndexChanged += new EventHandler(this.AccountTypeChanged);
         }
         private void AccountTypeChanged(object? sender, EventArgs e)
         {
-            this.Model.Account.AccountType = (short)(this.comboBox1.SelectedIndex + 1);
-            this.comboBox2.Items.Clear();
-            foreach (var item in Model.Providers)
+            this.Account.AccountType = (short)(this.accountTypeComboBox.SelectedIndex + 1);
+            this.accountProviderComboBox.Items.Clear();
+            foreach (var item in this.Providers)
             {
-                if (item.Type == Model.Account.AccountType)
+                if (item.Type == this.Account.AccountType)
                 {
-                    this.comboBox2.Items.Add(item);
-                    if (item.Id == Model.Account.Provider)
+                    this.accountProviderComboBox.Items.Add(item);
+                    if (item.Id == this.Account.Provider)
                     {
-                        this.comboBox2.SelectedIndex = this.comboBox2.Items.Count - 1;
+                        this.accountProviderComboBox.SelectedIndex = this.accountProviderComboBox.Items.Count - 1;
                     }
                 }
             }
@@ -82,50 +83,55 @@ namespace Astro.Winform.Forms
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(this.textBox1.Text))
+            var mainForm = this.FindForm();
+            if (mainForm is null) return;
+
+            if (string.IsNullOrWhiteSpace(this.accountNameTextBox.Text))
             {
                 MessageBox.Show("Account name cannot be empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.textBox1.Focus();
+                this.accountNameTextBox.Focus();
                 return;
             }
-            if (string.IsNullOrWhiteSpace(this.textBox2.Text))
+            if (string.IsNullOrWhiteSpace(this.accountNumberTextBox.Text))
             {
                 MessageBox.Show("Account name cannot be empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.textBox1.Focus();
+                this.accountNumberTextBox.Focus();
                 return;
             }
-            if (this.comboBox1.SelectedIndex < 0)
+            if (this.accountTypeComboBox.SelectedIndex < 0)
             {
                 MessageBox.Show("Account type is not selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.comboBox1.Focus();
+                this.accountTypeComboBox.Focus();
                 return;
             }
-            if (this.comboBox2.SelectedItem is null)
+            if (this.accountProviderComboBox.SelectedItem is null)
             {
                 MessageBox.Show("Account provider is not selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.comboBox2.Focus();
+                this.accountProviderComboBox.Focus();
                 return;
             }
-            var account = this.Model.Account;
-            account.AccountName = this.textBox1.Text.Trim();
-            account.AccountNumber = this.textBox2.Text.Trim();
-            account.AccountType = (short)(this.comboBox1.SelectedIndex + 1);
-            account.Provider = ((AccountProvider)this.comboBox2.SelectedItem).Id;
-
-            var json = account.Id > 0 ? await WClient.PutAsync("/data/accounts", account.ToString()) : await WClient.PostAsync("/data/accounts", account.ToString());
-            var commonResult = CommonResult.Create(json);
-            if (commonResult != null)
+            using (var writer = new Streams.Writer())
             {
-                if (commonResult.Success)
+                writer.WriteByte(0x01);
+                writer.WriteInt16(this.Account.Id);
+                writer.WriteString(this.accountNameTextBox.Text.Trim());
+                writer.WriteString(this.accountNumberTextBox.Text.Trim());
+                writer.WriteInt16((short)((AccountProvider)this.accountProviderComboBox.SelectedItem).Id);
+                var json = this.Account.Id > 0 ? await WClient.PutAsync("/data/accounts", writer.ToArray()) : await WClient.PostAsync("/data/accounts", writer.ToArray());
+                var commonResult = CommonResult.Create(json);
+                if (commonResult != null)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    if (commonResult.Success)
+                    {
+                        mainForm.DialogResult = DialogResult.OK;
+                        mainForm.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(commonResult.Message);
+                    }
                 }
-                else
-                {
-                    MessageBox.Show(commonResult.Message);
-                }
-            }
+            }           
         }
     }
 }

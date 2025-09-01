@@ -53,6 +53,12 @@ namespace Astro.Winform.Forms
                 districtComboBox.Focus();
                 return;
             }
+            if (villageComboBox.SelectedItem is null)
+            {
+                MessageBox.Show("Desa / Kelurahan belum dipilih.", "City", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                villageComboBox.Focus();
+                return;
+            }
             if (string.IsNullOrWhiteSpace(zipCodeTextBox.Text))
             {
                 MessageBox.Show("Zip or Postal code cannot be empty.", "Zip / Postal Code", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -62,24 +68,10 @@ namespace Astro.Winform.Forms
 
             this.Address.Type = (short)typeComboBox.SelectedIndex;
             this.Address.StreetAddress = streetTextBox.Text.Trim();
-            var selectedCity = (Option)this.districtComboBox.SelectedItem;
-            var selectedState = (Option)this.cityComboBox.SelectedItem;
-            var selectedCountry = (Option)this.stateComboBox.SelectedItem;
-            this.Address.City = new City()
-            {
-                Id = selectedCity.Id,
-                Name = selectedCity.Text
-            };
-            this.Address.StateOrProvince = new Province()
-            {
-                Id = (short)selectedState.Id,
-                Name = selectedState.Text
-            };
-            this.Address.Country = new Country()
-            {
-                Id = (short)selectedCountry.Id,
-                Name = selectedCountry.Text
-            };
+            this.Address.StateOrProvince = (Province)stateComboBox.SelectedItem;
+            this.Address.City = (City)cityComboBox.SelectedItem;
+            this.Address.District = (District)districtComboBox.SelectedItem;
+            this.Address.Village = (Village)villageComboBox.SelectedItem;
             this.Address.ZipCode = this.zipCodeTextBox.Text.Trim();
             this.Address.IsPrimary = this.primaryCheckBox.Checked;
 
@@ -101,32 +93,28 @@ namespace Astro.Winform.Forms
             this.typeComboBox.SelectedIndex = this.Address.Type;
             this.streetTextBox.Text = this.Address.StreetAddress;
 
-            if (this.Address.StateOrProvince.Id == 0)
+            using (var stream = await WClient.GetStreamAsync("/data/regions/states/360"))
+            using (var reader = new Astro.Streams.Reader(stream))
             {
-                this.stateComboBox.DataSource = await ListOptionHelper.GetCountryOptionsAsync();
+                var countryCount = reader.ReadInt32();
+                for (int i = 0; i < countryCount; i++)
+                {
+                    var state = new Province()
+                    {
+                        Id = reader.ReadInt16(),
+                        Name = reader.ReadString()
+                    };
+                    this.stateComboBox.Items.Add(state);
+                    if (state.Id == this.Address.StateOrProvince.Id) this.stateComboBox.SelectedIndex = i;
+                }
             }
-            else
+            if (this.Address.StateOrProvince.Id != 0)
             {
-                using (var stream = await WClient.GetStreamAsync("/data/regions/states/360"))
-                using (var reader = new Astro.Streams.Reader(stream))
+                using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + this.Address.StateOrProvince.Id.ToString()))
+                using (var reader = new Streams.Reader(stream))
                 {
                     var stateCount = reader.ReadInt32();
-                    for (int i=0; i < stateCount; i++)
-                    {
-                        var state = new Province()
-                        {
-                            Id = reader.ReadInt16(),
-                            Name = reader.ReadString()
-                        };
-                        this.stateComboBox.Items.Add(state);
-                        if (state.Id == this.Address.StateOrProvince.Id) this.stateComboBox.SelectedIndex = i;
-                    }
-                }
-                using (var stream = await WClient.GetStreamAsync("/data/regions/cities/" + this.Address.StateOrProvince.Id.ToString()))
-                using (var reader = new Astro.Streams.Reader(stream))
-                {
-                    var cityCount = reader.ReadInt32();
-                    for (int i=0; i < cityCount; i++)
+                    for (int i = 0; i < stateCount; i++)
                     {
                         var city = new City()
                         {
@@ -137,9 +125,11 @@ namespace Astro.Winform.Forms
                         if (city.Id == this.Address.City.Id) this.cityComboBox.SelectedIndex = i;
                     }
                 }
-
+            }
+            if (this.Address.City.Id != 0)
+            {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/districts/" + this.Address.City.Id.ToString()))
-                using (var reader = new Astro.Streams.Reader(stream))
+                using (var reader = new Streams.Reader(stream))
                 {
                     var districtCount = reader.ReadInt32();
                     for (int i = 0; i < districtCount; i++)
@@ -150,11 +140,14 @@ namespace Astro.Winform.Forms
                             Name = reader.ReadString()
                         };
                         this.districtComboBox.Items.Add(district);
-                        if (district.Id == this.Address.District.Id) this.districtComboBox.SelectedIndex = i;
+                        if (district.Id == this.Address.City.Id) this.districtComboBox.SelectedIndex = i;
                     }
                 }
+            }
+            if (this.Address.District.Id != 0)
+            {
                 using (var stream = await WClient.GetStreamAsync("/data/regions/villages/" + this.Address.District.Id.ToString()))
-                using (var reader = new Astro.Streams.Reader(stream))
+                using (var reader = new Streams.Reader(stream))
                 {
                     var villageCount = reader.ReadInt32();
                     for (int i = 0; i < villageCount; i++)
@@ -165,10 +158,11 @@ namespace Astro.Winform.Forms
                             Name = reader.ReadString()
                         };
                         this.villageComboBox.Items.Add(village);
-                        if (village.Id == this.Address.Village.Id) this.villageComboBox.SelectedIndex = i;
+                        if (village.Id == this.Address.City.Id) this.villageComboBox.SelectedIndex = i;
                     }
                 }
             }
+
             this.zipCodeTextBox.Text = this.Address.ZipCode;
             this.primaryCheckBox.Checked = this.Address.IsPrimary;
             this.primaryCheckBox.Visible = !this.Address.IsPrimary;

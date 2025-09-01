@@ -244,7 +244,7 @@ namespace Astro.Server.Binaries
         {
             var commandText = """
                 SELECT p.productid, p.name, p.description, p.sku, p.categoryid, p.producttype,
-                	i.isactive, i.stock, i.minstock, i.maxstock, p.unitid, i.price, i.cogs, p.images
+                	i.isactive, i.stock, i.minstock, i.maxstock, p.unitid, i.price, i.cogs, p.images, p.taxable, p.taxfactor
                 FROM products AS p
                 INNER JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @location
                 where p.productid = @id and p.isdeleted = false;
@@ -270,6 +270,8 @@ namespace Astro.Server.Binaries
                         writer.WriteInt64(reader.GetInt64(11));
                         writer.WriteInt64(reader.GetInt64(12));
                         writer.WriteString(reader.GetString(13));
+                        writer.WriteBoolean(reader.GetBoolean(14));
+                        writer.WriteDecimal(reader.GetDecimal(15));
                     }
                 }, commandText, db.CreateParameter("id", id, DbType.Int16), db.CreateParameter("location", context.Request.GetLocationID(), DbType.Int16));
 

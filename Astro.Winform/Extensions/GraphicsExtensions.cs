@@ -4,7 +4,7 @@ namespace Astro.Drawing.Extensions
 {
     internal static class GraphicsExtensions
     {
-        internal static void DrawRoundedRectangle(this Graphics g, Rectangle rect, int cornerRadius, Brush fillColor)
+        internal static void DrawRoundedRectangle(this Graphics g, Rectangle rect, int cornerRadius, Brush fillColor, Pen? borderColor = null)
         {
             using (GraphicsPath path = new GraphicsPath())
             {
@@ -17,8 +17,11 @@ namespace Astro.Drawing.Extensions
                 path.AddArc(rect.Left, rect.Bottom - diameter, diameter, diameter, 90, 90); // kiri bawah
                 path.CloseFigure();
 
-                g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.FillPath(fillColor, path);
+                if (borderColor != null)
+                {
+                    g.DrawPath(borderColor, path);
+                }
             }
         }
 

@@ -1,4 +1,6 @@
-﻿namespace Astro.Winform.Forms
+﻿using Astro.Winform.Controls;
+
+namespace Astro.Winform.Forms
 {
     partial class AccountForm
     {
@@ -28,47 +30,56 @@
         /// </summary>
         private void InitializeComponent()
         {
-            tabControl1 = new TabControl();
+            tabControl1 = new FlatTabControl();
             tabPage1 = new TabPage();
             label4 = new Label();
-            comboBox2 = new ComboBox();
+            accountProviderComboBox = new ComboBox();
             label3 = new Label();
-            comboBox1 = new ComboBox();
+            accountTypeComboBox = new ComboBox();
             label2 = new Label();
-            textBox2 = new TextBox();
+            accountNumberTextBox = new TextBox();
             label1 = new Label();
-            textBox1 = new TextBox();
+            accountNameTextBox = new TextBox();
             tabPage2 = new TabPage();
             button1 = new Button();
+            label5 = new Label();
+            panel1 = new Panel();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // tabControl1
             // 
+            tabControl1.ActiveColor = Color.DeepSkyBlue;
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
-            tabControl1.Location = new Point(12, 12);
+            tabControl1.Dock = DockStyle.Fill;
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl1.InactiveColor = Color.LightGray;
+            tabControl1.ItemSize = new Size(120, 40);
+            tabControl1.Location = new Point(0, 40);
             tabControl1.Name = "tabControl1";
             tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(540, 321);
+            tabControl1.Size = new Size(400, 431);
             tabControl1.TabIndex = 0;
+            tabControl1.TextColor = Color.Black;
             // 
             // tabPage1
             // 
             tabPage1.Controls.Add(label4);
-            tabPage1.Controls.Add(comboBox2);
+            tabPage1.Controls.Add(accountProviderComboBox);
             tabPage1.Controls.Add(label3);
-            tabPage1.Controls.Add(comboBox1);
+            tabPage1.Controls.Add(accountTypeComboBox);
             tabPage1.Controls.Add(label2);
-            tabPage1.Controls.Add(textBox2);
+            tabPage1.Controls.Add(accountNumberTextBox);
             tabPage1.Controls.Add(label1);
-            tabPage1.Controls.Add(textBox1);
-            tabPage1.Location = new Point(4, 32);
+            tabPage1.Controls.Add(accountNameTextBox);
+            tabPage1.Location = new Point(4, 44);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(532, 285);
+            tabPage1.Size = new Size(392, 383);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
@@ -76,129 +87,157 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(57, 116);
+            label4.Location = new Point(13, 182);
+            label4.Margin = new Padding(0, 0, 3, 0);
             label4.Name = "label4";
-            label4.Size = new Size(57, 17);
+            label4.Size = new Size(92, 17);
             label4.TabIndex = 8;
-            label4.Text = "Provider";
+            label4.Text = "Penyedia Akun";
             // 
-            // comboBox2
+            // accountProviderComboBox
             // 
-            comboBox2.DisplayMember = "Name";
-            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox2.FormattingEnabled = true;
-            comboBox2.Location = new Point(120, 113);
-            comboBox2.Name = "comboBox2";
-            comboBox2.Size = new Size(305, 25);
-            comboBox2.TabIndex = 7;
-            comboBox2.ValueMember = "Id";
+            accountProviderComboBox.DisplayMember = "Name";
+            accountProviderComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            accountProviderComboBox.FormattingEnabled = true;
+            accountProviderComboBox.Location = new Point(16, 202);
+            accountProviderComboBox.Name = "accountProviderComboBox";
+            accountProviderComboBox.Size = new Size(360, 25);
+            accountProviderComboBox.TabIndex = 7;
+            accountProviderComboBox.ValueMember = "Id";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(29, 85);
+            label3.Location = new Point(13, 129);
+            label3.Margin = new Padding(0, 0, 3, 0);
             label3.Name = "label3";
-            label3.Size = new Size(85, 17);
+            label3.Size = new Size(68, 17);
             label3.TabIndex = 6;
-            label3.Text = "Account Type";
+            label3.Text = "Jenis Akun";
             // 
-            // comboBox1
+            // accountTypeComboBox
             // 
-            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "Bank", "E-Wallet", "E-Money" });
-            comboBox1.Location = new Point(120, 82);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(305, 25);
-            comboBox1.TabIndex = 5;
+            accountTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            accountTypeComboBox.FormattingEnabled = true;
+            accountTypeComboBox.Items.AddRange(new object[] { "Bank", "E-Wallet", "E-Money" });
+            accountTypeComboBox.Location = new Point(16, 149);
+            accountTypeComboBox.Name = "accountTypeComboBox";
+            accountTypeComboBox.Size = new Size(360, 25);
+            accountTypeComboBox.TabIndex = 5;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(8, 54);
+            label2.Location = new Point(12, 76);
+            label2.Margin = new Padding(0, 0, 3, 0);
             label2.Name = "label2";
-            label2.Size = new Size(106, 17);
+            label2.Size = new Size(107, 17);
             label2.TabIndex = 3;
-            label2.Text = "Account Number";
+            label2.Text = "Nomor Rekening";
             // 
-            // textBox2
+            // accountNumberTextBox
             // 
-            textBox2.Location = new Point(120, 51);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(400, 25);
-            textBox2.TabIndex = 4;
+            accountNumberTextBox.Location = new Point(15, 96);
+            accountNumberTextBox.Name = "accountNumberTextBox";
+            accountNumberTextBox.Size = new Size(360, 25);
+            accountNumberTextBox.TabIndex = 4;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(21, 23);
+            label1.Location = new Point(12, 23);
+            label1.Margin = new Padding(0, 0, 3, 0);
             label1.Name = "label1";
-            label1.Size = new Size(93, 17);
+            label1.Size = new Size(129, 17);
             label1.TabIndex = 1;
-            label1.Text = "Account Name";
+            label1.Text = "Atas Nama Rekening";
             // 
-            // textBox1
+            // accountNameTextBox
             // 
-            textBox1.Location = new Point(120, 20);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(400, 25);
-            textBox1.TabIndex = 2;
+            accountNameTextBox.Location = new Point(15, 43);
+            accountNameTextBox.Name = "accountNameTextBox";
+            accountNameTextBox.Size = new Size(360, 25);
+            accountNameTextBox.TabIndex = 2;
             // 
             // tabPage2
             // 
-            tabPage2.Location = new Point(4, 32);
+            tabPage2.Location = new Point(4, 44);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(532, 285);
+            tabPage2.Size = new Size(392, 383);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "🕒 Histories";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 339);
+            button1.BackColor = Color.Blue;
+            button1.FlatAppearance.BorderSize = 0;
+            button1.FlatStyle = FlatStyle.Flat;
+            button1.ForeColor = Color.White;
+            button1.Location = new Point(19, 15);
             button1.Name = "button1";
-            button1.Size = new Size(81, 30);
+            button1.Size = new Size(359, 30);
             button1.TabIndex = 1;
             button1.Text = "💾 Save";
-            button1.UseVisualStyleBackColor = true;
+            button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
+            // 
+            // label5
+            // 
+            label5.Dock = DockStyle.Top;
+            label5.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label5.Location = new Point(0, 0);
+            label5.Name = "label5";
+            label5.Padding = new Padding(5, 0, 0, 0);
+            label5.Size = new Size(400, 40);
+            label5.TabIndex = 2;
+            label5.Text = "Detil Rekening";
+            label5.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(button1);
+            panel1.Dock = DockStyle.Bottom;
+            panel1.Location = new Point(0, 416);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(400, 55);
+            panel1.TabIndex = 3;
             // 
             // AccountForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(564, 381);
-            Controls.Add(button1);
+            BackColor = Color.FromArgb(250, 250, 250);
+            BorderStyle = BorderStyle.FixedSingle;
+            Controls.Add(panel1);
             Controls.Add(tabControl1);
+            Controls.Add(label5);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
             Name = "AccountForm";
-            ShowIcon = false;
-            StartPosition = FormStartPosition.CenterParent;
-            Text = "Account";
+            Size = new Size(400, 471);
             Load += AccountForm_Load;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
+            panel1.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         #endregion
-
-        private TabControl tabControl1;
         private TabPage tabPage1;
         private Label label4;
-        private ComboBox comboBox2;
+        private ComboBox accountProviderComboBox;
         private Label label3;
-        private ComboBox comboBox1;
+        private ComboBox accountTypeComboBox;
         private Label label2;
-        private TextBox textBox2;
+        private TextBox accountNumberTextBox;
         private Label label1;
-        private TextBox textBox1;
+        private TextBox accountNameTextBox;
         private TabPage tabPage2;
         private Button button1;
+        private Label label5;
+        private Panel panel1;
+        private FlatTabControl tabControl1;
     }
 }

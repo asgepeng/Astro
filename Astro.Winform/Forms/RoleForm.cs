@@ -14,7 +14,7 @@ using System.Windows.Forms;
 
 namespace Astro.Winform.Forms
 {
-    public partial class RoleForm : Form
+    public partial class RoleForm : UserControl
     {
         public RoleForm()
         {
@@ -59,21 +59,39 @@ namespace Astro.Winform.Forms
 
         private async void HandleSaveButtonClicked(object sender, EventArgs e)
         {
+            var mainForm = this.FindForm();
+            if (mainForm is null) return;
+
             if (this.Role is null) return;
 
             this.Role.Name = this.rolenameTextBox.Text.Trim();
-            var json = this.Role.Id > 0 ? await WClient.PutAsync("/data/roles", this.Role.ToString()) :await WClient.PostAsync("/data/roles", this.Role.ToString());
-            var commonResult = CommonResult.Create(json);
-            if (commonResult != null)
+            using (var writer = new Streams.Writer())
             {
-                if (commonResult.Success)
+                if (this.Role.Id > 0) writer.WriteInt16(this.Role.Id);
+                else writer.WriteByte(0x01);
+                writer.WriteString(this.rolenameTextBox.Text.Trim());
+                writer.WriteInt32(this.Role.Permissions.Count);
+                foreach (var item in this.Role.Permissions)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    writer.WriteInt16(item.Id);
+                    writer.WriteBoolean(item.AllowCreate);
+                    writer.WriteBoolean(item.AllowRead);
+                    writer.WriteBoolean(item.AllowEdit);
+                    writer.WriteBoolean(item.AllowDelete);
                 }
-                else
+                var json = this.Role.Id > 0 ? await WClient.PutAsync("/data/roles", writer.ToArray()) : await WClient.PostAsync("/data/roles", writer.ToArray());
+                var commonResult = CommonResult.Create(json);
+                if (commonResult != null)
                 {
-                    MessageBox.Show(commonResult.Message);
+                    if (commonResult.Success)
+                    {
+                        mainForm.DialogResult = DialogResult.OK;
+                        mainForm.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(commonResult.Message);
+                    }
                 }
             }
         }

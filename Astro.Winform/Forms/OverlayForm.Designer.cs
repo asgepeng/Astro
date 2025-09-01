@@ -40,11 +40,13 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "OverlayForm";
+            Padding = new Padding(0, 40, 0, 0);
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
             Text = "OverlayForm";
             TransparencyKey = Color.FromArgb(128, 64, 64);
+            Click += OverlayForm_Click;
             ResumeLayout(false);
         }
 

@@ -1,4 +1,6 @@
-﻿namespace Astro.Winform.Forms
+﻿using Astro.Winform.Controls;
+
+namespace Astro.Winform.Forms
 {
     partial class RoleForm
     {
@@ -29,11 +31,11 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             saveButton = new Button();
             label1 = new Label();
             rolenameTextBox = new TextBox();
-            tabControl1 = new TabControl();
+            tabControl1 = new FlatTabControl();
             tabPage1 = new TabPage();
             dataGridView1 = new DataGridView();
             nameDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
@@ -43,6 +45,7 @@
             allowDeleteDataGridViewCheckBoxColumn = new DataGridViewCheckBoxColumn();
             permissionBindingSource = new BindingSource(components);
             tabPage2 = new TabPage();
+            label2 = new Label();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
@@ -62,7 +65,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 15);
+            label1.Location = new Point(18, 84);
             label1.Name = "label1";
             label1.Size = new Size(73, 17);
             label1.TabIndex = 1;
@@ -70,29 +73,34 @@
             // 
             // rolenameTextBox
             // 
-            rolenameTextBox.Location = new Point(132, 12);
+            rolenameTextBox.Location = new Point(138, 81);
             rolenameTextBox.Name = "rolenameTextBox";
             rolenameTextBox.Size = new Size(387, 25);
             rolenameTextBox.TabIndex = 2;
             // 
             // tabControl1
             // 
+            tabControl1.ActiveColor = Color.DeepSkyBlue;
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
-            tabControl1.Location = new Point(12, 51);
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabControl1.InactiveColor = Color.LightGray;
+            tabControl1.ItemSize = new Size(120, 40);
+            tabControl1.Location = new Point(12, 112);
             tabControl1.Name = "tabControl1";
             tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(776, 418);
+            tabControl1.Size = new Size(605, 357);
             tabControl1.TabIndex = 3;
+            tabControl1.TextColor = Color.Black;
             // 
             // tabPage1
             // 
             tabPage1.Controls.Add(dataGridView1);
-            tabPage1.Location = new Point(4, 32);
+            tabPage1.Location = new Point(4, 44);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(768, 382);
+            tabPage1.Size = new Size(597, 309);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "🛡️ Permission";
             tabPage1.UseVisualStyleBackColor = true;
@@ -115,14 +123,14 @@
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dataGridView1.RowHeadersVisible = false;
-            dataGridView1.Size = new Size(762, 376);
+            dataGridView1.Size = new Size(591, 303);
             dataGridView1.TabIndex = 0;
             // 
             // nameDataGridViewTextBoxColumn
             // 
             nameDataGridViewTextBoxColumn.DataPropertyName = "Name";
-            dataGridViewCellStyle1.BackColor = SystemColors.ButtonFace;
-            nameDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = SystemColors.ButtonFace;
+            nameDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle2;
             nameDataGridViewTextBoxColumn.HeaderText = "Name";
             nameDataGridViewTextBoxColumn.Name = "nameDataGridViewTextBoxColumn";
             nameDataGridViewTextBoxColumn.ReadOnly = true;
@@ -158,27 +166,40 @@
             // 
             // tabPage2
             // 
-            tabPage2.Location = new Point(4, 30);
+            tabPage2.Location = new Point(4, 44);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(768, 384);
+            tabPage2.Size = new Size(768, 309);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "🕒 Change Log";
             tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            label2.Dock = DockStyle.Top;
+            label2.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label2.Location = new Point(0, 0);
+            label2.Name = "label2";
+            label2.Padding = new Padding(5, 0, 0, 0);
+            label2.Size = new Size(627, 40);
+            label2.TabIndex = 4;
+            label2.Text = "Role Name";
+            label2.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // RoleForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 510);
+            BackColor = Color.FromArgb(250, 250, 250);
+            BorderStyle = BorderStyle.FixedSingle;
+            Controls.Add(label2);
             Controls.Add(tabControl1);
             Controls.Add(rolenameTextBox);
             Controls.Add(label1);
             Controls.Add(saveButton);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "RoleForm";
-            StartPosition = FormStartPosition.CenterParent;
-            Text = "RoleForm";
+            Size = new Size(627, 508);
             Load += HandleFormLoad;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
@@ -193,7 +214,6 @@
         private Button saveButton;
         private Label label1;
         private TextBox rolenameTextBox;
-        private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;
         private DataGridView dataGridView1;
@@ -203,5 +223,7 @@
         private DataGridViewCheckBoxColumn allowReadDataGridViewCheckBoxColumn;
         private DataGridViewCheckBoxColumn allowEditDataGridViewCheckBoxColumn;
         private DataGridViewCheckBoxColumn allowDeleteDataGridViewCheckBoxColumn;
+        private Label label2;
+        private FlatTabControl tabControl1;
     }
 }

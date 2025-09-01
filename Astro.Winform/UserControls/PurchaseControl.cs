@@ -172,17 +172,7 @@ namespace Astro.Winform.UserControls
             using (var form = new ProductForm())
             {
                 var objectBuilder = new ObjectBuilder();
-                form.Model = await objectBuilder.CreateProductViewModel(0);
-                if (form.ShowDialog() == DialogResult.OK)
-                {
-                    if (form.Tag is null) return;
-                    var item = await GetPurchaseItemAsync((short)form.Tag);
-                    if (item != null)
-                    {
-                        this.Purchase.Items.Add(item);
-                        this.Calculate();
-                    }
-                }
+               
             }
         }
         private short GetLocationID()

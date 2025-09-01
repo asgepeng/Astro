@@ -150,7 +150,11 @@ namespace Astro.Winform.Classes
         {
             var endpoint = CreateUri(url);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            if (content.Length > 0) request.Content = new ByteArrayContent(content);
+            if (content.Length > 0)
+            {
+                request.Content = new ByteArrayContent(content);
+                request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            }
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
 
             try
@@ -290,6 +294,37 @@ namespace Astro.Winform.Classes
             catch (Exception ex)
             {
                 MessageBox.Show($"Unkknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return string.Empty;
+        }
+        internal static async Task<string> PutAsync(string url, byte[] data)
+        {
+            if (My.Application.ApiToken == "")
+            {
+                MessageBox.Show("Anda belum login silakan menutup aplikasi dan membukanya kembali untuk login", "Unauthorized", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return string.Empty;
+            }
+
+            Uri endpoint = CreateUri(url);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, endpoint);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", My.Application.ApiToken);
+            request.Content = new ByteArrayContent(data);
+
+            try
+            {
+                HttpResponseMessage response = await Instance.SendAsync(request);
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.InternalServerError:
+                        var problem = await response.GetProbemDetails();
+                        if (problem != null) MessageBox.Show(problem.Detail, "Internal server error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unknown error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return string.Empty;
         }
