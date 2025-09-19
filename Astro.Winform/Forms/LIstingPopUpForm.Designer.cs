@@ -93,7 +93,6 @@
             searchTextBox.PlaceholderText = "Filter ...";
             searchTextBox.Size = new Size(835, 25);
             searchTextBox.TabIndex = 3;
-            searchTextBox.TextChanged += ApplyFilter;
             searchTextBox.KeyDown += SearchTextBoxKeyDown;
             searchTextBox.KeyPress += SearchTextBoxKeyPressed;
             // 
@@ -113,7 +112,7 @@
             Name = "ListingPopUpForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Data";
-            Load += ListingPopUpForm_Load;
+            Load += HandleFormLoad;
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
             ResumeLayout(false);
             PerformLayout();

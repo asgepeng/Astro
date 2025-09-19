@@ -216,7 +216,7 @@ namespace Astro.Winform.Forms
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "AccountForm";
             Size = new Size(400, 471);
-            Load += AccountForm_Load;
+            Load += HandleFormLoad;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();

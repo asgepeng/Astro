@@ -39,17 +39,16 @@
             sideBarPanel.BoldFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
             sideBarPanel.Dock = DockStyle.Left;
             sideBarPanel.Font = new Font("Segoe UI", 9.75F);
-            sideBarPanel.ForeColor = Color.AliceBlue;
+            sideBarPanel.ForeColor = Color.White;
             sideBarPanel.GroupHeight = 48;
             sideBarPanel.ItemHeight = 32;
             sideBarPanel.Location = new Point(3, 40);
             sideBarPanel.Name = "sideBarPanel";
-            sideBarPanel.ScrollBarColor = Color.SlateGray;
+            sideBarPanel.ScrollBarColor = Color.FromArgb(192, 192, 255);
             sideBarPanel.SelectedItemColor = Color.DarkGray;
             sideBarPanel.Size = new Size(220, 557);
             sideBarPanel.TabIndex = 0;
             sideBarPanel.Text = "sideBarPanel1";
-            sideBarPanel.MouseClick += sideBarPanel_MouseClick;
             // 
             // mainPanel
             // 
@@ -64,9 +63,9 @@
             userPanel1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             userPanel1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             userPanel1.ForeColor = Color.Navy;
-            userPanel1.Location = new Point(691, 5);
+            userPanel1.Location = new Point(634, 5);
             userPanel1.Name = "userPanel1";
-            userPanel1.Size = new Size(331, 28);
+            userPanel1.Size = new Size(388, 30);
             userPanel1.TabIndex = 2;
             userPanel1.Text = "userPanel1";
             // 
@@ -85,7 +84,6 @@
             Name = "SPAForm";
             Padding = new Padding(3, 40, 3, 3);
             Text = "SPAForm";
-            WindowState = FormWindowState.Maximized;
             Load += SPAForm_Load;
             ResumeLayout(false);
         }

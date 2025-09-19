@@ -31,16 +31,17 @@ namespace Astro.Winform.UserControls
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            grid = new DGrid();
-            DataGridViewCellStyle dataGridViewCellStyle18 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle13 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle14 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle15 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle16 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle17 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            grid = new DGrid();
             idDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             nameDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
@@ -52,7 +53,6 @@ namespace Astro.Winform.UserControls
             totalDataGridViewTextBoxColumn = new DataGridViewTextBoxColumn();
             Delete = new DataGridViewButtonColumn();
             purchaseItemBindingSource = new BindingSource(components);
-            label1 = new Label();
             label2 = new Label();
             dateTimePicker1 = new DateTimePicker();
             label3 = new Label();
@@ -60,15 +60,11 @@ namespace Astro.Winform.UserControls
             label4 = new Label();
             barcodeTextBox = new TextBox();
             grandTotalLabel = new Label();
-            locationComboBox = new ComboBox();
-            label6 = new Label();
             button2 = new Button();
             subTotalTextBox = new TextBox();
             label7 = new Label();
             discountTextBox = new TextBox();
             label8 = new Label();
-            textTextBox = new TextBox();
-            label9 = new Label();
             costTextBox = new TextBox();
             label10 = new Label();
             textBox7 = new TextBox();
@@ -103,31 +99,37 @@ namespace Astro.Winform.UserControls
             grid.AllowUserToAddRows = false;
             grid.AllowUserToDeleteRows = false;
             grid.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(244, 244, 244);
+            dataGridViewCellStyle1.ForeColor = SystemColors.ControlText;
+            grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             grid.AutoGenerateColumns = false;
             grid.BackgroundColor = Color.White;
             grid.BorderStyle = BorderStyle.None;
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            grid.ColumnHeadersHeight = 26;
+            grid.ColumnHeadersHeight = 30;
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             grid.Columns.AddRange(new DataGridViewColumn[] { idDataGridViewTextBoxColumn, nameDataGridViewTextBoxColumn, dataGridViewTextBoxColumn1, quantityDataGridViewTextBoxColumn, unitDataGridViewTextBoxColumn, priceDataGridViewTextBoxColumn, discountDataGridViewTextBoxColumn, nettPriceDataGridViewTextBoxColumn, totalDataGridViewTextBoxColumn, Delete });
             grid.DataSource = purchaseItemBindingSource;
-            dataGridViewCellStyle18.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle18.BackColor = SystemColors.Window;
-            dataGridViewCellStyle18.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle18.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle18.SelectionBackColor = SystemColors.ButtonFace;
-            dataGridViewCellStyle18.SelectionForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle18.WrapMode = DataGridViewTriState.False;
-            grid.DefaultCellStyle = dataGridViewCellStyle18;
+            dataGridViewCellStyle10.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle10.BackColor = SystemColors.Window;
+            dataGridViewCellStyle10.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle10.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle10.SelectionBackColor = SystemColors.ButtonFace;
+            dataGridViewCellStyle10.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle10.WrapMode = DataGridViewTriState.False;
+            grid.DefaultCellStyle = dataGridViewCellStyle10;
             grid.EnableHeadersVisualStyles = false;
             grid.GridColor = Color.FromArgb(244, 244, 244);
-            grid.Location = new Point(13, 207);
+            grid.Location = new Point(-1, 162);
+            grid.MultiSelect = false;
             grid.Name = "grid";
+            grid.ReadOnly = true;
             grid.RowHeadersVisible = false;
+            grid.RowTemplate.Height = 30;
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.Size = new Size(1225, 183);
+            grid.Size = new Size(1254, 374);
             grid.TabIndex = 6;
             grid.CellContentClick += GridCellContentClick;
             grid.CellEndEdit += GridCellEndEdit;
@@ -137,12 +139,13 @@ namespace Astro.Winform.UserControls
             // idDataGridViewTextBoxColumn
             // 
             idDataGridViewTextBoxColumn.DataPropertyName = "Id";
-            dataGridViewCellStyle10.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle10.BackColor = Color.FromArgb(250, 250, 250);
-            dataGridViewCellStyle10.Format = "00000";
-            idDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(250, 250, 250);
+            dataGridViewCellStyle2.Format = "00000";
+            idDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle2;
             idDataGridViewTextBoxColumn.HeaderText = "Kode";
             idDataGridViewTextBoxColumn.Name = "idDataGridViewTextBoxColumn";
+            idDataGridViewTextBoxColumn.ReadOnly = true;
             idDataGridViewTextBoxColumn.Width = 60;
             // 
             // nameDataGridViewTextBoxColumn
@@ -150,6 +153,7 @@ namespace Astro.Winform.UserControls
             nameDataGridViewTextBoxColumn.DataPropertyName = "Name";
             nameDataGridViewTextBoxColumn.HeaderText = "Nama Barang / Produk";
             nameDataGridViewTextBoxColumn.Name = "nameDataGridViewTextBoxColumn";
+            nameDataGridViewTextBoxColumn.ReadOnly = true;
             nameDataGridViewTextBoxColumn.Width = 350;
             // 
             // dataGridViewTextBoxColumn1
@@ -157,53 +161,58 @@ namespace Astro.Winform.UserControls
             dataGridViewTextBoxColumn1.DataPropertyName = "Sku";
             dataGridViewTextBoxColumn1.HeaderText = "Sku / Barcode";
             dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            dataGridViewTextBoxColumn1.ReadOnly = true;
             dataGridViewTextBoxColumn1.Width = 150;
             // 
             // quantityDataGridViewTextBoxColumn
             // 
             quantityDataGridViewTextBoxColumn.DataPropertyName = "Quantity";
-            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleRight;
-            quantityDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleRight;
+            quantityDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle3;
             quantityDataGridViewTextBoxColumn.HeaderText = "Quantity";
             quantityDataGridViewTextBoxColumn.Name = "quantityDataGridViewTextBoxColumn";
+            quantityDataGridViewTextBoxColumn.ReadOnly = true;
             quantityDataGridViewTextBoxColumn.Width = 80;
             // 
             // unitDataGridViewTextBoxColumn
             // 
             unitDataGridViewTextBoxColumn.DataPropertyName = "Unit";
-            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = Color.FromArgb(250, 250, 250);
-            dataGridViewCellStyle12.Format = "N0";
-            unitDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(250, 250, 250);
+            dataGridViewCellStyle4.Format = "N0";
+            unitDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle4;
             unitDataGridViewTextBoxColumn.HeaderText = "Unit";
             unitDataGridViewTextBoxColumn.Name = "unitDataGridViewTextBoxColumn";
+            unitDataGridViewTextBoxColumn.ReadOnly = true;
             unitDataGridViewTextBoxColumn.Width = 80;
             // 
             // priceDataGridViewTextBoxColumn
             // 
             priceDataGridViewTextBoxColumn.DataPropertyName = "Price";
-            dataGridViewCellStyle13.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle13.Format = "N0";
-            priceDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle5.Format = "N0";
+            priceDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle5;
             priceDataGridViewTextBoxColumn.HeaderText = "Harga";
             priceDataGridViewTextBoxColumn.Name = "priceDataGridViewTextBoxColumn";
+            priceDataGridViewTextBoxColumn.ReadOnly = true;
             // 
             // discountDataGridViewTextBoxColumn
             // 
             discountDataGridViewTextBoxColumn.DataPropertyName = "Discount";
-            dataGridViewCellStyle14.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle14.Format = "N0";
-            discountDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle14;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle6.Format = "N0";
+            discountDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle6;
             discountDataGridViewTextBoxColumn.HeaderText = "Diskon";
             discountDataGridViewTextBoxColumn.Name = "discountDataGridViewTextBoxColumn";
+            discountDataGridViewTextBoxColumn.ReadOnly = true;
             // 
             // nettPriceDataGridViewTextBoxColumn
             // 
             nettPriceDataGridViewTextBoxColumn.DataPropertyName = "NettPrice";
-            dataGridViewCellStyle15.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle15.BackColor = Color.FromArgb(250, 250, 250);
-            dataGridViewCellStyle15.Format = "N0";
-            nettPriceDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle7.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle7.BackColor = Color.FromArgb(250, 250, 250);
+            dataGridViewCellStyle7.Format = "N0";
+            nettPriceDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle7;
             nettPriceDataGridViewTextBoxColumn.HeaderText = "Harga Bersih";
             nettPriceDataGridViewTextBoxColumn.Name = "nettPriceDataGridViewTextBoxColumn";
             nettPriceDataGridViewTextBoxColumn.ReadOnly = true;
@@ -211,10 +220,10 @@ namespace Astro.Winform.UserControls
             // totalDataGridViewTextBoxColumn
             // 
             totalDataGridViewTextBoxColumn.DataPropertyName = "Total";
-            dataGridViewCellStyle16.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle16.BackColor = Color.FromArgb(250, 250, 250);
-            dataGridViewCellStyle16.Format = "N0";
-            totalDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle8.BackColor = Color.FromArgb(250, 250, 250);
+            dataGridViewCellStyle8.Format = "N0";
+            totalDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle8;
             totalDataGridViewTextBoxColumn.HeaderText = "Total";
             totalDataGridViewTextBoxColumn.Name = "totalDataGridViewTextBoxColumn";
             totalDataGridViewTextBoxColumn.ReadOnly = true;
@@ -222,9 +231,9 @@ namespace Astro.Winform.UserControls
             // Delete
             // 
             Delete.DataPropertyName = "Delete";
-            dataGridViewCellStyle17.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle17.BackColor = Color.FromArgb(250, 250, 250);
-            Delete.DefaultCellStyle = dataGridViewCellStyle17;
+            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle9.BackColor = Color.FromArgb(250, 250, 250);
+            Delete.DefaultCellStyle = dataGridViewCellStyle9;
             Delete.HeaderText = "Action";
             Delete.Name = "Delete";
             Delete.ReadOnly = true;
@@ -237,20 +246,10 @@ namespace Astro.Winform.UserControls
             // 
             purchaseItemBindingSource.DataSource = typeof(Models.Transactions.PurchaseItem);
             // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label1.Location = new Point(7, 9);
-            label1.Name = "label1";
-            label1.Size = new Size(109, 30);
-            label1.TabIndex = 0;
-            label1.Text = "Pembelian";
-            // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(10, 88);
+            label2.Location = new Point(522, 62);
             label2.Name = "label2";
             label2.Size = new Size(54, 17);
             label2.TabIndex = 1;
@@ -260,7 +259,7 @@ namespace Astro.Winform.UserControls
             // 
             dateTimePicker1.CustomFormat = "dd/MM/yyyy HH:mm";
             dateTimePicker1.Format = DateTimePickerFormat.Custom;
-            dateTimePicker1.Location = new Point(107, 85);
+            dateTimePicker1.Location = new Point(597, 59);
             dateTimePicker1.Name = "dateTimePicker1";
             dateTimePicker1.Size = new Size(139, 25);
             dateTimePicker1.TabIndex = 2;
@@ -269,7 +268,7 @@ namespace Astro.Winform.UserControls
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(10, 114);
+            label3.Location = new Point(10, 88);
             label3.Name = "label3";
             label3.Size = new Size(56, 17);
             label3.TabIndex = 3;
@@ -278,7 +277,7 @@ namespace Astro.Winform.UserControls
             // supplierNameTextBox
             // 
             supplierNameTextBox.BackColor = Color.White;
-            supplierNameTextBox.Location = new Point(158, 111);
+            supplierNameTextBox.Location = new Point(158, 85);
             supplierNameTextBox.Name = "supplierNameTextBox";
             supplierNameTextBox.ReadOnly = true;
             supplierNameTextBox.Size = new Size(348, 25);
@@ -287,7 +286,7 @@ namespace Astro.Winform.UserControls
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(11, 168);
+            label4.Location = new Point(11, 134);
             label4.Name = "label4";
             label4.Size = new Size(87, 17);
             label4.TabIndex = 7;
@@ -296,7 +295,7 @@ namespace Astro.Winform.UserControls
             // barcodeTextBox
             // 
             barcodeTextBox.BackColor = SystemColors.Info;
-            barcodeTextBox.Location = new Point(107, 165);
+            barcodeTextBox.Location = new Point(107, 131);
             barcodeTextBox.Name = "barcodeTextBox";
             barcodeTextBox.Size = new Size(187, 25);
             barcodeTextBox.TabIndex = 8;
@@ -309,31 +308,12 @@ namespace Astro.Winform.UserControls
             grandTotalLabel.BorderStyle = BorderStyle.FixedSingle;
             grandTotalLabel.Font = new Font("Segoe UI", 24F, FontStyle.Regular, GraphicsUnit.Point, 0);
             grandTotalLabel.ForeColor = Color.FromArgb(0, 0, 192);
-            grandTotalLabel.Location = new Point(733, 133);
+            grandTotalLabel.Location = new Point(901, 99);
             grandTotalLabel.Name = "grandTotalLabel";
-            grandTotalLabel.Size = new Size(505, 57);
+            grandTotalLabel.Size = new Size(338, 58);
             grandTotalLabel.TabIndex = 9;
             grandTotalLabel.Text = "0";
             grandTotalLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // locationComboBox
-            // 
-            locationComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            locationComboBox.FormattingEnabled = true;
-            locationComboBox.Location = new Point(319, 85);
-            locationComboBox.Name = "locationComboBox";
-            locationComboBox.Size = new Size(239, 25);
-            locationComboBox.TabIndex = 10;
-            locationComboBox.SelectedIndexChanged += LocationComboBoxSelentedIndexChanged;
-            // 
-            // label6
-            // 
-            label6.AutoSize = true;
-            label6.Location = new Point(269, 88);
-            label6.Name = "label6";
-            label6.Size = new Size(36, 17);
-            label6.TabIndex = 11;
-            label6.Text = "Toko";
             // 
             // button2
             // 
@@ -342,7 +322,7 @@ namespace Astro.Winform.UserControls
             button2.FlatStyle = FlatStyle.Flat;
             button2.Font = new Font("Segoe UI Emoji", 9F);
             button2.ForeColor = Color.White;
-            button2.Location = new Point(533, 111);
+            button2.Location = new Point(533, 85);
             button2.Name = "button2";
             button2.Size = new Size(25, 25);
             button2.TabIndex = 12;
@@ -354,7 +334,7 @@ namespace Astro.Winform.UserControls
             // 
             subTotalTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             subTotalTextBox.BackColor = Color.FromArgb(250, 250, 250);
-            subTotalTextBox.Location = new Point(107, 407);
+            subTotalTextBox.Location = new Point(107, 553);
             subTotalTextBox.Name = "subTotalTextBox";
             subTotalTextBox.ReadOnly = true;
             subTotalTextBox.Size = new Size(187, 25);
@@ -364,7 +344,7 @@ namespace Astro.Winform.UserControls
             // 
             label7.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label7.AutoSize = true;
-            label7.Location = new Point(11, 410);
+            label7.Location = new Point(11, 556);
             label7.Name = "label7";
             label7.Size = new Size(62, 17);
             label7.TabIndex = 13;
@@ -374,7 +354,7 @@ namespace Astro.Winform.UserControls
             // 
             discountTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             discountTextBox.BackColor = Color.FromArgb(250, 250, 250);
-            discountTextBox.Location = new Point(107, 433);
+            discountTextBox.Location = new Point(107, 579);
             discountTextBox.Name = "discountTextBox";
             discountTextBox.ReadOnly = true;
             discountTextBox.Size = new Size(187, 25);
@@ -384,37 +364,17 @@ namespace Astro.Winform.UserControls
             // 
             label8.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label8.AutoSize = true;
-            label8.Location = new Point(10, 433);
+            label8.Location = new Point(10, 579);
             label8.Name = "label8";
             label8.Size = new Size(47, 17);
             label8.TabIndex = 15;
             label8.Text = "Diskon";
             // 
-            // textTextBox
-            // 
-            textTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            textTextBox.BackColor = Color.FromArgb(250, 250, 250);
-            textTextBox.Location = new Point(760, 516);
-            textTextBox.Name = "textTextBox";
-            textTextBox.ReadOnly = true;
-            textTextBox.Size = new Size(187, 25);
-            textTextBox.TabIndex = 18;
-            // 
-            // label9
-            // 
-            label9.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            label9.AutoSize = true;
-            label9.Location = new Point(663, 520);
-            label9.Name = "label9";
-            label9.Size = new Size(38, 17);
-            label9.TabIndex = 17;
-            label9.Text = "Pajak";
-            // 
             // costTextBox
             // 
             costTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             costTextBox.BackColor = Color.FromArgb(250, 250, 250);
-            costTextBox.Location = new Point(107, 459);
+            costTextBox.Location = new Point(107, 605);
             costTextBox.Name = "costTextBox";
             costTextBox.ReadOnly = true;
             costTextBox.Size = new Size(161, 25);
@@ -424,7 +384,7 @@ namespace Astro.Winform.UserControls
             // 
             label10.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label10.AutoSize = true;
-            label10.Location = new Point(10, 462);
+            label10.Location = new Point(10, 607);
             label10.Name = "label10";
             label10.Size = new Size(38, 17);
             label10.TabIndex = 19;
@@ -452,7 +412,7 @@ namespace Astro.Winform.UserControls
             // 
             label12.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label12.AutoSize = true;
-            label12.Location = new Point(322, 488);
+            label12.Location = new Point(322, 634);
             label12.Name = "label12";
             label12.Size = new Size(102, 17);
             label12.TabIndex = 24;
@@ -463,7 +423,7 @@ namespace Astro.Winform.UserControls
             comboBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBox2.FormattingEnabled = true;
-            comboBox2.Location = new Point(430, 485);
+            comboBox2.Location = new Point(430, 631);
             comboBox2.Name = "comboBox2";
             comboBox2.Size = new Size(318, 25);
             comboBox2.TabIndex = 23;
@@ -473,10 +433,10 @@ namespace Astro.Winform.UserControls
             paidAmountTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             paidAmountTextBox.BackColor = SystemColors.Info;
             paidAmountTextBox.Font = new Font("Segoe UI", 24F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            paidAmountTextBox.Location = new Point(430, 433);
+            paidAmountTextBox.Location = new Point(430, 579);
             paidAmountTextBox.Multiline = true;
             paidAmountTextBox.Name = "paidAmountTextBox";
-            paidAmountTextBox.Size = new Size(318, 51);
+            paidAmountTextBox.Size = new Size(318, 50);
             paidAmountTextBox.TabIndex = 25;
             paidAmountTextBox.Text = "0";
             paidAmountTextBox.TextChanged += textBox8_TextChanged;
@@ -486,7 +446,7 @@ namespace Astro.Winform.UserControls
             // 
             label13.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label13.AutoSize = true;
-            label13.Location = new Point(340, 433);
+            label13.Location = new Point(340, 579);
             label13.Name = "label13";
             label13.Size = new Size(84, 17);
             label13.TabIndex = 26;
@@ -497,7 +457,7 @@ namespace Astro.Winform.UserControls
             button3.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             button3.Enabled = false;
             button3.Font = new Font("Segoe UI Emoji", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            button3.Location = new Point(754, 433);
+            button3.Location = new Point(754, 579);
             button3.Name = "button3";
             button3.Size = new Size(115, 77);
             button3.TabIndex = 27;
@@ -508,18 +468,19 @@ namespace Astro.Winform.UserControls
             // button4
             // 
             button4.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            button4.Location = new Point(875, 433);
+            button4.Location = new Point(875, 579);
             button4.Name = "button4";
             button4.Size = new Size(77, 77);
             button4.TabIndex = 28;
             button4.Text = "Baru";
             button4.UseVisualStyleBackColor = true;
+            button4.Click += button4_Click;
             // 
             // refundTextBox
             // 
             refundTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             refundTextBox.BackColor = Color.White;
-            refundTextBox.Location = new Point(430, 511);
+            refundTextBox.Location = new Point(430, 657);
             refundTextBox.Name = "refundTextBox";
             refundTextBox.ReadOnly = true;
             refundTextBox.Size = new Size(187, 25);
@@ -529,7 +490,7 @@ namespace Astro.Winform.UserControls
             // 
             label14.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label14.AutoSize = true;
-            label14.Location = new Point(334, 514);
+            label14.Location = new Point(334, 660);
             label14.Name = "label14";
             label14.Size = new Size(90, 17);
             label14.TabIndex = 29;
@@ -540,7 +501,7 @@ namespace Astro.Winform.UserControls
             button5.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             button5.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button5.FlatStyle = FlatStyle.Flat;
-            button5.Location = new Point(269, 459);
+            button5.Location = new Point(269, 605);
             button5.Name = "button5";
             button5.Size = new Size(25, 25);
             button5.TabIndex = 31;
@@ -571,7 +532,7 @@ namespace Astro.Winform.UserControls
             button7.BackColor = Color.FromArgb(250, 250, 250);
             button7.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button7.FlatStyle = FlatStyle.Flat;
-            button7.Location = new Point(321, 165);
+            button7.Location = new Point(321, 131);
             button7.Name = "button7";
             button7.Size = new Size(103, 25);
             button7.TabIndex = 35;
@@ -586,7 +547,7 @@ namespace Astro.Winform.UserControls
             button8.FlatStyle = FlatStyle.Flat;
             button8.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             button8.ForeColor = SystemColors.ControlDarkDark;
-            button8.Location = new Point(295, 165);
+            button8.Location = new Point(295, 131);
             button8.Name = "button8";
             button8.Size = new Size(25, 25);
             button8.TabIndex = 36;
@@ -601,7 +562,7 @@ namespace Astro.Winform.UserControls
             button1.FlatStyle = FlatStyle.Flat;
             button1.Font = new Font("Segoe UI Emoji", 9F);
             button1.ForeColor = SystemColors.ControlDarkDark;
-            button1.Location = new Point(507, 111);
+            button1.Location = new Point(507, 85);
             button1.Name = "button1";
             button1.Size = new Size(25, 25);
             button1.TabIndex = 5;
@@ -622,12 +583,13 @@ namespace Astro.Winform.UserControls
             button9.TabIndex = 37;
             button9.Text = "🔍";
             button9.UseVisualStyleBackColor = false;
+            button9.Click += button9_Click;
             // 
             // grandTotalTextBox
             // 
             grandTotalTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             grandTotalTextBox.BackColor = Color.FromArgb(250, 250, 250);
-            grandTotalTextBox.Location = new Point(107, 485);
+            grandTotalTextBox.Location = new Point(107, 631);
             grandTotalTextBox.Name = "grandTotalTextBox";
             grandTotalTextBox.ReadOnly = true;
             grandTotalTextBox.Size = new Size(187, 25);
@@ -637,7 +599,7 @@ namespace Astro.Winform.UserControls
             // 
             label15.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label15.AutoSize = true;
-            label15.Location = new Point(11, 488);
+            label15.Location = new Point(11, 634);
             label15.Name = "label15";
             label15.Size = new Size(76, 17);
             label15.TabIndex = 38;
@@ -647,7 +609,7 @@ namespace Astro.Winform.UserControls
             // 
             textBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             textBox2.BackColor = Color.White;
-            textBox2.Location = new Point(430, 407);
+            textBox2.Location = new Point(430, 553);
             textBox2.Name = "textBox2";
             textBox2.ReadOnly = true;
             textBox2.Size = new Size(187, 25);
@@ -658,7 +620,7 @@ namespace Astro.Winform.UserControls
             // 
             label16.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label16.AutoSize = true;
-            label16.Location = new Point(327, 410);
+            label16.Location = new Point(327, 556);
             label16.Name = "label16";
             label16.Size = new Size(97, 17);
             label16.TabIndex = 40;
@@ -666,7 +628,7 @@ namespace Astro.Winform.UserControls
             // 
             // supplierIdTextBox
             // 
-            supplierIdTextBox.Location = new Point(107, 111);
+            supplierIdTextBox.Location = new Point(107, 85);
             supplierIdTextBox.Name = "supplierIdTextBox";
             supplierIdTextBox.ReadOnly = true;
             supplierIdTextBox.Size = new Size(50, 25);
@@ -677,9 +639,9 @@ namespace Astro.Winform.UserControls
             label17.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label17.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label17.ForeColor = Color.FromArgb(0, 0, 192);
-            label17.Location = new Point(941, 90);
+            label17.Location = new Point(937, 59);
             label17.Name = "label17";
-            label17.Size = new Size(297, 43);
+            label17.Size = new Size(302, 40);
             label17.TabIndex = 43;
             label17.Text = "Total Belanja";
             label17.TextAlign = ContentAlignment.MiddleRight;
@@ -688,7 +650,7 @@ namespace Astro.Winform.UserControls
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.White;
+            BackColor = Color.FromArgb(250, 250, 250);
             Controls.Add(grandTotalLabel);
             Controls.Add(label17);
             Controls.Add(supplierIdTextBox);
@@ -714,15 +676,11 @@ namespace Astro.Winform.UserControls
             Controls.Add(label11);
             Controls.Add(costTextBox);
             Controls.Add(label10);
-            Controls.Add(textTextBox);
-            Controls.Add(label9);
             Controls.Add(discountTextBox);
             Controls.Add(label8);
             Controls.Add(subTotalTextBox);
             Controls.Add(label7);
             Controls.Add(button2);
-            Controls.Add(label6);
-            Controls.Add(locationComboBox);
             Controls.Add(barcodeTextBox);
             Controls.Add(label4);
             Controls.Add(grid);
@@ -731,10 +689,9 @@ namespace Astro.Winform.UserControls
             Controls.Add(label3);
             Controls.Add(dateTimePicker1);
             Controls.Add(label2);
-            Controls.Add(label1);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "PurchaseControl";
-            Size = new Size(1247, 554);
+            Size = new Size(1252, 700);
             Load += BaseFormLoad;
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
             ((System.ComponentModel.ISupportInitialize)purchaseItemBindingSource).EndInit();
@@ -743,8 +700,6 @@ namespace Astro.Winform.UserControls
         }
 
         #endregion
-
-        private Label label1;
         private DataGridViewTextBoxColumn productIdDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn productNameDataGridViewTextBoxColumn;
         private DataGridViewTextBoxColumn productUnitDataGridViewTextBoxColumn;
@@ -759,15 +714,11 @@ namespace Astro.Winform.UserControls
         private Label label4;
         private TextBox barcodeTextBox;
         private Label grandTotalLabel;
-        private ComboBox locationComboBox;
-        private Label label6;
         private Button button2;
         private TextBox subTotalTextBox;
         private Label label7;
         private TextBox discountTextBox;
         private Label label8;
-        private TextBox textTextBox;
-        private Label label9;
         private TextBox costTextBox;
         private Label label10;
         private TextBox textBox7;

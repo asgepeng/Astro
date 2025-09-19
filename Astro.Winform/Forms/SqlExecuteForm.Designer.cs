@@ -1,4 +1,6 @@
-﻿namespace Astro.Winform.Forms
+﻿using Astro.Winform.Controls;
+
+namespace Astro.Winform.Forms
 {
     partial class SqlExecuteForm
     {
@@ -30,7 +32,7 @@
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             splitContainer1 = new SplitContainer();
-            dataGridView1 = new DataGridView();
+            dataGridView1 = new DGrid();
             richTextBox1 = new RichTextBox();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();

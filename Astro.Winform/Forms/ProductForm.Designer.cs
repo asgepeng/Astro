@@ -74,6 +74,7 @@ namespace Astro.Winform.Forms
             productImage = new PictureBox();
             panel1 = new Panel();
             titleLabel = new Label();
+            label12 = new Label();
             commanTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)taxFactorNumericUpDown).BeginInit();
             tabControl.SuspendLayout();
@@ -117,7 +118,7 @@ namespace Astro.Winform.Forms
             // 
             button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             button1.ImageIndex = 3;
-            button1.Location = new Point(998, 404);
+            button1.Location = new Point(1001, 404);
             button1.Name = "button1";
             button1.Size = new Size(142, 32);
             button1.TabIndex = 101;
@@ -302,6 +303,7 @@ namespace Astro.Winform.Forms
             // 
             // commanTabPage
             // 
+            commanTabPage.Controls.Add(label12);
             commanTabPage.Controls.Add(marginTextBox);
             commanTabPage.Controls.Add(label13);
             commanTabPage.Controls.Add(basicpriceTextBox);
@@ -335,7 +337,7 @@ namespace Astro.Winform.Forms
             commanTabPage.Location = new Point(4, 44);
             commanTabPage.Name = "commanTabPage";
             commanTabPage.Padding = new Padding(3);
-            commanTabPage.Size = new Size(392, 668);
+            commanTabPage.Size = new Size(395, 657);
             commanTabPage.TabIndex = 0;
             commanTabPage.Text = "ℹ️ Umum";
             commanTabPage.UseVisualStyleBackColor = true;
@@ -430,7 +432,7 @@ namespace Astro.Winform.Forms
             tabControl.Name = "tabControl";
             tabControl.Padding = new Point(10, 6);
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(400, 716);
+            tabControl.Size = new Size(403, 705);
             tabControl.TabIndex = 8;
             tabControl.TextColor = Color.Black;
             // 
@@ -553,9 +555,9 @@ namespace Astro.Winform.Forms
             // 
             panel1.Controls.Add(saveButton);
             panel1.Dock = DockStyle.Bottom;
-            panel1.Location = new Point(0, 700);
+            panel1.Location = new Point(0, 689);
             panel1.Name = "panel1";
-            panel1.Size = new Size(400, 56);
+            panel1.Size = new Size(403, 56);
             panel1.TabIndex = 9;
             // 
             // titleLabel
@@ -565,10 +567,20 @@ namespace Astro.Winform.Forms
             titleLabel.Location = new Point(0, 0);
             titleLabel.Name = "titleLabel";
             titleLabel.Padding = new Padding(5, 0, 0, 0);
-            titleLabel.Size = new Size(400, 40);
+            titleLabel.Size = new Size(403, 40);
             titleLabel.TabIndex = 10;
             titleLabel.Text = "Tambah Produk";
             titleLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // label12
+            // 
+            label12.AutoSize = true;
+            label12.Location = new Point(15, 359);
+            label12.Margin = new Padding(0, 0, 3, 0);
+            label12.Name = "label12";
+            label12.Size = new Size(42, 17);
+            label12.TabIndex = 120;
+            label12.Text = "Induk:";
             // 
             // ProductForm
             // 
@@ -581,7 +593,7 @@ namespace Astro.Winform.Forms
             Controls.Add(titleLabel);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "ProductForm";
-            Size = new Size(400, 756);
+            Size = new Size(403, 745);
             Load += ProductForm_Load;
             commanTabPage.ResumeLayout(false);
             commanTabPage.PerformLayout();
@@ -639,5 +651,6 @@ namespace Astro.Winform.Forms
         private PictureBox productImage;
         private TextBox marginTextBox;
         private Label label13;
+        private Label label12;
     }
 }

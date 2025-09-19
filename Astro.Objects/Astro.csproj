@@ -32,10 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="IO\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Astro.Stream\Astro.Stream.csproj" />
   </ItemGroup>
 </Project>

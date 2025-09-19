@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Astro.Winform.Forms
 {
-    public partial class StockOpnameForm : Form
+    public partial class StockOpnameForm : UserControl
     {
         public StockOpnameForm()
         {

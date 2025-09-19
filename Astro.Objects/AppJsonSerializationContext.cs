@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(ProductViewModel))]
 [JsonSerializable(typeof(ContactViewModel))]
 [JsonSerializable(typeof(RoleViewModel))]
-[JsonSerializable(typeof(UserViewModel))]
 
 [JsonSerializable(typeof(List<Phone>))]
 [JsonSerializable(typeof(List<Email>))]
@@ -24,8 +23,6 @@ using System.Text.Json.Serialization;
 [JsonSerializable(typeof(Account))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(Address))]
-[JsonSerializable(typeof(ListOption))]
-[JsonSerializable(typeof(Option))]
 [JsonSerializable(typeof(ResetPasswordRequest))]
 [JsonSerializable(typeof(ChangePasswordRequest))]
 [JsonSerializable(typeof(ListSection))]

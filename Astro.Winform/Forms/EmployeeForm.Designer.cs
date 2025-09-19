@@ -32,7 +32,7 @@ namespace Astro.Winform.Forms
         {
             tabControl1 = new FlatTabControl();
             tabPage1 = new TabPage();
-            checkBox1 = new CheckBox();
+            activeCheckBox = new CheckBox();
             groupBox1 = new GroupBox();
             label2 = new Label();
             villageComboBox = new ComboBox();
@@ -51,9 +51,9 @@ namespace Astro.Winform.Forms
             label13 = new Label();
             emailTextBox = new TextBox();
             label17 = new Label();
-            comboBox7 = new ComboBox();
+            roleComboBox = new ComboBox();
             label12 = new Label();
-            textBox6 = new TextBox();
+            hiredDateTextBox = new TextBox();
             label15 = new Label();
             label10 = new Label();
             maritalComboBox = new ComboBox();
@@ -65,13 +65,13 @@ namespace Astro.Winform.Forms
             fullnameTextBox = new TextBox();
             label1 = new Label();
             tabPage2 = new TabPage();
+            label14 = new Label();
+            comboBox2 = new ComboBox();
+            label11 = new Label();
+            comboBox1 = new ComboBox();
             saveButton = new Button();
             formLabel = new Label();
             panel1 = new Panel();
-            label11 = new Label();
-            comboBox1 = new ComboBox();
-            label14 = new Label();
-            comboBox2 = new ComboBox();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -98,16 +98,16 @@ namespace Astro.Winform.Forms
             // 
             // tabPage1
             // 
-            tabPage1.Controls.Add(checkBox1);
+            tabPage1.Controls.Add(activeCheckBox);
             tabPage1.Controls.Add(groupBox1);
             tabPage1.Controls.Add(label16);
             tabPage1.Controls.Add(phoneTextBox);
             tabPage1.Controls.Add(label13);
             tabPage1.Controls.Add(emailTextBox);
             tabPage1.Controls.Add(label17);
-            tabPage1.Controls.Add(comboBox7);
+            tabPage1.Controls.Add(roleComboBox);
             tabPage1.Controls.Add(label12);
-            tabPage1.Controls.Add(textBox6);
+            tabPage1.Controls.Add(hiredDateTextBox);
             tabPage1.Controls.Add(label15);
             tabPage1.Controls.Add(label10);
             tabPage1.Controls.Add(maritalComboBox);
@@ -126,15 +126,15 @@ namespace Astro.Winform.Forms
             tabPage1.Text = "ℹ️ Umum";
             tabPage1.UseVisualStyleBackColor = true;
             // 
-            // checkBox1
+            // activeCheckBox
             // 
-            checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(15, 482);
-            checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(52, 21);
-            checkBox1.TabIndex = 70;
-            checkBox1.Text = "Aktif";
-            checkBox1.UseVisualStyleBackColor = true;
+            activeCheckBox.AutoSize = true;
+            activeCheckBox.Location = new Point(15, 497);
+            activeCheckBox.Name = "activeCheckBox";
+            activeCheckBox.Size = new Size(52, 21);
+            activeCheckBox.TabIndex = 70;
+            activeCheckBox.Text = "Aktif";
+            activeCheckBox.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -150,7 +150,7 @@ namespace Astro.Winform.Forms
             groupBox1.Controls.Add(zipCodeTextBox);
             groupBox1.Controls.Add(label5);
             groupBox1.Controls.Add(streetTextBox);
-            groupBox1.Location = new Point(15, 230);
+            groupBox1.Location = new Point(15, 242);
             groupBox1.Name = "groupBox1";
             groupBox1.Size = new Size(360, 237);
             groupBox1.TabIndex = 69;
@@ -291,7 +291,7 @@ namespace Astro.Winform.Forms
             // emailTextBox
             // 
             emailTextBox.Location = new Point(15, 194);
-            emailTextBox.MaxLength = 16;
+            emailTextBox.MaxLength = 50;
             emailTextBox.Name = "emailTextBox";
             emailTextBox.Size = new Size(240, 25);
             emailTextBox.TabIndex = 53;
@@ -299,40 +299,39 @@ namespace Astro.Winform.Forms
             // label17
             // 
             label17.AutoSize = true;
-            label17.Location = new Point(126, 506);
+            label17.Location = new Point(126, 521);
             label17.Name = "label17";
             label17.Size = new Size(92, 17);
             label17.TabIndex = 46;
             label17.Text = "Role / Jabatan";
             // 
-            // comboBox7
+            // roleComboBox
             // 
-            comboBox7.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox7.FormattingEnabled = true;
-            comboBox7.Items.AddRange(new object[] { "Laki-laki", "Perempuan" });
-            comboBox7.Location = new Point(129, 526);
-            comboBox7.Name = "comboBox7";
-            comboBox7.Size = new Size(246, 25);
-            comboBox7.TabIndex = 45;
+            roleComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            roleComboBox.FormattingEnabled = true;
+            roleComboBox.Location = new Point(129, 541);
+            roleComboBox.Name = "roleComboBox";
+            roleComboBox.Size = new Size(246, 25);
+            roleComboBox.TabIndex = 45;
             // 
             // label12
             // 
             label12.AutoSize = true;
-            label12.Location = new Point(12, 506);
+            label12.Location = new Point(12, 521);
             label12.Name = "label12";
             label12.Size = new Size(96, 17);
             label12.TabIndex = 44;
             label12.Text = "Tanggal Masuk";
             // 
-            // textBox6
+            // hiredDateTextBox
             // 
-            textBox6.BackColor = Color.White;
-            textBox6.Location = new Point(15, 526);
-            textBox6.MaxLength = 16;
-            textBox6.Name = "textBox6";
-            textBox6.ReadOnly = true;
-            textBox6.Size = new Size(108, 25);
-            textBox6.TabIndex = 43;
+            hiredDateTextBox.BackColor = Color.White;
+            hiredDateTextBox.Location = new Point(15, 541);
+            hiredDateTextBox.MaxLength = 16;
+            hiredDateTextBox.Name = "hiredDateTextBox";
+            hiredDateTextBox.ReadOnly = true;
+            hiredDateTextBox.Size = new Size(108, 25);
+            hiredDateTextBox.TabIndex = 43;
             // 
             // label15
             // 
@@ -436,6 +435,44 @@ namespace Astro.Winform.Forms
             tabPage2.Text = "💳 Payroll";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // label14
+            // 
+            label14.AutoSize = true;
+            label14.Location = new Point(258, 15);
+            label14.Name = "label14";
+            label14.Size = new Size(94, 17);
+            label14.TabIndex = 37;
+            label14.Text = "Setiap Tanggal";
+            // 
+            // comboBox2
+            // 
+            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox2.FormattingEnabled = true;
+            comboBox2.Items.AddRange(new object[] { "Laki-laki", "Perempuan" });
+            comboBox2.Location = new Point(259, 35);
+            comboBox2.Name = "comboBox2";
+            comboBox2.Size = new Size(116, 25);
+            comboBox2.TabIndex = 36;
+            // 
+            // label11
+            // 
+            label11.AutoSize = true;
+            label11.Location = new Point(14, 15);
+            label11.Name = "label11";
+            label11.Size = new Size(137, 17);
+            label11.TabIndex = 35;
+            label11.Text = "Methode Pembayaran";
+            // 
+            // comboBox1
+            // 
+            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Items.AddRange(new object[] { "Laki-laki", "Perempuan" });
+            comboBox1.Location = new Point(15, 35);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(237, 25);
+            comboBox1.TabIndex = 34;
+            // 
             // saveButton
             // 
             saveButton.BackColor = Color.Blue;
@@ -448,6 +485,7 @@ namespace Astro.Winform.Forms
             saveButton.TabIndex = 1;
             saveButton.Text = "Simpan";
             saveButton.UseVisualStyleBackColor = false;
+            saveButton.Click += saveButton_Click;
             // 
             // formLabel
             // 
@@ -469,44 +507,6 @@ namespace Astro.Winform.Forms
             panel1.Name = "panel1";
             panel1.Size = new Size(400, 50);
             panel1.TabIndex = 3;
-            // 
-            // label11
-            // 
-            label11.AutoSize = true;
-            label11.Location = new Point(14, 15);
-            label11.Name = "label11";
-            label11.Size = new Size(137, 17);
-            label11.TabIndex = 35;
-            label11.Text = "Methode Pembayaran";
-            // 
-            // comboBox1
-            // 
-            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "Laki-laki", "Perempuan" });
-            comboBox1.Location = new Point(15, 35);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(237, 25);
-            comboBox1.TabIndex = 34;
-            // 
-            // label14
-            // 
-            label14.AutoSize = true;
-            label14.Location = new Point(258, 15);
-            label14.Name = "label14";
-            label14.Size = new Size(94, 17);
-            label14.TabIndex = 37;
-            label14.Text = "Setiap Tanggal";
-            // 
-            // comboBox2
-            // 
-            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox2.FormattingEnabled = true;
-            comboBox2.Items.AddRange(new object[] { "Laki-laki", "Perempuan" });
-            comboBox2.Location = new Point(259, 35);
-            comboBox2.Name = "comboBox2";
-            comboBox2.Size = new Size(116, 25);
-            comboBox2.TabIndex = 36;
             // 
             // EmployeeForm
             // 
@@ -550,9 +550,9 @@ namespace Astro.Winform.Forms
         private FlatTabControl tabControl1;
         private Label label15;
         private Label label12;
-        private TextBox textBox6;
+        private TextBox hiredDateTextBox;
         private Label label17;
-        private ComboBox comboBox7;
+        private ComboBox roleComboBox;
         private Label label16;
         private TextBox phoneTextBox;
         private Label label13;
@@ -570,7 +570,7 @@ namespace Astro.Winform.Forms
         private TextBox streetTextBox;
         private Label label2;
         private GroupBox groupBox1;
-        private CheckBox checkBox1;
+        private CheckBox activeCheckBox;
         private Label label14;
         private ComboBox comboBox2;
         private Label label11;

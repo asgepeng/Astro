@@ -35,29 +35,13 @@ namespace Astro.Winform.Controls
                  | ControlStyles.OptimizedDoubleBuffer, true);
             this.UpdateStyles();
             this._avatar = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                  <g fill="none" stroke="#000000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="8" r="3.2"/>
-                    <path d="M4 19c0-3.3 3.6-5.8 8-5.8s8 2.5 8 5.8"/>
-                  </g>
-                </svg>
-                """.ToImage(30,30);
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle opacity="0.5" cx="12" cy="9" r="3" stroke="#1C274C" stroke-width="1.5"></circle> <circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"></circle> <path opacity="0.5" d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"></path> </g></svg>
+                """.ToImage(48,48);
             this._email = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                  <path d="M1.5 4.2h13v7.6a1 1 0 0 1-1 1H2.5a1 1 0 0 1-1-1V4.2z" fill="#FFFFFF" stroke="#222222" stroke-width="0.9" stroke-linejoin="round"/>
-                  <path d="M2 5.1L8 9.1l6-4" fill="none" stroke="#222222" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22Z" stroke="#1C274C" stroke-width="1.5"></path> <path opacity="0.5" d="M8 10.5H16" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"></path> <path opacity="0.5" d="M8 14H13.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"></path> </g></svg>
                 """.ToImage(30,30);
             this._cashflow = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                  <rect x="3" y="6" width="18" height="12" rx="2" 
-                        fill="#FFFFFF" stroke="#2E7D32" stroke-width="1.5"/>
-                  <circle cx="12" cy="12" r="2.5" fill="#2E7D32"/>
-                  <path d="M7 17 L7 9 L5 11" 
-                        fill="none" stroke="#1976D2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M17 7 L17 15 L19 13" 
-                        fill="none" stroke="#D32F2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path opacity="0.5" d="M18.6667 12C20.5513 11.7213 22 10.0457 22 8.02036C22 5.79998 20.2589 4 18.1111 4H5.88889C3.74112 4 2 5.79998 2 8.02036C2 10.0457 3.44873 11.7213 5.33333 12" stroke="#1C274C" stroke-width="1.5"></path> <path d="M12 7V14M12 14L14 11.6667M12 14L10 11.6667" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M5 11C5 9.11438 5 8.17157 5.58579 7.58579C6.17157 7 7.11438 7 9 7H15C16.8856 7 17.8284 7 18.4142 7.58579C19 8.17157 19 9.11438 19 11V17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17V11Z" stroke="#1C274C" stroke-width="1.5"></path> <path opacity="0.5" d="M5 18H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
                 """.ToImage(30,30);
         }
         protected override void OnPaint(PaintEventArgs e)

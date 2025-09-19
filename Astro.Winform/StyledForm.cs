@@ -315,7 +315,7 @@ namespace Astro.Winform
                 this.WindowState = FormWindowState.Maximized;
                 ApplyShadow();
                 using (var stream = await WClient.GetStreamAsync("/auth/permissions"))
-                using (var reader = new Astro.Streams.Reader(stream))
+                using (var reader = new Astro.Binaries.BinaryDataReader(stream))
                 {
                     var sectionLength = reader.ReadInt32();
                     while (sectionLength > 0)

@@ -1,4 +1,5 @@
-﻿using Astro.Data;
+﻿using Astro.Binaries;
+using Astro.Data;
 using Astro.Models;
 using Astro.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
@@ -16,8 +17,10 @@ namespace Astro.Server.Api
             app.MapPost("/data/accounts", async Task<IResult>(IDBClient db, HttpContext context) =>
             {
                 using (var ms = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new Streams.Reader(ms))
+                using (var reader = new BinaryDataReader(ms))
                 {
+                    if (ms.Length == 0) return Results.BadRequest();
+
                     var requestType = reader.ReadByte();
                     if (requestType == 0x00) return await GetDataTableAsync(reader, db);
                     else if (requestType == 0x01) return await CreateAsync(reader, db, context);
@@ -27,7 +30,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/accounts", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/accounts/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetDataTableAsync(Streams.Reader reader, IDBClient db)
+        private static async Task<IResult> GetDataTableAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db)
         {
             var listingType = reader.ReadByte();
             if (listingType == 0x00)
@@ -43,6 +46,32 @@ namespace Astro.Server.Api
                 """;
                 return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
             }
+            else if(listingType == 0x02)
+            {
+                var commandText = """
+                    SELECT acc.accountid, CONCAT(ap.name, ' - ', acc.accountname) AS name 
+                    FROM accounts AS acc
+                    INNER JOIN accountproviders AS ap ON acc.providerid = ap.providerid
+                    WHERE acc.isdeleted = false
+                    """;
+                using (var writer = new BinaryDataWriter())
+                {
+
+                    var iPos = writer.ReserveInt32();
+                    var iCount = 0;
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            writer.WriteInt16(reader.GetInt16(0));
+                            writer.WriteString(reader.GetString(1));
+                            iCount++;
+                        }
+                    }, commandText);
+                    writer.WriteInt32(iCount, iPos);
+                    return Results.File(writer.ToArray(), "application/octet-stream");
+                }
+            }
             else return Results.BadRequest();
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
@@ -54,7 +83,7 @@ namespace Astro.Server.Api
                 WHERE a.accountid = @id AND a.isdeleted = false
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -89,7 +118,7 @@ namespace Astro.Server.Api
                 return Results.File(writer.ToArray(), "application/octet-stream");
             }
         }
-        private static async Task<IResult> CreateAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var commandText = """
                 INSERT INTO accounts
@@ -112,7 +141,7 @@ namespace Astro.Server.Api
         private static async Task<IResult> UpdateAsync(IDBClient db, HttpContext context)
         {
             using (var ms = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new Streams.Reader(ms))
+            using (var reader = new Astro.Binaries.BinaryDataReader(ms))
             {
                 if (reader.ReadByte() != 0x01) return Results.BadRequest();
                 var commandText = """

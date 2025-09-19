@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Astro.Server.Middlewares;
 using Astro.Server.Api;
 using Astro.Data;
+using Astro.Server.Websites;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,5 +60,8 @@ app.MapDocumentEndPoints();
 app.MapSqlQueryEndPoints();
 
 app.MapPurchaseEndPoints();
+
+//Websites
+app.MapHomeEndPoints();
 
 app.Run();

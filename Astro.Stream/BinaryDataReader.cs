@@ -2,13 +2,13 @@
 using System.Text;
 using Astro.Extensions;
 
-namespace Astro.Streams
+namespace Astro.Binaries
 {
-    public class Reader : IDisposable
+    public class BinaryDataReader : IDisposable
     {
         private bool disposedValue;
         private readonly BinaryReader reader;
-        public Reader(Stream stream) => reader = new BinaryReader(stream, Encoding.UTF8);
+        public BinaryDataReader(Stream stream) => reader = new BinaryReader(stream, Encoding.UTF8);
         public bool ReadBoolean() => reader.ReadBoolean();
         public byte ReadByte() => reader.ReadByte();
         public sbyte ReadSByte() => reader.ReadSByte();
@@ -27,6 +27,13 @@ namespace Astro.Streams
             var ticks = ReadInt64();
             return ticks == 0 ? DateTime.MinValue : new DateTime(ticks, DateTimeKind.Utc);
         }
+        public DateTimeOffset ReadDateTimeOffset()
+        {
+            var ticks = reader.ReadInt64();
+            var offset = reader.ReadInt64();
+            return new DateTimeOffset(ticks, new TimeSpan(offset));
+        }
+        public TimeSpan ReadTimeSpan() => new TimeSpan(reader.ReadInt64());
         public object ReadDateTimeOrDBNull()
         {
             long ticks = reader.ReadInt64();
@@ -48,23 +55,23 @@ namespace Astro.Streams
         {
             var table = new DataTable();
             var colCount = ReadByte();
-            var types = new DbType[colCount];
+            var types = new int[colCount];
 
             for (int i = 0; i < colCount; i++)
             {
                 var colName = ReadString();
-                types[i] = (DbType)ReadByte();
-                table.Columns.Add(colName, types[i].ToType());
+                types[i] = (int)ReadByte();
+                table.Columns.Add(colName, types[i].ConvertToType());
             }
             try
             {
                 var rowCount = ReadInt32();
                 for (int i = 0; i < rowCount; i++)
                 {
-                    var values = new object[colCount];
+                    var values = new object?[colCount];
                     for (int j = 0; j < colCount; j++)
                     {
-                        values[j] = this.GetData(types[j]);
+                        values[j] = this.ReadCellData(types[j]);
                     }
                     table.Rows.Add(values);
                 }
@@ -73,14 +80,14 @@ namespace Astro.Streams
             
             return table;
         }
-        public Guid? ReadGuid()
+        public Guid ReadGuid()
         {
             if (reader.ReadBoolean())
             {
                 byte[] bytes = reader.ReadBytes(16);
                 return new Guid(bytes);
             }
-            return null;
+            return Guid.Empty;
         }
         protected virtual void Dispose(bool disposing)
         {

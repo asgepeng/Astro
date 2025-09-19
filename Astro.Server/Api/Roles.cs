@@ -1,6 +1,7 @@
 ﻿using Astro.Data;
 using Astro.Models;
 using Astro.Server.Binaries;
+using Astro.Binaries;
 using Astro.Server.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +19,7 @@ namespace Astro.Server.Api
             app.MapPost("/data/roles", async Task<IResult>(IDBClient db, HttpContext context) =>
             {
                 using (var ms = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new Streams.Reader(ms))
+                using (var reader = new BinaryDataReader(ms))
                 {
                     var requestType = reader.ReadByte();
                     if (requestType == 0x00) return await GetDataTableAsync(reader, db);
@@ -29,7 +30,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/roles", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/roles/{id}", DeleteAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> GetDataTableAsync(Streams.Reader reader, IDBClient db)
+        internal static async Task<IResult> GetDataTableAsync(BinaryDataReader reader, IDBClient db)
         {
             var listingMode = reader.ReadByte();
             /*
@@ -42,12 +43,38 @@ namespace Astro.Server.Api
                 SELECT r.roleid, r.name, CASE WHEN r.creatorid = 0 THEN 'System' else c.fullname END AS creator, r.createddate
                 FROM roles AS r
                 LEFT JOIN employees AS c ON r.creatorid = c.employeeid
+                WHERE r.roleid > 1
                 """;
                 return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
             }
             else if (listingMode == 0x01)
             {
                 return Results.BadRequest(); // not implemented right now
+            }
+            else if (listingMode == 0x02)
+            {
+                using (var writer = new BinaryDataWriter())
+                {
+                    var commandText = """
+                        SELECT roleid, name
+                        FROM roles
+                        WHERE roleid > 1
+                        ORDER BY name
+                        """;
+                    var iPos = writer.ReserveInt32();
+                    var iCount = 0;
+                    await db.ExecuteReaderAsync(async reader =>
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            writer.WriteInt16(reader.GetInt16(0));
+                            writer.WriteString(reader.GetString(1));
+                            iCount++;
+                        }
+                    }, commandText);
+                    writer.WriteInt32(iCount, iPos);
+                    return Results.File(writer.ToArray(), "application/octet-stream");
+                }
             }
             else return Results.BadRequest();
         }
@@ -58,7 +85,7 @@ namespace Astro.Server.Api
             FROM roles
             WHERE roleid = @id;
             """;
-            using (var builder = new Streams.Writer())
+            using (var builder = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -101,7 +128,7 @@ namespace Astro.Server.Api
                 return Results.File(builder.ToArray(), "application/octet-stream");
             }
         }
-        internal static async Task<IResult> CreateAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        internal static async Task<IResult> CreateAsync(BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var rolename = reader.ReadString();
             var commandCheck = """
@@ -151,7 +178,7 @@ namespace Astro.Server.Api
         internal static async Task<IResult> UpdateAsync(IDBClient db, HttpContext context)
         {
             using (var ms = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new Streams.Reader(ms))
+            using (var reader = new BinaryDataReader(ms))
             {
                 var sb = new StringBuilder();
                 sb.Append(""""

@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Astro.Extensions;
 
-namespace Astro.Streams
+namespace Astro.Binaries
 {
-    public class Writer : IDisposable
+    public class BinaryDataWriter : IDisposable
     {
         private bool disposedValue;
         private readonly MemoryStream stream;
         private readonly BinaryWriter writer;
-        public Writer()
+        public BinaryDataWriter()
         {
             stream = new MemoryStream();
             writer = new BinaryWriter(stream, Encoding.UTF8);
@@ -42,6 +42,15 @@ namespace Astro.Streams
         {
             if (value.HasValue) writer.Write(value.Value.Ticks);
             else writer.Write(DateTime.MinValue.Ticks);
+        }
+        public void WriteDateTimeOffset(DateTimeOffset value)
+        {
+            writer.Write(value.Ticks);
+            writer.Write(value.Offset.Ticks);
+        }
+        public void WriteTimeSpan(TimeSpan value)
+        {
+            WriteInt64(value.Ticks);
         }
         public void WriteGuid(Guid? guid)
         {
@@ -75,7 +84,6 @@ namespace Astro.Streams
         public async Task WriteDataTableAsync(System.Data.Common.DbDataReader reader)
         {
             var colCount = reader.FieldCount;
-            var types = new DbType[colCount];
             if (colCount > 0)
             {
                 WriteByte(0x01);
@@ -88,11 +96,12 @@ namespace Astro.Streams
             WriteByte((byte)colCount);
             if (colCount == 0) return;
 
+            var methodIndexs = new int[colCount];
             for (int i = 0; i < colCount; i++)
             {
+                methodIndexs[i] = reader.GetFieldType(i).GetMethodIndex();
                 WriteString(reader.GetName(i));
-                types[i] = (DbType)reader.GetDbType(i);
-                WriteByte((byte)types[i]);
+                WriteByte((byte)methodIndexs[i]);
             }
             var rowCount = 0;
             var iPos = ReserveInt32();
@@ -100,7 +109,7 @@ namespace Astro.Streams
             {
                 for (int i = 0; i < colCount; i++)
                 {
-                    reader.SetData(i, this, types[i]);
+                    this.WriteCellData(reader, i, methodIndexs[i]);
                 }
                 rowCount++;
             }

@@ -21,22 +21,22 @@ namespace Astro.Server.Api
         {
             var commandText = string.Empty;
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new Streams.Reader(stream))
+            using (var reader = new Astro.Binaries.BinaryDataReader(stream))
             {
                 var guid = reader.ReadGuid();
-                if (guid is null) return Results.BadRequest("Bad request: missing GUID.");
+                if (guid == Guid.Empty) return Results.BadRequest("Bad request: missing GUID.");
 
-                var key = guid.Value.ToByteArray();
+                var key = guid.ToByteArray();
                 var encrypted = reader.ReadString();
                 commandText = encrypted.Decrypt(key);
             }
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
                     await writer.WriteDataTableAsync(reader); 
-                }, commandText);
+                }, commandText, db.CreateParameter("location", context.Request.GetLocationID(), System.Data.DbType.Int16));
                 if (writer.GetLength() == 0)
                 {
                     writer.WriteByte(2);

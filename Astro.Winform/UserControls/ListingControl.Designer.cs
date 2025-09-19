@@ -30,76 +30,104 @@ namespace Astro.Forms.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            dataGridView1 = new DGrid();
             textBox1 = new TextBox();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            grid = new DGrid();
+            contextMenuStrip1 = new ContextMenuStrip(components);
+            filterToolStripMenuItem = new ToolStripMenuItem();
+            dataToolStripMenuItem = new ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
+            contextMenuStrip1.SuspendLayout();
             SuspendLayout();
-            // 
-            // dataGridView1
-            // 
-            dataGridView1.AllowUserToAddRows = false;
-            dataGridView1.AllowUserToDeleteRows = false;
-            dataGridView1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(244, 244, 244);
-            dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            dataGridView1.BackgroundColor = Color.White;
-            dataGridView1.BorderStyle = BorderStyle.None;
-            dataGridView1.CellBorderStyle = DataGridViewCellBorderStyle.None;
-            dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridView1.ColumnHeadersHeight = 30;
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = SystemColors.Window;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(210, 210, 210);
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
-            dataGridView1.Dock = DockStyle.Fill;
-            dataGridView1.EnableHeadersVisualStyles = false;
-            dataGridView1.GridColor = Color.FromArgb(244, 244, 244);
-            dataGridView1.Location = new Point(10, 40);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.ReadOnly = true;
-            dataGridView1.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridView1.RowHeadersVisible = false;
-            dataGridView1.RowTemplate.Height = 30;
-            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView1.Size = new Size(1088, 499);
-            dataGridView1.TabIndex = 1;
-            dataGridView1.CellMouseDoubleClick += dataGridView1_CellMouseDoubleClick;
             // 
             // textBox1
             // 
             textBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            textBox1.Location = new Point(940, 9);
+            textBox1.Location = new Point(950, 19);
             textBox1.Name = "textBox1";
             textBox1.PlaceholderText = "Ketik sesuatu...";
             textBox1.Size = new Size(158, 25);
             textBox1.TabIndex = 2;
+            textBox1.KeyDown += textBox1_KeyDown;
+            // 
+            // grid
+            // 
+            grid.AllowUserToAddRows = false;
+            grid.AllowUserToDeleteRows = false;
+            grid.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(244, 244, 244);
+            dataGridViewCellStyle1.ForeColor = SystemColors.ControlText;
+            grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            grid.BackgroundColor = Color.White;
+            grid.BorderStyle = BorderStyle.None;
+            grid.CellBorderStyle = DataGridViewCellBorderStyle.None;
+            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            grid.ColumnHeadersHeight = 30;
+            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9.75F);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(255, 255, 192);
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            grid.DefaultCellStyle = dataGridViewCellStyle2;
+            grid.Dock = DockStyle.Fill;
+            grid.EnableHeadersVisualStyles = false;
+            grid.Location = new Point(0, 50);
+            grid.MultiSelect = false;
+            grid.Name = "grid";
+            grid.ReadOnly = true;
+            grid.RowHeadersVisible = false;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.Size = new Size(1108, 499);
+            grid.TabIndex = 3;
+            grid.CellMouseDoubleClick += dataGridView1_CellMouseDoubleClick;
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { filterToolStripMenuItem, dataToolStripMenuItem });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new Size(181, 70);
+            // 
+            // filterToolStripMenuItem
+            // 
+            filterToolStripMenuItem.Name = "filterToolStripMenuItem";
+            filterToolStripMenuItem.Size = new Size(180, 22);
+            filterToolStripMenuItem.Text = "Filter";
+            // 
+            // dataToolStripMenuItem
+            // 
+            dataToolStripMenuItem.Name = "dataToolStripMenuItem";
+            dataToolStripMenuItem.Size = new Size(180, 22);
+            dataToolStripMenuItem.Text = "Data";
             // 
             // ListingControl
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(250, 250, 250);
+            Controls.Add(grid);
             Controls.Add(textBox1);
-            Controls.Add(dataGridView1);
             Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "ListingControl";
-            Padding = new Padding(10, 40, 10, 10);
+            Padding = new Padding(0, 50, 0, 0);
             Size = new Size(1108, 549);
             Load += ListingControl_Load;
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)grid).EndInit();
+            contextMenuStrip1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private DataGridView dataGridView1;
         private TextBox textBox1;
+        private DGrid grid;
+        private ContextMenuStrip contextMenuStrip1;
+        private ToolStripMenuItem filterToolStripMenuItem;
+        private ToolStripMenuItem dataToolStripMenuItem;
     }
 }

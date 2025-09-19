@@ -16,6 +16,7 @@ namespace Astro.Data
         Task<bool> ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
         Task ExecuteReaderAsync(Func<DbDataReader, Task> handler, string commandText, params DbParameter[] parameters);
         Task<T?> ExecuteScalarAsync<T>(string commandText, params DbParameter[] parameters);
+        Task<DataTable> ExecuteDataTableAsync(string commandText, params DbParameter[] parameters); 
         Task<bool> HasRecordsAsync(string commandText, params DbParameter[] parameters);     
         Task<List<T>> FetchListAsync<T>(string commandText, params DbParameter[] parameters);
         Task<Dictionary<TKey, TValue>> FetchDictionaryAsync<TKey, TValue>(string commandText, params DbParameter[] parameters)
@@ -145,7 +146,7 @@ namespace Astro.Data
         }
         public async Task<byte[]> ExecuteBinaryTableAsync(string commandText, params DbParameter[] parameters)
         {
-            using var writer = new Astro.Streams.Writer();
+            using var writer = new Astro.Binaries.BinaryDataWriter();
             var (conn, cmd) = CreateConnection(commandText, parameters);
             using (conn) using (cmd)
             {
@@ -220,6 +221,28 @@ namespace Astro.Data
                 }
                 catch { return default(T); }
             }
+        }
+        public async Task<DataTable> ExecuteDataTableAsync(string commandText, params DbParameter[] parameters)
+        {
+            var table = new DataTable();
+            var (conn, cmd) = CreateConnection(commandText, parameters);
+            using (conn) using (cmd)
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        table.Load(reader);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    File.WriteAllText(AppContext.BaseDirectory + "sql.txt", ex.ToString());
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+            return table;
         }
         public async Task<bool> HasRecordsAsync(string commandText, params DbParameter[] parameters)
         {

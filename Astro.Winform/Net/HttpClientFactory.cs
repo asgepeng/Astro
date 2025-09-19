@@ -1,6 +1,7 @@
 ﻿using Astro.Models;
 using Astro.Winform.Net;
 using System.Text;
+using Astro.Binaries;
 
 namespace Astro.Winform.Classes
 {
@@ -26,16 +27,22 @@ namespace Astro.Winform.Classes
         }
         internal static async Task<bool> SignInAsync(string username, string password)
         {
-            Credential request = new Credential(username, password);
+            var dataPayload = Array.Empty<byte>();
+            using (var writer = new BinaryDataWriter())
+            {
+                writer.WriteString(username);
+                writer.WriteString(password);
+                dataPayload = writer.ToArray();
+            }
             Uri endpoint = CreateUri("/auth/login");
-            HttpContent content = new StringContent(request.ToString(), Encoding.UTF8, "application/json");
+            HttpContent content = new ByteArrayContent(dataPayload);
             try
             {
                 HttpResponseMessage response = await Instance.PostAsync(endpoint, content);
                 if (response.IsSuccessStatusCode)
                 {
                     using (var stream = await response.Content.ReadAsStreamAsync())
-                    using (var reader = new Astro.Streams.Reader(stream))
+                    using (var reader = new BinaryDataReader(stream))
                     {
                         My.Application.User = new UserInfo(reader.ReadInt16(), reader.ReadString(), new Role() { Id = reader.ReadInt16(), Name = reader.ReadString() });
                         My.Application.ApiToken = reader.ReadString();

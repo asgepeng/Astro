@@ -4,17 +4,85 @@ using Astro.Winform.Forms;
 using Astro.Models;
 using Astro.Winform.Helpers;
 using Astro.Extensions;
+using Astro.Binaries;
+using DocumentFormat.OpenXml.InkML;
+using Org.BouncyCastle.Ocsp;
+using System.Data.Common;
+using System.Data;
+using Astro.Data;
+using MySqlX.XDevAPI.Common;
 
 namespace Astro.Winform.UserControls
 {
     public partial class PurchaseControl : UserControl
     {
+        private Point _mousePoint;
+        private bool _closeButtonHit;
+        private readonly IDBClient db = My.Application.CreateDBAccess();
         public PurchaseControl()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.UserPaint
+                | ControlStyles.ResizeRedraw
+                | ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+
+            this.Text = "Pembelian";
             this.grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             this.grid.ColumnHeadersDefaultCellStyle.Font = new Font(this.grid.Font, FontStyle.Bold);
+            this.purchaseItemBindingSource.DataSource = this.Purchase.Items;
         }
+        public Image? Icon { get; set; }
+        #region Protected Area
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            var x = 15;
+            var y = 10;
+            if (Icon != null)
+            {
+                var imgRext = new Rectangle(x, y, 32, 32);
+                e.Graphics.DrawImage(this.Icon, imgRext);
+                x += 37;
+            }
+            var rect = new Rectangle(x, y, this.Width - 10, 32);
+            TextFormatFlags flags = TextFormatFlags.EndEllipsis;
+            TextFormatFlags centerFlags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+            TextRenderer.DrawText(e.Graphics, this.Text, My.Application.TitleFont, rect, My.Application.TitleForeColor, flags);
+            var closeButton = new Rectangle(e.ClipRectangle.Width - 40, 0, 40, 40);
+            var closeColor = SystemColors.ControlText;
+            if (closeButton.Contains(_mousePoint))
+            {
+                e.Graphics.FillRectangle(Brushes.Red, closeButton);
+                closeColor = SystemColors.Window;
+            }
+            TextRenderer.DrawText(e.Graphics, "\uE8BB", My.Application.EmojiFont, closeButton, closeColor, centerFlags);
+        }
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            _mousePoint = e.Location;
+            Invalidate();
+        }
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            if (e.X >= this.Width - 40 && e.Y <= 40 && _closeButtonHit)
+            {
+                var mainForm = this.FindForm();
+                if (mainForm != null) mainForm.Close();
+            }
+        }
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.X >= this.Width - 40 && e.Y <= 40)
+            {
+                _closeButtonHit = true;
+            }
+            Invalidate();
+        }
+        #endregion Protected Area
         private void Calculate()
         {
             this.Purchase.Calculate();
@@ -27,16 +95,16 @@ namespace Astro.Winform.UserControls
         private void SupplierButtonClicked(object sender, EventArgs e)
         {
             var commandText = """
-                SELECT c.contact_id, c.contact_name, a.street_address
+                SELECT c.contactid, c.name, a.streetaddress
                 FROM contacts AS c
-                LEFT JOIN addresses AS a ON c.contact_id = a.owner_id AND a.is_primary = true
-                WHERE c.contact_type = 0 AND c.is_deleted = false
+                LEFT JOIN addresses AS a ON c.contactid = a.contactid AND a.isprimary = true
+                WHERE c.contacttype = 0 AND c.isdeleted = false
                 """;
             using (var dialog = new ListingPopUpForm(commandText))
             {
-                dialog.AddColumn("Kode", "contact_id", 60, DataGridViewContentAlignment.MiddleCenter, "00000");
-                dialog.AddColumn("Supplier", "contact_name", 200);
-                dialog.AddColumn("Alamat", "street_address", 300);
+                dialog.AddColumn("Kode", "contactid", 60, DataGridViewContentAlignment.MiddleCenter, "00000");
+                dialog.AddColumn("Supplier", "name", 200);
+                dialog.AddColumn("Alamat", "streetaddress", 300);
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     this.Purchase.SupplierId = (short)(int)dialog.SelectedRow[0];
@@ -46,7 +114,6 @@ namespace Astro.Winform.UserControls
             }
         }
         public Purchase Purchase { get; set; } = new Purchase();
-
         private async void BarcodeTextBoxKeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyData == Keys.Enter)
@@ -54,21 +121,21 @@ namespace Astro.Winform.UserControls
                 if (string.IsNullOrWhiteSpace(barcodeTextBox.Text))
                 {
                     var sql = $"""
-                        SELECT p.product_id, p.product_name, p.product_sku, i.stock, u.unit_name, i.buyprice
+                        SELECT p.productid, p.name, p.sku, i.stock, u.name AS unitname, i.buyprice
                         FROM products AS p
-                        INNER JOIN inventories AS i ON p.product_id = i.product_id AND i.location_id = {this.Purchase.Location}
-                        INNER JOIN units AS u ON p.unit_id = u.unit_id
-                        WHERE p.is_deleted = false AND i.is_active = true
+                        LEFT JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @locationid
+                        INNER JOIN units AS u ON p.unitid = u.unitid
+                        WHERE p.isdeleted = false AND i.isactive = true
                         """;
                     using (var dialog = new ListingPopUpForm(sql))
                     {
                         dialog.Text = "Datfar Barang";
 
-                        dialog.AddColumn("Kode", "product_id", 60, DataGridViewContentAlignment.MiddleCenter, "00000");
-                        dialog.AddColumn("Nama Barang", "product_name", 300);
-                        dialog.AddColumn("SKU", "product_sku", 120);
+                        dialog.AddColumn("Kode", "productid", 60, DataGridViewContentAlignment.MiddleCenter, "00000");
+                        dialog.AddColumn("Nama Barang", "name", 300);
+                        dialog.AddColumn("SKU", "sku", 120);
                         dialog.AddColumn("Stok", "stock", 80, DataGridViewContentAlignment.MiddleRight, "N0");
-                        dialog.AddColumn("Satuan", "unit_name", 100);
+                        dialog.AddColumn("Satuan", "unitname", 100);
                         dialog.AddColumn("Harga", "buyprice", 100, DataGridViewContentAlignment.MiddleRight, "N0");
                         if (dialog.ShowDialog() == DialogResult.OK)
                         {
@@ -113,7 +180,6 @@ namespace Astro.Winform.UserControls
                 }
             }
         }
-
         private void ResetSupplierButtonClicked(object sender, EventArgs e)
         {
             this.Purchase.SupplierId = 0;
@@ -123,89 +189,82 @@ namespace Astro.Winform.UserControls
 
         private void PurchaseDateChanged(object sender, EventArgs e)
         {
-            this.Purchase.Date = this.dateTimePicker1.Value;
+            this.Purchase.Date = this.dateTimePicker1.Value.ToUniversalTime();
         }
 
         private async void BaseFormLoad(object sender, EventArgs e)
         {
+            this.comboBox2.ValueMember = "Id";
+            this.comboBox2.DisplayMember = "Text";
+
             this.purchaseItemBindingSource.DataSource = this.Purchase.Items;
-            using (var stream = await WClient.GetStreamAsync("/auth/stores"))
-            using (var reader = new Astro.Streams.Reader(stream))
+            if (My.Application.User != null)
             {
-                var count = reader.ReadInt32();
-                for (int i = 0; i < count; i++)
+                this.comboBox2.Items.Add(new Option<short>()
                 {
-                    this.locationComboBox.Items.Add(new Option()
+                    Id = My.Application.User.Id,
+                    Text = "Tunai - " + My.Application.User.Name
+                });
+            }
+            var commandText = """
+                SELECT ac.accountid, CONCAT(p.name, ' - ', ac.accountname) AS txt
+                FROM accounts AS ac
+                INNER JOIN accountproviders AS p ON ac.providerid = p.providerid
+                WHERE ac.isdeleted = false
+                ORDER BY ac.accountid
+                """;
+            await db.ExecuteReaderAsync(async reader =>
+            {
+                while (await reader.ReadAsync())
+                {
+                    this.comboBox2.Items.Add(new Option<short>()
                     {
-                        Id = reader.ReadInt16(),
-                        Text = reader.ReadString()
+                        Id = reader.GetInt16(0),
+                        Text = reader.GetString(1)
                     });
                 }
-                if (this.locationComboBox.Items.Count > 0) this.locationComboBox.SelectedIndex = 0;
-                this.locationComboBox.DisplayMember = "Text";
-                this.locationComboBox.ValueMember = "Id";
-                count = reader.ReadInt32();
-                for (int i = 0; i < count; i++)
-                {
-                    this.comboBox2.Items.Add(new Option()
-                    {
-                        Id = reader.ReadInt16(),
-                        Text = reader.ReadString()
-                    });
-                }
-                if (this.comboBox2.Items.Count > 0) this.comboBox2.SelectedIndex = 0;
-                this.comboBox2.ValueMember = "Id";
-                this.comboBox2.DisplayMember = "Text";
-            }
+            }, commandText);
         }
-
-        private void LocationComboBoxSelentedIndexChanged(object sender, EventArgs e)
-        {
-            if (this.locationComboBox.SelectedItem != null)
-            {
-                this.Purchase.Location = (short)((Option)locationComboBox.SelectedItem).Id;
-            }
-        }
-
-        private async void NewProductButtonClicked(object sender, EventArgs e)
+        private void NewProductButtonClicked(object sender, EventArgs e)
         {
             using (var form = new ProductForm())
             {
-                var objectBuilder = new ObjectBuilder();
-               
+
             }
-        }
-        private short GetLocationID()
-        {
-            if (this.locationComboBox.SelectedItem is null) return (short)0;
-            return (short)((Option)this.locationComboBox.SelectedItem).Id;
         }
         private async Task<PurchaseItem?> GetPurchaseItemAsync(short productId, string sku = "")
         {
-            var req = new PurchaseItemRequest()
+            PurchaseItem? item = null;
+            var commandText = """
+                SELECT p.productid, p.name, p.sku, u.name AS unitname, i.buyprice
+                FROM products AS p
+                INNER JOIN units AS u ON p.unitid = u.unitid
+                INNER JOIN inventories AS i ON p.productid = i.productid  AND i.locationid = @location
+                WHERE p.isdeleted = false AND (p.productid = @id OR p.sku = @sku)
+                ORDER BY p.sku LIMIT 1
+                """;
+            var parameters = new DbParameter[]
             {
-                Id = productId,
-                Sku = sku,
-                Location = GetLocationID()
+                db.CreateParameter("location", My.Application.GetCurrentLocationID(), DbType.Int16),
+                db.CreateParameter("id", productId, DbType.Int16),
+                db.CreateParameter("sku", sku)
             };
-            using (var stream = await WClient.PostStreamAsync("/trans/purchases/get-item", req.ToString()))
-            using (var reader = new Astro.Streams.Reader(stream))
+            await db.ExecuteReaderAsync(async reader =>
             {
-                if (reader.ReadBoolean())
+                if (await reader.ReadAsync())
                 {
-                    var item = new PurchaseItem()
+                    item = new PurchaseItem()
                     {
-                        Id = reader.ReadInt16(),
-                        Name = reader.ReadString(),
-                        Sku = reader.ReadString(),
-                        Quantity = reader.ReadInt32(),
-                        Unit = reader.ReadString(),
-                        Price = reader.ReadInt64()
+                        Id = reader.GetInt16(0),
+                        Name = reader.GetString(1),
+                        Sku = reader.GetString(2),
+                        Quantity = 1,
+                        Unit = reader.GetString(3),
+                        Price = reader.GetInt64(4)
                     };
-                    return item;
                 }
-            }
-            return null;
+            }, commandText, parameters);
+            return item;
         }
         private void GridCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
@@ -228,14 +287,12 @@ namespace Astro.Winform.UserControls
         }
         private void GridRowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
-            this.locationComboBox.Enabled = !(grid.Rows.Count > 0);
             this.button3.Enabled = grid.Rows.Count > 0;
             this.Calculate();
         }
 
         private void GridRowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            this.locationComboBox.Enabled = !(grid.Rows.Count > 0);
             this.button3.Enabled = grid.Rows.Count > 0;
             this.Calculate();
         }
@@ -264,7 +321,6 @@ namespace Astro.Winform.UserControls
                     {
                         this.Purchase.Costs.Add(item);
                     }
-                    this.Purchase.Cost = this.Purchase.Costs.GetTotal();
                     this.Calculate();
                 }
             }
@@ -275,7 +331,8 @@ namespace Astro.Winform.UserControls
             if (this.Purchase.Items.Count == 0) return;
 
             this.Purchase.Calculate();
-            if (this.Purchase.TotalPaid < this.Purchase.GrandTotal)
+            var paidAmount = this.paidAmountTextBox.Text.ToInt64();
+            if (paidAmount < this.Purchase.GrandTotal)
             {
                 if (!IsUserAllowedCreateAccountPayable())
                 {
@@ -299,25 +356,92 @@ namespace Astro.Winform.UserControls
                         return;
                     }
                 }
-            }
-            using (var stream = await WClient.PostStreamAsync("/trans/purchases", this.Purchase.ToByteArray()))
-            using (var reader = new Astro.Streams.Reader(stream))
-            {
-                var success = reader.ReadBoolean();
-                if (success)
-                {
-                    MessageBox.Show(reader.ReadString(), reader.ReadString(), MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.purchaseItemBindingSource.DataSource = null;
 
-                    this.Purchase = new Purchase();
-                    this.purchaseItemBindingSource.DataSource = this.Purchase.Items;
-                    this.Calculate();
+            }
+            if (paidAmount > this.Purchase.GrandTotal) paidAmount = this.Purchase.GrandTotal;
+            if (paidAmount > 0)
+            {
+                var accountType = this.comboBox2.SelectedIndex == 0 ? (short)1 : (short)2;
+                if (this.comboBox2.SelectedItem is null) return;
+                var payment = new Payment()
+                {
+                    AccountType = accountType,
+                    Amount = paidAmount,
+                    AccountId = ((Option<short>)this.comboBox2.SelectedItem).Id
+                };
+                this.Purchase.Payments.Add(payment);
+            }
+            this.Purchase.Id = Guid.NewGuid();
+            this.Purchase.InvoiceNumber = "INV/20332/25/2025-09-08";
+            if (await this.CreateAsync())
+            {
+                var form = this.FindForm();
+                if (form is null) return;
+
+                form.DialogResult = DialogResult.OK;
+                form.Close();
+            }
+        }
+        private async Task<bool> CreateAsync()
+        {
+            this.Purchase.Calculate();
+            var creator = My.Application.GetCurrentUserID();
+            var parameters = new DbParameter[]
+            {
+                db.CreateParameter("id", this.Purchase.Id, DbType.Guid),
+                db.CreateParameter("invoicenumber", this.Purchase.InvoiceNumber, DbType.AnsiString),
+                db.CreateParameter("location", My.Application.GetCurrentLocationID(), DbType.Int16),
+                db.CreateParameter("purchasedate", this.Purchase.Date, DbType.DateTime),
+                db.CreateParameter("supplierid", this.Purchase.SupplierId, DbType.Int16),
+                db.CreateParameter("subtotal", this.Purchase.SubTotal, DbType.Int64),
+                db.CreateParameter("discount", this.Purchase.Discount, DbType.Int32),
+                db.CreateParameter("cost", this.Purchase.Cost, DbType.Int32),
+                db.CreateParameter("grandtotal", this.Purchase.GrandTotal, DbType.Int32),
+                db.CreateParameter("tax", this.Purchase.Tax, DbType.Int32),
+                db.CreateParameter("totalpaid", this.Purchase.TotalPaid, DbType.Int64),
+                db.CreateParameter("status", this.Purchase.GetStatusCode(), DbType.Int16),
+                db.CreateParameter("notes", "", DbType.AnsiString),
+                db.CreateParameter("creator", creator, DbType.Int16)
+            };
+            var commandText = this.Purchase.GenerateSql();
+            var success = await db.ExecuteNonQueryAsync(commandText, parameters);
+            if (!success) return false;
+
+            if (this.Purchase.Payments.Count > 0)
+            {
+                var iCount = 0;
+                commandText = """
+                    INSERT INTO cashflows
+                        (cashflowid, cashflowdate, refid, reftype, accountid, accounttype, amount, creatorid)
+                    VALUES
+                        (@paymentid, @purchasedate, @purchaseid, 1, @accountid, @accounttype, @amount, @creator)
+                    """;
+                foreach (var payment in this.Purchase.Payments)
+                {
+                    var paymentParams = new DbParameter[]
+                    {
+                        db.CreateParameter("paymentid", payment.Id, DbType.Guid),
+                        db.CreateParameter("purchasedate", this.Purchase.Date, DbType.DateTime),
+                        db.CreateParameter("purchaseid", this.Purchase.Id, DbType.Guid),
+                        db.CreateParameter("accountid", payment.AccountId, DbType.Int16),
+                        db.CreateParameter("accountType", payment.AccountType, DbType.Int16),
+                        db.CreateParameter("amount", payment.Amount * -1, DbType.Int64),
+                        db.CreateParameter("creator", creator, DbType.Int16)
+                    };
+                    success = await db.ExecuteNonQueryAsync(commandText, paymentParams);
+                    if (success) iCount++;
+                }
+                if (iCount == this.Purchase.Payments.Count)
+                {
+                    return true;
                 }
                 else
                 {
-                    MessageBox.Show(reader.ReadString(), reader.ReadString(), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Gagal menyimpan pembayaran");
+                    return false;
                 }
             }
+            return true;
         }
         private bool IsUserAllowedCreateAccountPayable()
         {
@@ -335,20 +459,26 @@ namespace Astro.Winform.UserControls
 
         private void textBox8_TextChanged(object sender, EventArgs e)
         {
-            this.Purchase.TotalPaid = this.paidAmountTextBox.Text.ToInt64();
-            if (this.Purchase.AccountPayableAmount < 0)
-            {
-                this.refundTextBox.Text = (-1 * this.Purchase.AccountPayableAmount).ToString("N0");
-            }
-            else
-            {
-                if (this.refundTextBox.Text.Length > 0) this.refundTextBox.Clear();
-            }
+            var amount = this.paidAmountTextBox.Text.ToInt64();
+            var refund = amount - this.Purchase.GrandTotal;
+            if (refund > 0) this.refundTextBox.Text = refund.ToString("N0");
+            else this.refundTextBox.Clear();
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
             BarcodeTextBoxKeyDown(sender, new KeyEventArgs(Keys.Enter));
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            this.Purchase.Calculate();
+            this.textBox7.Text = this.Purchase.Items.GenerateSql();
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

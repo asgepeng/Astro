@@ -1,17 +1,10 @@
 ﻿using Astro.Winform.Classes;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using Astro.Winform.Extensions;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Astro.Winform.Forms
 {
-    public partial class ListUnitForm : Form
+    public partial class ListUnitForm : UserControl
     {
         private readonly BindingSource bs = new BindingSource();
         public ListUnitForm()
@@ -19,12 +12,13 @@ namespace Astro.Winform.Forms
             InitializeComponent();
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.DataSource = bs;
+            dataGridView1.ApplyGridStyle();
         }
         private async Task LoadDataAsync()
         {
             this.Cursor = Cursors.WaitCursor;
             using (var stream = await WClient.GetStreamAsync("/data/units"))
-            using (var reader = new Astro.Streams.Reader(stream))
+            using (var reader = new Astro.Binaries.BinaryDataReader(stream))
             {
                 var result = reader.ReadByte();
                 if (result == 0x00)
@@ -71,7 +65,7 @@ namespace Astro.Winform.Forms
             var id = (short)((DataRowView)this.bs.Current)[0];
             var form = new UnitForm() { Unit = new Models.Unit() };
             using (var stream = await WClient.GetStreamAsync($"/data/units/{id}"))
-            using (var reader = new Astro.Streams.Reader(stream))
+            using (var reader = new Astro.Binaries.BinaryDataReader(stream))
             {
                 if (reader.Read())
                 {

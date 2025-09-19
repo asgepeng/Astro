@@ -1,4 +1,5 @@
-﻿using Astro.Data;
+﻿using Astro.Binaries;
+using Astro.Data;
 using Astro.Models;
 using Astro.Server.Binaries;
 using Astro.Server.Extensions;
@@ -18,7 +19,7 @@ namespace Astro.Server.Api
             app.MapPost("/data/customers", async Task<IResult>(IDBClient db, HttpContext context) =>
             {
                 using (var stream = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new Streams.Reader(stream))
+                using (var reader = new Astro.Binaries.BinaryDataReader(stream))
                 {
                     var requestType = reader.ReadByte();
                     if (requestType == 0x00) return await GetDataTableAsync(reader, db, context);
@@ -29,7 +30,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/customers", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/customers/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetDataTableAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> GetDataTableAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var listingType = reader.ReadByte();
             if (listingType == 0x00)
@@ -62,6 +63,31 @@ namespace Astro.Server.Api
             else if (listingType == 0x01)
             {
                 return Results.BadRequest();
+            }
+            else if (listingType == 0x02)
+            {
+                using (var w = new BinaryDataWriter())
+                {
+                    var commandText = """
+                        SELECT contactid, name
+                        FROM contacts
+                        WHERE contacttype = 1
+                        ORDER BY name
+                        """;
+                    var iPos = w.ReserveInt32();
+                    var iCount = 0;
+                    await db.ExecuteReaderAsync(async r =>
+                    {
+                        while (await r.ReadAsync())
+                        {
+                            w.WriteInt16(r.GetInt16(0));
+                            w.WriteString(r.GetString(1));
+                            iCount++;
+                        }
+                    }, commandText);
+                    w.WriteInt32(iCount, iPos);
+                    return Results.File(w.ToArray(), "application/octet-stream");
+                }
             }
             else return Results.BadRequest();
         }
@@ -100,7 +126,7 @@ namespace Astro.Server.Api
                 WHERE contactid = @contactId
                 AND isdeleted = false
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 bool contactExists = false;
                 await db.ExecuteReaderAsync(async reader =>
@@ -204,7 +230,7 @@ namespace Astro.Server.Api
                 return Results.File(writer.ToArray(), "application/octet-stream");
             }
         }
-        private static async Task<IResult> CreateAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var commandText = """
                 INSERT INTO contacts ("name", contacttype, creatorid)
@@ -292,7 +318,7 @@ namespace Astro.Server.Api
         private static async Task<IResult> UpdateAsync(IDBClient db, HttpContext context)
         {
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new Streams.Reader(stream))
+            using (var reader = new Astro.Binaries.BinaryDataReader(stream))
             {
                 if (reader.ReadByte() != 0x01) return Results.BadRequest();
 

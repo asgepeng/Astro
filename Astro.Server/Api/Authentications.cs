@@ -11,14 +11,10 @@ using Astro.Server.Memory;
 using Microsoft.AspNetCore.Routing;
 using Astro.Server.Extensions;
 using Astro.Extensions;
-using System.Dynamic;
+using Astro.Binaries;
 
 namespace Astro.Server.Api
 {
-    internal enum LoginResult
-    {
-        Success, AccountLocked, InvalidCredential, NotFound, CreateTokenFailed, PasswordExpired
-    }
     internal static class Authentications
     {
         internal static void MapAuthEndPoints(this WebApplication app)
@@ -30,113 +26,121 @@ namespace Astro.Server.Api
             app.MapGet("/auth/stores", GetUserLocationsAsync).RequireAuthorization();
             app.MapPut("/auth/stores/{location}", ChangeLocationAsync).RequireAuthorization();
         }
-        internal static async Task<IResult> SignInAsync(Credential credential, IDBClient db, HttpContext context)
+        internal static async Task<IResult> SignInAsync(IDBClient db, HttpContext context)
         {
-            if (string.IsNullOrEmpty(credential.Username) || string.IsNullOrEmpty(credential.Password))
+            using (var ms = await context.Request.GetMemoryStreamAsync())
+            using (var reader = new BinaryDataReader(ms))
             {
-                return Results.Unauthorized();
-            }
-            var loginInfo = await GetLoginInfoAsync(credential.Username, db);
-            if (loginInfo is null)
-            {
-                await CreateLoginHistory(null, LoginResult.NotFound, db, context);
-                return Results.Unauthorized();
-            }
+                if (ms.Length == 0) return Results.BadRequest("Credential is empty");
+                if (ms.Length != context.Request.ContentLength) return Results.BadRequest();
 
-            if (loginInfo.IsLockedOut())
-            {
-                await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
-                return Results.Unauthorized();
-            }
-            var credentialVerified = loginInfo.VerifyPassword(credential.Password);
-            if (!credentialVerified)
-            {
-                if (loginInfo.LockoutEnabled && await IncrementAccessFailedCountAsync(loginInfo, db))
+                var credential = new Credential(reader.ReadString(), reader.ReadString());
+                if (string.IsNullOrEmpty(credential.Username) || string.IsNullOrEmpty(credential.Password))
                 {
-                    await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
-                    return Results.Problem("Your account has been temporarily locked due to multiple failed login attempts.");
-                }
-                else
-                {
-                    await CreateLoginHistory(loginInfo, LoginResult.InvalidCredential, db, context);
                     return Results.Unauthorized();
                 }
-            }
-            if (loginInfo.IsPasswordExpired())
-            {
-                await CreateLoginHistory(loginInfo, LoginResult.PasswordExpired, db, context);
-                return Results.Forbid();
-            }
-
-            var token = await RegisterNewToken(loginInfo, db, context);
-            if (string.IsNullOrEmpty(token))
-            {
-                await CreateLoginHistory(loginInfo, LoginResult.CreateTokenFailed, db, context);
-                return Results.Problem("We were unable to generate your access token. Please contact your administrator for assistance");
-            }
-
-            if (context.Request.IsDesktopAppRequest())
-            {
-                using (var writer =new Streams.Writer())
+                var loginInfo = await GetLoginInfoAsync(credential.Username, db);
+                if (loginInfo is null)
                 {
-                    var commandText = """
+                    await CreateLoginHistory(null, LoginResult.NotFound, db, context);
+                    return Results.Unauthorized();
+                }
+
+                if (loginInfo.IsLockedOut())
+                {
+                    await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
+                    return Results.Unauthorized();
+                }
+                var credentialVerified = loginInfo.VerifyPassword(credential.Password);
+                if (!credentialVerified)
+                {
+                    if (loginInfo.LockoutEnabled && await IncrementAccessFailedCountAsync(loginInfo, db))
+                    {
+                        await CreateLoginHistory(loginInfo, LoginResult.AccountLocked, db, context);
+                        return Results.Problem("Your account has been temporarily locked due to multiple failed login attempts.");
+                    }
+                    else
+                    {
+                        await CreateLoginHistory(loginInfo, LoginResult.InvalidCredential, db, context);
+                        return Results.Unauthorized();
+                    }
+                }
+                if (loginInfo.IsPasswordExpired())
+                {
+                    await CreateLoginHistory(loginInfo, LoginResult.PasswordExpired, db, context);
+                    return Results.Forbid();
+                }
+
+                var token = await RegisterNewToken(loginInfo, db, context);
+                if (string.IsNullOrEmpty(token))
+                {
+                    await CreateLoginHistory(loginInfo, LoginResult.CreateTokenFailed, db, context);
+                    return Results.Problem("We were unable to generate your access token. Please contact your administrator for assistance");
+                }
+
+                if (context.Request.IsDesktopAppRequest())
+                {
+                    using (var writer = new Astro.Binaries.BinaryDataWriter())
+                    {
+                        var commandText = """
                         SELECT e.fullname, e.roleid, r.name AS rolename
                         FROM employees AS e
                         INNER JOIN roles AS r ON e.roleid = r.roleid
                         WHERE e.employeeid = @id
                         """;
-                    writer.WriteInt16(loginInfo.EmployeeId);
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        if (await reader.ReadAsync())
+                        writer.WriteInt16(loginInfo.EmployeeId);
+                        await db.ExecuteReaderAsync(async reader =>
                         {
-                            writer.WriteString(reader.GetString(0));
-                            writer.WriteInt16(reader.GetInt16(1));
-                            writer.WriteString(reader.GetString(2));
-                        }
-                    }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
-                    writer.WriteString(token);
+                            if (await reader.ReadAsync())
+                            {
+                                writer.WriteString(reader.GetString(0));
+                                writer.WriteInt16(reader.GetInt16(1));
+                                writer.WriteString(reader.GetString(2));
+                            }
+                        }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
+                        writer.WriteString(token);
 
-                    var iPos = writer.ReserveInt32();
-                    var command = """
+                        var iPos = writer.ReserveInt32();
+                        var command = """
                         SELECT l.locationid, l.name
                         FROM employeelocations AS el
                         INNER JOIN locations AS l ON el.locationid = l.locationid
                         WHERE el.employeeid = @id
                         """;
-                    await db.ExecuteReaderAsync(async reader =>
-                    {
-                        var iCount = 0;
-                        while (await reader.ReadAsync())
+                        await db.ExecuteReaderAsync(async reader =>
                         {
-                            writer.WriteInt16(reader.GetInt16(0));
-                            writer.WriteString(reader.GetString(1));
-                            iCount++;
-                        }
-                        writer.WriteInt32(iCount, iPos);
-                    }, command, db.CreateParameter("id", loginInfo.EmployeeId));
-                    return Results.File(writer.ToArray(), "application/octet-stream");
+                            var iCount = 0;
+                            while (await reader.ReadAsync())
+                            {
+                                writer.WriteInt16(reader.GetInt16(0));
+                                writer.WriteString(reader.GetString(1));
+                                iCount++;
+                            }
+                            writer.WriteInt32(iCount, iPos);
+                        }, command, db.CreateParameter("id", loginInfo.EmployeeId));
+                        return Results.File(writer.ToArray(), "application/octet-stream");
+                    }
                 }
-            }
-            else
-            {
-                var commandText = """
+                else
+                {
+                    var commandText = """
                     SELECT e.fullname, e.roleid, r.name AS rolename
                     FROM employees AS e
                     INNER JOIN roles AS r ON e.roleid = r.roleid
                     WHERE e.employeeid = @id
                     """;
-                UserInfo? userInfo = null;
-                await db.ExecuteReaderAsync(async reader =>
-                {
-                    if (await reader.ReadAsync())
+                    UserInfo? userInfo = null;
+                    await db.ExecuteReaderAsync(async reader =>
                     {
-                        userInfo = new UserInfo(loginInfo.EmployeeId, reader.GetString(0), new Role() { Id = reader.GetInt16(1), Name = reader.GetString(2) });
-                    }
-                }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
+                        if (await reader.ReadAsync())
+                        {
+                            userInfo = new UserInfo(loginInfo.EmployeeId, reader.GetString(0), new Role() { Id = reader.GetInt16(1), Name = reader.GetString(2) });
+                        }
+                    }, commandText, db.CreateParameter("id", loginInfo.EmployeeId, DbType.Int16));
 
-                await CreateLoginHistory(loginInfo, LoginResult.Success, db, context);
-                return Results.Ok(AuthResponse.Success(token, userInfo));
+                    await CreateLoginHistory(loginInfo, LoginResult.Success, db, context);
+                    return Results.Ok(AuthResponse.Success(token, userInfo));
+                }
             }
         }
         private static async Task<IResult> ChangeLocationAsync(short location, IDBClient db, HttpContext context)
@@ -379,7 +383,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetUserLocationsAsync(IDBClient db, HttpContext context)
         {
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 var iCount = 0;
                 await db.ExecuteReaderAsync(async reader =>

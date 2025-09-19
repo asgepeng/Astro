@@ -7,40 +7,54 @@ using System.Threading.Tasks;
 
 namespace Astro.Winform.Controls
 {
-    internal class DGrid : DataGridView
+    public class DGrid : DataGridView
     {
         protected override bool ShowFocusCues
         {
             get { return true; }
         }
-        internal DGrid()
+        public DGrid()
         {
-            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
-            this.AllowUserToAddRows = false;
-            this.AllowUserToDeleteRows = false;
-            this.AllowUserToResizeRows = false;
-            this.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            this.AutoGenerateColumns = false;
-            this.BackgroundColor = Color.White;
-            this.BorderStyle = BorderStyle.Fixed3D;
-            this.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            this.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            this.ColumnHeadersHeight = 26;
-            this.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            
-            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = SystemColors.Window;
-            dataGridViewCellStyle9.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            dataGridViewCellStyle9.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle9.SelectionBackColor = SystemColors.ButtonFace;
-            dataGridViewCellStyle9.SelectionForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.False;
+            this.InitializeComponent();
+        }
 
-            this.DefaultCellStyle = dataGridViewCellStyle9;
-            this.GridColor = Color.FromArgb(244, 244, 244);
-            this.RowHeadersVisible = false;
-            this.RowTemplate.Height = 26;
-            this.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        private void InitializeComponent()
+        {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            ((System.ComponentModel.ISupportInitialize)this).BeginInit();
+            SuspendLayout();
+            // 
+            // DGrid
+            // 
+            AllowUserToAddRows = false;
+            AllowUserToDeleteRows = false;
+            AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(244, 244, 244);
+            dataGridViewCellStyle1.ForeColor = SystemColors.ControlText;
+            AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            BackgroundColor = Color.White;
+            BorderStyle = BorderStyle.None;
+            CellBorderStyle = DataGridViewCellBorderStyle.None;
+            ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            ColumnHeadersHeight = 30;
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(255, 255, 192);
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            DefaultCellStyle = dataGridViewCellStyle2;
+            EnableHeadersVisualStyles = false;
+            MultiSelect = false;
+            ReadOnly = true;
+            RowHeadersVisible = false;
+            RowTemplate.Height = 30;
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            ((System.ComponentModel.ISupportInitialize)this).EndInit();
+            ResumeLayout(false);
         }
     }
 }

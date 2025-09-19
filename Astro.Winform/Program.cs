@@ -26,7 +26,7 @@ namespace PointOfSale
                 {
                     My.Application.ApiUrl = "http://localhost:5002";
                 }
-                Application.Run(new MainForm());
+                Application.Run(new SPAForm());
             }
             catch(Exception ex)
             {

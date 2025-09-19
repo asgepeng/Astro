@@ -32,20 +32,21 @@
             // 
             // OverlayForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.FromArgb(128, 64, 64);
-            ClientSize = new Size(783, 469);
+            BackColor = Color.Indigo;
+            ClientSize = new Size(783, 532);
+            Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "OverlayForm";
-            Padding = new Padding(0, 40, 0, 0);
+            Padding = new Padding(1);
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
             Text = "OverlayForm";
-            TransparencyKey = Color.FromArgb(128, 64, 64);
+            TransparencyKey = Color.Indigo;
             Click += OverlayForm_Click;
             ResumeLayout(false);
         }

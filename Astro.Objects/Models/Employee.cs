@@ -9,7 +9,7 @@ namespace Astro.Models
 {
     public class Employee
     {
-        private Employee(Streams.Reader reader)
+        private Employee(Binaries.BinaryDataReader reader)
         {
             Id = reader.ReadInt16();
             FullName = reader.ReadString();
@@ -67,6 +67,6 @@ namespace Astro.Models
         [JsonPropertyName("notes")]
         public string Notes { get; set; } = "";
 
-        public static Employee Create(Streams.Reader reader) => new Employee(reader);
+        public static Employee Create(Binaries.BinaryDataReader reader) => new Employee(reader);
     }
 }

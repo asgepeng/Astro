@@ -23,7 +23,7 @@ namespace Astro.Server.Api
             app.MapPost("/data/suppliers", async Task<IResult>(IDBClient db, HttpContext context) =>
             {
                 using (var ms = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new Streams.Reader(ms))
+                using (var reader = new Astro.Binaries.BinaryDataReader(ms))
                 {
                     var requestType = reader.ReadByte();
                     if (requestType == 0x00) return await GetDataTableAsync(reader, db, context);
@@ -34,7 +34,7 @@ namespace Astro.Server.Api
             app.MapPut("/data/suppliers", UpdateAsync).RequireAuthorization();
             app.MapDelete("/data/suppliers/{id}", DeleteAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetDataTableAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> GetDataTableAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var listingType = reader.ReadByte();
             if (listingType == 0x00)
@@ -105,7 +105,7 @@ namespace Astro.Server.Api
                 WHERE contactid = @contactId
                 AND isdeleted = false
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 bool contactExists = false;
                 await db.ExecuteReaderAsync(async reader =>
@@ -209,7 +209,7 @@ namespace Astro.Server.Api
                 return Results.File(writer.ToArray(), "application/octet-stream");
             }
         }
-        private static async Task<IResult> CreateAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> CreateAsync(Astro.Binaries.BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var commandText = """
                 INSERT INTO contacts ("name", contacttype, creatorid)
@@ -297,7 +297,7 @@ namespace Astro.Server.Api
         private static async Task<IResult> UpdateAsync(IDBClient db, HttpContext context)
         {
             using (var stream = await context.Request.GetMemoryStreamAsync())
-            using (var reader = new Streams.Reader(stream))
+            using (var reader = new Astro.Binaries.BinaryDataReader(stream))
             {
                 if (reader.ReadByte() != 0x01) return Results.BadRequest();
 

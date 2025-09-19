@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Data;
 using Microsoft.AspNetCore.Http;
 using Astro.Server.Extensions;
-using Astro.Server.Memory;
+using Astro.Binaries;
 
 namespace Astro.Server.Binaries
 {
@@ -46,7 +46,7 @@ namespace Astro.Server.Binaries
                 WHERE u.user_id = @userId
                     AND u.is_deleted = false
                 """;
-            using (var builder = new Streams.Writer())
+            using (var builder = new BinaryDataWriter())
             {
                 var addressInfo = new AddressInfo();
 
@@ -197,7 +197,7 @@ namespace Astro.Server.Binaries
                 from roles
                 where roleid = @id;
                 """;
-            using (var builder = new Streams.Writer())
+            using (var builder = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -249,7 +249,7 @@ namespace Astro.Server.Binaries
                 INNER JOIN inventories AS i ON p.productid = i.productid AND i.locationid = @location
                 where p.productid = @id and p.isdeleted = false;
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -324,7 +324,7 @@ namespace Astro.Server.Binaries
             var data = Array.Empty<byte>();
             await db.ExecuteReaderAsync(async reader =>
             {
-                using (var writer = new Streams.Writer())
+                using (var writer = new BinaryDataWriter())
                 {
                     writer.WriteBoolean(reader.HasRows);
                     if (await reader.ReadAsync())
@@ -347,7 +347,7 @@ namespace Astro.Server.Binaries
             var data = Array.Empty<byte>();
             await db.ExecuteReaderAsync(async reader =>
             {
-                using (var writer = new Streams.Writer())
+                using (var writer = new BinaryDataWriter())
                 {
                     writer.WriteBoolean(reader.HasRows);
                     if (await reader.ReadAsync())
@@ -368,7 +368,7 @@ namespace Astro.Server.Binaries
                 WHERE contactid = @contactId
                 AND isdeleted = false
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 bool contactExists = false;
                 await db.ExecuteReaderAsync(async reader =>
@@ -480,7 +480,7 @@ namespace Astro.Server.Binaries
                 where provider_id = @id;
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -505,7 +505,7 @@ namespace Astro.Server.Binaries
                 where a.accountid = @id and a.isdeleted = false
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -553,7 +553,7 @@ namespace Astro.Server.Binaries
                 """;
             var listMenu = new ListMenu();
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async (DbDataReader reader) =>
                 {
@@ -609,7 +609,7 @@ namespace Astro.Server.Binaries
                     LEFT JOIN employees AS c ON e.creatorid = c.employeeid
                     where e.isdeleted = false
                     """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async (DbDataReader reader) =>
                 {
@@ -633,7 +633,7 @@ namespace Astro.Server.Binaries
                 FROM roles AS r
                 LEFT JOIN employees AS c on r.creatorid = c.employeeid
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -660,7 +660,7 @@ namespace Astro.Server.Binaries
                 INNER JOIN employees AS e ON p.creatorid = e.employeeid
                 WHERE p.isdeleted = false
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -688,7 +688,7 @@ namespace Astro.Server.Binaries
                 INNER JOIN employees AS c on u.creatorid = c.employeeid
                 ORDER BY u.name
                 """;
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -713,7 +713,7 @@ namespace Astro.Server.Binaries
                     ORDER BY c.name
                     """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -755,7 +755,7 @@ namespace Astro.Server.Binaries
                   AND c.contacttype = @contactType;
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -780,7 +780,7 @@ namespace Astro.Server.Binaries
                 from accountproviders
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {
@@ -807,7 +807,7 @@ namespace Astro.Server.Binaries
                 where acc.isdeleted = false
                 """;
             var data = Array.Empty<byte>();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 await db.ExecuteReaderAsync(async reader =>
                 {

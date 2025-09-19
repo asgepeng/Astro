@@ -1,4 +1,5 @@
-﻿using Astro.Models;
+﻿using Astro.Binaries;
+using Astro.Models;
 using Astro.Winform.Classes;
 using System;
 using System.Collections.Generic;
@@ -36,19 +37,25 @@ namespace Astro.Winform.Forms
                 MessageBox.Show("Category name cannot be empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            Category.Name = this.textBox1.Text.Trim();
-            var json = Category.Id > 0 ? await WClient.PutAsync("/data/categories", Category.ToString()) : await WClient.PostAsync("/data/categories", Category.ToString());
-            var commondResult = CommonResult.Create(json);
-            if (commondResult != null)
+            using (var writer = new BinaryDataWriter())
             {
-                if (commondResult.Success)
+                if (Category.Id > 0) writer.WriteInt16(Category.Id);
+                else writer.WriteByte(0x01);
+
+                writer.WriteString(this.textBox1.Text.Trim());
+                var json = Category.Id > 0 ? await WClient.PutAsync("/data/categories", writer.ToArray()) : await WClient.PostAsync("/data/categories", writer.ToArray());
+                var commondResult = CommonResult.Create(json);
+                if (commondResult != null)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show(commondResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (commondResult.Success)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(commondResult.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }

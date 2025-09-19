@@ -10,6 +10,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Astro.Binaries;
 
 namespace Astro.Server.Api
 {
@@ -21,7 +22,7 @@ namespace Astro.Server.Api
             app.MapPost("/data/employees", async Task<IResult> (IDBClient db, HttpContext context) =>
             {
                 using (var ms = await context.Request.GetMemoryStreamAsync())
-                using (var reader = new Streams.Reader(ms))
+                using (var reader = new BinaryDataReader(ms))
                 {
                     var requestType = reader.ReadByte();
                     if (requestType == 0x00) return await GetDataTableAsync(reader, db, context);
@@ -29,8 +30,9 @@ namespace Astro.Server.Api
                     else return Results.BadRequest();
                 }
             }).RequireAuthorization();
+            app.MapPut("/data/employees", UpdateAsync).RequireAuthorization();
         }
-        private static async Task<IResult> GetDataTableAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> GetDataTableAsync(BinaryDataReader reader, IDBClient db, HttpContext context)
         {
             var listingType = reader.ReadByte();
             if (listingType == 0x00)
@@ -40,7 +42,7 @@ namespace Astro.Server.Api
                     FROM employees AS e
                     INNER JOIN roles AS r ON e.roleid = r.roleid
                     LEFT JOIN employees AS c ON e.creatorid = c.employeeid
-                    WHERE e.isdeleted = false
+                    WHERE e.isdeleted = false AND e.employeeid > 1
                     """;
                 return Results.File(await db.ExecuteBinaryTableAsync(commandText), "application/octet-stream");
             }
@@ -48,82 +50,127 @@ namespace Astro.Server.Api
             {
                 return Results.BadRequest();
             }
+            else if (listingType == 0x02)
+            {
+                var commandText = """
+                    SELECT employeeid, fullname
+                    FROM employees
+                    WHERE employeeid NOT IN ((SELECT employeeid FROM logins))
+                    """;
+                using (var writer = new BinaryDataWriter())
+                {
+                    var iPos = writer.ReserveInt32();
+                    var iCount = 0;
+                    await db.ExecuteReaderAsync(async r =>
+                    {
+                        while (await r.ReadAsync())
+                        {
+                            writer.WriteInt16(r.GetInt16(0));
+                            writer.WriteString(r.GetString(1));
+                            iCount++;
+                        }
+                    }, commandText);
+                    writer.WriteInt32(iCount, iPos);
+                    return Results.File(writer.ToArray(), "application/octet-stream");
+                }
+            }
+            else if (listingType == 0x03)
+            {
+                var employeeId = reader.ReadInt16();
+                var commandText = """
+                    SELECT name
+                    FROM employees
+                    WHERE employeeid = @id
+                    """;
+                var employeeName = await db.ExecuteScalarAsync<string>(commandText, db.CreateParameter("id", employeeId, DbType.Int16));
+                if (string.IsNullOrEmpty(employeeName)) employeeName = "";
+                return Results.File(Encoding.UTF8.GetBytes(employeeName), "application/octet-stream");
+            }
             else
             {
                 return Results.BadRequest();
             }
         }
-        private static async Task<IResult> CreateAsync(Streams.Reader reader, IDBClient db, HttpContext context)
+        private static async Task<IResult> CreateAsync(BinaryDataReader reader, IDBClient db, HttpContext context)
         {
-            var employee = Employee.Create(reader);
-            var commandText = """
-                INSERT INTO employees (
-                    fullname,
-                    placeofbirth,
-                    dateofbirth,
-                    sex,
-                    maritalstatus,
-                    streetaddress,
-                    villageid,
-                    zipcode,
-                    phone,
-                    email,
-                    hireddate,
-                    roleid,
-                    isactive,
-                    terminationdate,
-                    payrolldate,
-                    payrollmethod,
-                    notes,
-                    creatorid
-                ) VALUES (
-                    @fullname,
-                    @placeofbirth,
-                    @dateofbirth,
-                    @sex,
-                    @maritalstatus,
-                    @streetaddress,
-                    @villageid,
-                    @zipcode,
-                    @phone,
-                    @email,
-                    @hireddate,
-                    @roleid,
-                    @isactive,
-                    @terminationdate,
-                    @payrolldate,
-                    @payrollmethod,
-                    @notes,
-                    @creator
-                );
-                """;
             var parameters = new DbParameter[]
             {
-                db.CreateParameter("fullname", employee.FullName, DbType.AnsiString),
-                db.CreateParameter("placeofbirth", employee.PlaceOfBirth, DbType.DateTime),
-                db.CreateParameter("dateofbirth", employee.DateOfBirth, DbType.DateTime),
-                db.CreateParameter("sex", employee.Sex, DbType.Int16),
-                db.CreateParameter("maritalstatus", employee.MaritalStatus, DbType.Int16),
-                db.CreateParameter("streetaddress", employee.StreetAddress, DbType.AnsiString),
-                db.CreateParameter("villageid", employee.StreetAddress, DbType.AnsiString),
-                db.CreateParameter("zipcode", employee.ZipCode, DbType.AnsiString),
-                db.CreateParameter("phone", employee.PhoneNumber, DbType.AnsiString),
-                db.CreateParameter("email", employee.Email, DbType.AnsiString),
-                db.CreateParameter("hireddate", employee.HiredDate, DbType.DateTime),
-                db.CreateParameter("roleid", employee.RoleId, DbType.Int16),
-                db.CreateParameter("isactive", employee.IsActive, DbType.Boolean),
-                db.CreateParameter("terminationdate", employee.TerminationDate, DbType.DateTime),
-                db.CreateParameter("payrolldate", employee.PayrollDate, DbType.Int16),
-                db.CreateParameter("payrollmethos", employee.PayrollMethod, DbType.Int16),
-                db.CreateParameter("notes", employee.Notes, DbType.AnsiString),
+                db.CreateParameter("fullname", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("placeofbirth", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("dateofbirth", reader.ReadDateTime(), DbType.DateTime),
+                db.CreateParameter("sex", reader.ReadInt16(), DbType.Int16),
+                db.CreateParameter("maritalstatus", reader.ReadInt16(), DbType.Int16),
+                db.CreateParameter("email", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("phone", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("streetaddress", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("zipcode", reader.ReadString(), DbType.AnsiString),
+                db.CreateParameter("villageid", reader.ReadInt64(), DbType.Int64),
+                db.CreateParameter("roleid", reader.ReadInt16(), DbType.Int16),
+                db.CreateParameter("isactive", reader.ReadBoolean(), DbType.Boolean),
                 db.CreateParameter("creator", context.GetUserID(), DbType.Int16)
             };
-            var success = await db.ExecuteNonQueryAsync(commandText);
+            var commandText = """
+                INSERT INTO employees 
+                (
+                    fullname, placeofbirth, dateofbirth, sex, maritalstatus, streetaddress,
+                    villageid, zipcode, phone, email, hireddate, roleid, isactive, terminationdate, payrolldate,
+                    payrollmethod, notes, creatorid
+                ) 
+                VALUES 
+                (
+                    @fullname, @placeofbirth, @dateofbirth, @sex, @maritalstatus, @streetaddress,
+                    @villageid, @zipcode, @phone, @email, CURRENT_TIMESTAMP, @roleid, @isactive, NULL, 10,
+                    1,'', @creator
+                );
+                """;
+            var success = await db.ExecuteNonQueryAsync(commandText, parameters);
             return success ? Results.Ok(CommonResult.Ok("Employee is saved successfully")) : Results.Problem("An error occured while save employee, please try again later");
+        }
+        private static async Task<IResult> UpdateAsync(IDBClient db, HttpContext context)
+        {
+            using (var stream = await context.Request.GetMemoryStreamAsync())
+            using (var reader = new BinaryDataReader(stream))
+            {
+                var parameters = new DbParameter[]
+                {
+                    db.CreateParameter("employeeid", reader.ReadInt16(), DbType.Int16),
+                    db.CreateParameter("fullname", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("placeofbirth", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("dateofbirth", reader.ReadDateTime(), DbType.DateTime),
+                    db.CreateParameter("sex", reader.ReadInt16(), DbType.Int16),
+                    db.CreateParameter("maritalstatus", reader.ReadInt16(), DbType.Int16),
+                    db.CreateParameter("email", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("phone", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("streetaddress", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("zipcode", reader.ReadString(), DbType.AnsiString),
+                    db.CreateParameter("villageid", reader.ReadInt64(), DbType.Int64),
+                    db.CreateParameter("roleid", reader.ReadInt16(), DbType.Int16),
+                    db.CreateParameter("isactive", reader.ReadBoolean(), DbType.Boolean),
+                    db.CreateParameter("editor", context.GetUserID(), DbType.Int16)
+                };
+                var commandText = """
+                    UPDATE employees
+                    SET fullname = @fullname,
+                        placeofbirth = @placeofbirth,
+                        dateofbirth = @dateofbirth,
+                        sex = @sex,
+                        maritalstatus = @maritalstatus,
+                        email = @email,
+                        phone = @phone,
+                        streetaddress = @streetaddress,
+                        zipcode = @zipcode,
+                        villageid = @villageid,
+                        roleid = @roleid,
+                        isactive = @isactive,
+                        editorid = @editor
+                    WHERE employeeid = @employeeid
+                    """;
+                return await db.ExecuteNonQueryAsync(commandText, parameters) ? Results.Ok(CommonResult.Ok("")) : Results.Problem("Kesalahan yang tidak diketahui terjadi saat memperbarui data pegawai, silakan coba lain waktu");
+            }
         }
         private static async Task<IResult> GetByIdAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 var commandText = """
                     SELECT e.employeeid, e.fullname, e.placeofbirth, e.dateofbirth, e.sex, e.maritalstatus, e.email, e.phone, 
@@ -134,6 +181,7 @@ namespace Astro.Server.Api
                     LEFT JOIN districts AS d ON v.districtid = d.districtid
                     LEFT JOIN cities AS c ON d.cityid = c.cityid
                     LEFT JOIN states AS s ON c.stateid = s.stateid
+                    WHERE e.employeeid = @employeeid AND e.isdeleted = false
                     """;
                 await db.ExecuteReaderAsync(async reader =>
                 {

@@ -28,8 +28,11 @@ namespace Astro.Models
             Price = reader.GetInt64(11);
             COGs = reader.GetInt64(12);
             Images = reader.GetString(13);
+            Taxable = reader.GetBoolean(14);
+            TaxFactor = reader.GetDecimal(15);
+            ParentID = reader.GetInt16(16);
         }
-        private Product(Streams.Reader reader)
+        private Product(Binaries.BinaryDataReader reader)
         {
             ID = reader.ReadInt16();
             Name = reader.ReadString();
@@ -47,6 +50,7 @@ namespace Astro.Models
             Images = reader.ReadString();
             Taxable = reader.ReadBoolean();
             TaxFactor = reader.ReadDecimal();
+            ParentID = reader.ReadInt16();
         }
         [JsonConstructor] public Product() { }
         [JsonPropertyName("id")]
@@ -84,8 +88,10 @@ namespace Astro.Models
         public bool Taxable { get; set; } = false;
         [JsonPropertyName("taxFactor")]
         public decimal TaxFactor { get; set; } = 0.0M;
+        public short ParentID { get; set; } = 0;
         public override string ToString() => JsonSerializer.Serialize(this, AppJsonSerializerContext.Default.Product);
         public static Product? Create(string json) => JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.Product);
-        public static Product Create(Streams.Reader reader) => new Product(reader);
+        public static Product Create(Binaries.BinaryDataReader reader) => new Product(reader);
+        public static Product Create(IDataReader reader) => new Product(reader);
     }
 }

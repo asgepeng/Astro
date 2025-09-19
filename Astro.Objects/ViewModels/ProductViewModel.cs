@@ -16,8 +16,8 @@ namespace Astro.ViewModels
         public Product Product { get; set; }
 
         [JsonPropertyName("categories")]
-        public List<Option> Categories { get; } = new List<Option>();
+        public List<Option<short>> Categories { get; } = new List<Option<short>>();
         [JsonPropertyName("units")]
-        public List<Option> Units { get; } = new List<Option>();
+        public List<Option<short>> Units { get; } = new List<Option<short>>();
     }
 }

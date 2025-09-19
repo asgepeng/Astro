@@ -1,16 +1,7 @@
 ﻿using Astro.Models;
 using Astro.ViewModels;
 using Astro.Winform.Classes;
-using ExCSS;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using Astro.Binaries;
 
 namespace Astro.Winform.Forms
 {
@@ -25,7 +16,7 @@ namespace Astro.Winform.Forms
         private async void HandleFormLoad(object sender, EventArgs e)
         {
             using (var stream = await WClient.GetStreamAsync("/data/roles/" + (Tag is null ? "0" : Tag.ToString())))
-            using (var r = new Astro.Streams.Reader(stream))
+            using (var r = new BinaryDataReader(stream))
             {
                 Role = new Role();
                 var roleExists = r.ReadBoolean();
@@ -65,7 +56,7 @@ namespace Astro.Winform.Forms
             if (this.Role is null) return;
 
             this.Role.Name = this.rolenameTextBox.Text.Trim();
-            using (var writer = new Streams.Writer())
+            using (var writer = new BinaryDataWriter())
             {
                 if (this.Role.Id > 0) writer.WriteInt16(this.Role.Id);
                 else writer.WriteByte(0x01);

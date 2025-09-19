@@ -48,7 +48,7 @@ namespace Astro.Winform.Forms
             addButton = new Button();
             label2 = new Label();
             label1 = new Label();
-            textBox1 = new TextBox();
+            contactNameTextBox = new TextBox();
             tabPage2 = new TabPage();
             tabPage3 = new TabPage();
             button1 = new Button();
@@ -56,12 +56,9 @@ namespace Astro.Winform.Forms
             addressToolStripMenuItem = new ToolStripMenuItem();
             phoneToolStripMenuItem = new ToolStripMenuItem();
             emailToolStripMenuItem = new ToolStripMenuItem();
-            label3 = new Label();
-            panel1 = new Panel();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             contextMenuStrip1.SuspendLayout();
-            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // tabControl1
@@ -74,11 +71,11 @@ namespace Astro.Winform.Forms
             tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
             tabControl1.InactiveColor = Color.LightGray;
             tabControl1.ItemSize = new Size(120, 40);
-            tabControl1.Location = new Point(0, 40);
+            tabControl1.Location = new Point(10, 50);
             tabControl1.Name = "tabControl1";
             tabControl1.Padding = new Point(6, 6);
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(400, 607);
+            tabControl1.Size = new Size(580, 550);
             tabControl1.TabIndex = 0;
             tabControl1.TextColor = Color.Black;
             // 
@@ -94,11 +91,11 @@ namespace Astro.Winform.Forms
             tabPage1.Controls.Add(addButton);
             tabPage1.Controls.Add(label2);
             tabPage1.Controls.Add(label1);
-            tabPage1.Controls.Add(textBox1);
+            tabPage1.Controls.Add(contactNameTextBox);
             tabPage1.Location = new Point(4, 44);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(392, 559);
+            tabPage1.Size = new Size(572, 502);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "ℹ️ General";
             tabPage1.UseVisualStyleBackColor = true;
@@ -111,7 +108,7 @@ namespace Astro.Winform.Forms
             deleteButton.FlatStyle = FlatStyle.Flat;
             deleteButton.Font = new Font("Segoe MDL2 Assets", 9.75F);
             deleteButton.ForeColor = SystemColors.ControlText;
-            deleteButton.Location = new Point(81, 91);
+            deleteButton.Location = new Point(526, 63);
             deleteButton.Name = "deleteButton";
             deleteButton.Size = new Size(30, 30);
             deleteButton.TabIndex = 18;
@@ -127,9 +124,9 @@ namespace Astro.Winform.Forms
             listView1.GridLines = true;
             listView1.LabelWrap = false;
             listView1.LargeImageList = imageList1;
-            listView1.Location = new Point(15, 127);
+            listView1.Location = new Point(15, 99);
             listView1.Name = "listView1";
-            listView1.Size = new Size(363, 378);
+            listView1.Size = new Size(541, 366);
             listView1.TabIndex = 2;
             listView1.TileSize = new Size(350, 56);
             listView1.UseCompatibleStateImageBehavior = false;
@@ -153,7 +150,7 @@ namespace Astro.Winform.Forms
             // 
             label6.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label6.AutoSize = true;
-            label6.Location = new Point(200, 508);
+            label6.Location = new Point(313, 474);
             label6.Name = "label6";
             label6.Size = new Size(55, 17);
             label6.TabIndex = 17;
@@ -162,7 +159,7 @@ namespace Astro.Winform.Forms
             // textBox3
             // 
             textBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            textBox3.Location = new Point(200, 528);
+            textBox3.Location = new Point(378, 471);
             textBox3.Name = "textBox3";
             textBox3.Size = new Size(178, 25);
             textBox3.TabIndex = 16;
@@ -171,7 +168,7 @@ namespace Astro.Winform.Forms
             // 
             label5.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             label5.AutoSize = true;
-            label5.Location = new Point(12, 508);
+            label5.Location = new Point(12, 474);
             label5.Name = "label5";
             label5.Size = new Size(74, 17);
             label5.TabIndex = 15;
@@ -180,7 +177,7 @@ namespace Astro.Winform.Forms
             // textBox2
             // 
             textBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            textBox2.Location = new Point(12, 528);
+            textBox2.Location = new Point(92, 471);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(178, 25);
             textBox2.TabIndex = 14;
@@ -193,7 +190,7 @@ namespace Astro.Winform.Forms
             editButton.FlatStyle = FlatStyle.Flat;
             editButton.Font = new Font("Segoe MDL2 Assets", 9.75F);
             editButton.ForeColor = SystemColors.ControlText;
-            editButton.Location = new Point(48, 91);
+            editButton.Location = new Point(493, 63);
             editButton.Name = "editButton";
             editButton.Size = new Size(30, 30);
             editButton.TabIndex = 9;
@@ -208,7 +205,7 @@ namespace Astro.Winform.Forms
             addButton.FlatStyle = FlatStyle.Flat;
             addButton.Font = new Font("Segoe MDL2 Assets", 9.75F);
             addButton.ForeColor = SystemColors.ControlText;
-            addButton.Location = new Point(15, 91);
+            addButton.Location = new Point(460, 63);
             addButton.Name = "addButton";
             addButton.Size = new Size(30, 30);
             addButton.TabIndex = 8;
@@ -227,26 +224,27 @@ namespace Astro.Winform.Forms
             // 
             // label1
             // 
-            label1.Location = new Point(12, 10);
+            label1.Location = new Point(15, 20);
+            label1.Margin = new Padding(0, 0, 3, 0);
             label1.Name = "label1";
             label1.Size = new Size(108, 25);
             label1.TabIndex = 1;
             label1.Text = "Customer Name";
             label1.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // textBox1
+            // contactNameTextBox
             // 
-            textBox1.Location = new Point(15, 38);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(363, 25);
-            textBox1.TabIndex = 0;
+            contactNameTextBox.Location = new Point(159, 21);
+            contactNameTextBox.Name = "contactNameTextBox";
+            contactNameTextBox.Size = new Size(397, 25);
+            contactNameTextBox.TabIndex = 0;
             // 
             // tabPage2
             // 
             tabPage2.Location = new Point(4, 44);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(392, 559);
+            tabPage2.Size = new Size(572, 502);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "🕒 Transaction Histories";
             tabPage2.UseVisualStyleBackColor = true;
@@ -256,20 +254,21 @@ namespace Astro.Winform.Forms
             tabPage3.Location = new Point(4, 44);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
-            tabPage3.Size = new Size(392, 559);
+            tabPage3.Size = new Size(572, 502);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "\U0001f9fe Account Payable";
             tabPage3.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
+            button1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             button1.BackColor = Color.Blue;
             button1.FlatAppearance.BorderColor = Color.FromArgb(192, 192, 255);
             button1.FlatStyle = FlatStyle.Flat;
             button1.ForeColor = Color.White;
-            button1.Location = new Point(16, 17);
+            button1.Location = new Point(16, 606);
             button1.Name = "button1";
-            button1.Size = new Size(366, 32);
+            button1.Size = new Size(130, 32);
             button1.TabIndex = 1;
             button1.Text = "Simpan";
             button1.UseVisualStyleBackColor = false;
@@ -277,70 +276,46 @@ namespace Astro.Winform.Forms
             // 
             // contextMenuStrip1
             // 
+            contextMenuStrip1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { addressToolStripMenuItem, phoneToolStripMenuItem, emailToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(149, 70);
+            contextMenuStrip1.Size = new Size(181, 92);
             // 
             // addressToolStripMenuItem
             // 
             addressToolStripMenuItem.Name = "addressToolStripMenuItem";
-            addressToolStripMenuItem.Size = new Size(148, 22);
-            addressToolStripMenuItem.Text = "Address";
+            addressToolStripMenuItem.Size = new Size(180, 22);
+            addressToolStripMenuItem.Text = "Alamat";
             addressToolStripMenuItem.Click += addressToolStripMenuItem_Click;
             // 
             // phoneToolStripMenuItem
             // 
             phoneToolStripMenuItem.Name = "phoneToolStripMenuItem";
-            phoneToolStripMenuItem.Size = new Size(148, 22);
-            phoneToolStripMenuItem.Text = "Phone";
+            phoneToolStripMenuItem.Size = new Size(180, 22);
+            phoneToolStripMenuItem.Text = "Telepon";
             phoneToolStripMenuItem.Click += button7_Click;
             // 
             // emailToolStripMenuItem
             // 
             emailToolStripMenuItem.Name = "emailToolStripMenuItem";
-            emailToolStripMenuItem.Size = new Size(148, 22);
-            emailToolStripMenuItem.Text = "Email Address";
+            emailToolStripMenuItem.Size = new Size(180, 22);
+            emailToolStripMenuItem.Text = "Alamat E-Mail";
             emailToolStripMenuItem.Click += button5_Click;
-            // 
-            // label3
-            // 
-            label3.Dock = DockStyle.Top;
-            label3.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label3.Location = new Point(0, 0);
-            label3.Name = "label3";
-            label3.Padding = new Padding(5, 0, 0, 0);
-            label3.Size = new Size(400, 40);
-            label3.TabIndex = 2;
-            label3.Text = "Pelanggan";
-            label3.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // panel1
-            // 
-            panel1.Controls.Add(button1);
-            panel1.Dock = DockStyle.Bottom;
-            panel1.Location = new Point(0, 647);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(400, 64);
-            panel1.TabIndex = 19;
             // 
             // ContactForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(250, 250, 250);
-            BorderStyle = BorderStyle.FixedSingle;
+            Controls.Add(button1);
             Controls.Add(tabControl1);
-            Controls.Add(label3);
-            Controls.Add(panel1);
-            Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "ContactForm";
-            Size = new Size(400, 711);
+            Size = new Size(600, 650);
             Load += ContactForm_Load;
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
             contextMenuStrip1.ResumeLayout(false);
-            panel1.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -349,7 +324,7 @@ namespace Astro.Winform.Forms
         private TabPage tabPage2;
         private ListView listView1;
         private Label label1;
-        private TextBox textBox1;
+        private TextBox contactNameTextBox;
         private TabPage tabPage3;
         private Button button1;
         private Label label2;
@@ -369,7 +344,5 @@ namespace Astro.Winform.Forms
         private ToolStripMenuItem emailToolStripMenuItem;
         private Button deleteButton;
         private FlatTabControl tabControl1;
-        private Label label3;
-        private Panel panel1;
     }
 }

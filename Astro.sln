@@ -21,6 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astro.DbInitialializer", "I
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astro.Winform", "Astro.Winform\Astro.Winform.csproj", "{783EE715-4D35-4319-9278-1686D23E76E8}"
 	ProjectSection(ProjectDependencies) = postProject
+		{4A18BBCB-93F8-42E0-8F9D-0DE7A4D1B23E} = {4A18BBCB-93F8-42E0-8F9D-0DE7A4D1B23E}
 		{625D9F56-5910-4A9C-91B8-F71DEDBD1408} = {625D9F56-5910-4A9C-91B8-F71DEDBD1408}
 	EndProjectSection
 EndProject
@@ -45,7 +46,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "wwwroot", "bin\Release\net8
 		SlnRelativePath = "bin\Release\net8.0\wwwroot\"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Astro.Stream", "Astro.Stream\Astro.Stream.csproj", "{29357D67-7DFF-4827-A36F-6FE701F5DEA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astro.Stream", "Astro.Stream\Astro.Stream.csproj", "{29357D67-7DFF-4827-A36F-6FE701F5DEA2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

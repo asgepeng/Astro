@@ -1,5 +1,6 @@
 ﻿using Astro.Drawing.Extensions;
-using Astro.Winform.Forms;
+using Astro.Models;
+
 using System.Collections.ObjectModel;
 
 namespace Astro.Winform.Controls
@@ -50,7 +51,8 @@ namespace Astro.Winform.Controls
             public bool Hovered { get; set; }
             public bool MouseHit { get; set; } = false;
             public Rectangle Bounds { get; set; }
-            public string URL { get; set; } = string.Empty;
+            public string SQLSelect { get; set; } = string.Empty;
+            public string SQLDelete { get; set; } = string.Empty;
             public ListingData Type { get; set; }
             public void SetUserAccess(bool add, bool edit, bool update, bool delete)
             {
@@ -134,13 +136,13 @@ namespace Astro.Winform.Controls
             int x = 10, y = 10 - _scrollOffsetY;
             foreach (var group in this.Groups)
             {
-                group.Bounds = new Rectangle(x, y + 5, width, this.GroupHeight - 10);
+                group.Bounds = new Rectangle(x, y + 2, width, this.GroupHeight - 4);
                 y += this.GroupHeight;
                 if (!group.IsCollapsed)
                 {
                     foreach (var item in group.Items)
                     {
-                        item.Bounds = new Rectangle(x, y + 2, width, this.ItemHeight - 4);
+                        item.Bounds = new Rectangle(x, y + 1, width, this.ItemHeight - 2);
                         y += this.ItemHeight;
                     }
                 }
@@ -162,15 +164,21 @@ namespace Astro.Winform.Controls
         public Menu? SelectedItem { get; private set; }
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
-            using (var brush = new SolidBrush(this.BackColor))
+            if (this.BackgroundImage != null)
             {
-                pevent.Graphics.FillRectangle(brush, pevent.ClipRectangle);
+                pevent.Graphics.DrawImage(this.BackgroundImage, pevent.ClipRectangle);
+            }
+            else
+            {
+                using (var brush = new SolidBrush(this.BackColor))
+                {
+                    pevent.Graphics.FillRectangle(brush, pevent.ClipRectangle);
+                }
             }
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis;
             foreach (var g in Groups)
             {            
                 //if (g.Bounds.Contains(_mousePoint)) e.Graphics.FillRectangle(Brushes.LightGreen, g.Bounds);
@@ -181,31 +189,23 @@ namespace Astro.Winform.Controls
                     e.Graphics.DrawEllipse(Pens.YellowGreen, rect);
                 }
                 // Group title (pakai TextRenderer)
-                TextRenderer.DrawText(
-                    e.Graphics,
-                    g.Title.ToUpper(),
-                    this.BoldFont,
-                    g.Bounds,
-                    this.ForeColor,
-                    flags
-                );
-
+                TextRenderer.DrawText(e.Graphics, g.Title.ToUpper(), this.BoldFont, g.Bounds, this.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
                 if (!g.IsCollapsed)
                 {
                     foreach (var m in g.Items)
                     {
                         if (!m.Selected && m.MouseHit)
                         {
-                            using (var selectedItemBrush = new SolidBrush(Color.FromArgb(56,56,56)))
+                            using (var selectedItemBrush = new SolidBrush(Color.FromArgb(100, Color.SkyBlue)))
                             {
-                                e.Graphics.DrawRoundedRectangle(m.Bounds, 8, selectedItemBrush);
+                                e.Graphics.DrawRoundedRectangle(m.Bounds, 4, selectedItemBrush);
                             }
                         }
                         else if (m.Selected || m.Bounds.Contains(_mousePoint))
                         {
-                            using (var selectedItemBrush = new SolidBrush(Color.FromArgb(187, 0, 0, 0)))
+                            using (var selectedItemBrush = new SolidBrush(Color.FromArgb(100, Color.Black)))
                             {
-                                e.Graphics.DrawRoundedRectangle(m.Bounds, 8, selectedItemBrush);
+                                e.Graphics.DrawRoundedRectangle(m.Bounds, 4, selectedItemBrush);
                             }
                         }
 
@@ -223,16 +223,8 @@ namespace Astro.Winform.Controls
                         }
 
                         var textRect = new Rectangle(m.Bounds.X + 30, m.Bounds.Y, m.Bounds.Width - 30, m.Bounds.Height);
+                        TextRenderer.DrawText(e.Graphics, m.Title, this.Font, textRect, this.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-                        // Item text (pakai TextRenderer)
-                        TextRenderer.DrawText(
-                            e.Graphics,
-                            m.Title,
-                            this.Font,
-                            textRect,
-                            this.ForeColor,
-                            flags
-                        );
                     }
                 }
                 else
@@ -249,10 +241,6 @@ namespace Astro.Winform.Controls
         }
         private void DrawScrollBar(Graphics g)
         {
-            Rectangle trackRect = new Rectangle(this.Width - ScrollBarWidth, 0, ScrollBarWidth, this.Height);
-            using (Brush trackBrush = new SolidBrush(this.BackColor))
-                g.FillRectangle(trackBrush, trackRect);
-
             float ratio = (float)this.Height / _contentHeight;
             int thumbHeight = Math.Max(20, (int)(this.Height * ratio));
 
@@ -268,7 +256,7 @@ namespace Astro.Winform.Controls
         {
             if (_contentHeight <= this.Height) return;
 
-            int scrollAmount = 40;
+            int scrollAmount = this.ItemHeight;
             _scrollOffsetY = e.Delta < 0
                 ? Math.Min(_scrollOffsetY + scrollAmount, _contentHeight - this.Height)
                 : Math.Max(_scrollOffsetY - scrollAmount, 0);
@@ -377,10 +365,14 @@ namespace Astro.Winform.Controls
                         selectedItem.Group.Selected = false;
                     }
                     selectedItem.Selected = false;
+                    if (OnItemClicked != null)
+                    {
+                        OnItemClicked.Invoke(SelectedItem);
+                    }
                 }
                 this.Invalidate();
-                base.OnMouseClick(e);
             }
         }
+        public Func<Menu, Task>? OnItemClicked = null;
     }
 }

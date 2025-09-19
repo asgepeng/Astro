@@ -1,4 +1,5 @@
 ﻿using Astro.Cryptography;
+using Astro.Data;
 using Astro.Winform.Classes;
 using Astro.Winform.Helpers;
 using System;
@@ -16,55 +17,41 @@ namespace Astro.Winform.Forms
     public partial class ListingPopUpForm : Form
     {
         private readonly string commandText;
-        private readonly Guid guid = Guid.NewGuid();
-        private readonly BindingSource bs;
+        private readonly BindingSource bs  = new BindingSource();
+        private readonly IDBClient db = My.Application.CreateDBAccess();
 
         private List<string> stringColumns = new List<string>();
-        public ListingPopUpForm(string cmd)
+        public ListingPopUpForm(string cmd, string filterText = "")
         {
             InitializeComponent();
-            this.bs = new BindingSource();
             this.grid.DataSource = bs;
             this.grid.AutoGenerateColumns = false;
             this.grid.MultiSelect = false;
             this.commandText = cmd;
+            this.searchTextBox.Text = filterText;
         }
-        private async void ListingPopUpForm_Load(object sender, EventArgs e)
+        private async void HandleFormLoad(object sender, EventArgs e)
         {
-            var key = guid.ToByteArray();
-            var encrypted = Encryption.Encrypt(commandText, key);
-            using (var writer = new Astro.Streams.Writer())
+            var parameters = new System.Data.Common.DbParameter[]
             {
-                writer.WriteGuid(guid);
-                writer.WriteString(encrypted);
-
-                using (var stream = await WClient.PostStreamAsync("/api/sql", writer.ToArray()))
-                using (var reader = new Astro.Streams.Reader(stream))
-                {
-                    var result = reader.ReadByte();
-                    if (result == 1)
-                    {
-                        var table = reader.ReadDataTable();
-                        foreach (DataColumn col in table.Columns)
-                        {
-                            if (col.DataType.Equals(typeof(string)))
-                            {
-                                stringColumns.Add(col.ColumnName);
-                            }
-                        }
-                        this.bs.DataSource = table;
-                    }
-                    else if (result == 2)
-                    {
-                        var message = reader.ReadString();
-                        MessageBox.Show(message);
-                    }
-
-                    this.searchTextBox.Enabled = true;
-                    this.grid.Enabled = true;
-                    this.okButton.Enabled = true;
-                }
+                db.CreateParameter("userid", My.Application.GetCurrentUserID(), DbType.Int16),
+                db.CreateParameter("locationid", My.Application.GetCurrentLocationID(), DbType.Int16)
+            };
+            var table = await db.ExecuteDataTableAsync(this.commandText, parameters);
+            foreach (DataColumn col in table.Columns)
+            {
+                stringColumns.Add(col.ColumnName);
             }
+            this.bs.DataSource = table;
+            if (!string.IsNullOrWhiteSpace(this.searchTextBox.Text))
+            {
+                this.ApplyFilter(sender, e);
+            }
+            this.searchTextBox.Enabled = true;
+            this.grid.Enabled = true;
+            this.okButton.Enabled = true;
+
+            this.searchTextBox.TextChanged += this.ApplyFilter;
             this.searchTextBox.Focus();
         }
         internal void AddColumn(string headerText, string propertyName, int width, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleLeft, string format = "")
@@ -116,7 +103,7 @@ namespace Astro.Winform.Forms
             return string.Join(" OR ", columns);
         }
 
-        private void ApplyFilter(object sender, EventArgs e)
+        private void ApplyFilter(object? sender, EventArgs e)
         {
             this.bs.Filter = CreateFilter(this.searchTextBox.Text);
         }

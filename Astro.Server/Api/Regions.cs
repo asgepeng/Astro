@@ -21,45 +21,27 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetCountriesAsync(IDBClient db, HttpContext context)
         {
-            var isWinformApp = context.Request.IsDesktopAppRequest();
             var commandText = """
                 select countryid, name
                 from countries
                 order by name
                 """;
-            if (context.Request.IsDesktopAppRequest())
+            using (var builder = new Astro.Binaries.BinaryDataWriter())
             {
-                using (var builder = new Streams.Writer())
+                await db.ExecuteReaderAsync(async reader =>
                 {
-                    await db.ExecuteReaderAsync(async reader =>
+                    while (await reader.ReadAsync())
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            builder.WriteInt16(reader.GetInt16(0));
-                            builder.WriteString(reader.GetString(1));
-                        }
-                    }, commandText);
-                    return Results.File(builder.ToArray(), "application/octet-stream");
-                }
+                        builder.WriteInt16(reader.GetInt16(0));
+                        builder.WriteString(reader.GetString(1));
+                    }
+                }, commandText);
+                return Results.File(builder.ToArray(), "application/octet-stream");
             }
-
-            var list = new ListOption();
-            await db.ExecuteReaderAsync(async reader =>
-            {
-                while (await reader.ReadAsync())
-                {
-                    list.Add(new Option()
-                    {
-                        Id = (int)reader.GetInt16(0),
-                        Text = reader.GetString(1)
-                    });
-                }
-            }, commandText);
-            return Results.Ok(list);
         }
         internal static async Task<IResult> GetStatesAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var builder = new Streams.Writer())
+            using (var builder = new Astro.Binaries.BinaryDataWriter())
             {
                 var commandText = """
                     select stateid, name
@@ -84,7 +66,7 @@ namespace Astro.Server.Api
         }
         internal static async Task<IResult> GetCitiesAsync(short id, IDBClient db, HttpContext context)
         {
-            using (var builder = new Streams.Writer())
+            using (var builder = new Astro.Binaries.BinaryDataWriter())
             {
                 var commandText = """
                     select cityid, name
@@ -109,7 +91,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetDistrictsAscync(int id, IDBClient db)
         {
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 var commandText = """
                 SELECT districtid, name
@@ -134,7 +116,7 @@ namespace Astro.Server.Api
         }
         private static async Task<IResult> GetVillagesAsync(int id, IDBClient db)
         {
-            using (var writer = new Streams.Writer())
+            using (var writer = new Astro.Binaries.BinaryDataWriter())
             {
                 var commandText = """
                     SELECT villageid, name

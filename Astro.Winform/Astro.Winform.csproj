@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Astro.Data\Astro.Data.csproj" />
     <ProjectReference Include="..\Astro.Objects\Astro.csproj" />
     <ProjectReference Include="..\Astro.Stream\Astro.Stream.csproj" />
   </ItemGroup>
