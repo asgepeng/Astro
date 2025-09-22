@@ -341,17 +341,14 @@ namespace Astro.Winform.Forms
         {
             _loadingOverlay.Hide();
         }
-        private async void SPAForm_Load(object sender, EventArgs e)
+        protected async override void OnLoad(EventArgs e)
         {
-            using (var loginDialog = new LoginForm())
-            {
-                if (loginDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    var home = sideBarPanel.Groups.Add("HOME");
-                    home.Selected = true;
-                    var dashboard = home.Items.Add(0, "Dashboard");
-                    dashboard.Selected = true;
-                    dashboard.Image = """
+            base.OnLoad(e);
+            var home = sideBarPanel.Groups.Add("HOME");
+            home.Selected = true;
+            var dashboard = home.Items.Add(0, "Dashboard");
+            dashboard.Selected = true;
+            dashboard.Image = """
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                          xmlns="http://www.w3.org/2000/svg">
                       <rect x="3"  y="3"  width="8" height="8" rx="2" stroke="#fff" stroke-width="2"/>
@@ -361,7 +358,7 @@ namespace Astro.Winform.Forms
                     </svg>                
                     """.ToImage();
 
-                    var commandText = """
+            var commandText = """
                     SELECT s.sectionid, s.title, m.menuid, m.title AS menu_title, m.icon, rtm.allowcreate, rtm.allowread, rtm.allowupdate, rtm.allowdelete
                     FROM rolemenus AS rtm 
                     INNER JOIN menus m ON rtm.menuid = m.menuid 
@@ -369,35 +366,35 @@ namespace Astro.Winform.Forms
                     WHERE m.disabled = false AND rtm.roleid = @roleId
                     ORDER BY s.sectionid, m.menuid
                     """;
-                    var listMenu = new ListMenu();
-                    using (var writer = new BinaryDataWriter())
+            var listMenu = new ListMenu();
+            using (var writer = new BinaryDataWriter())
+            {
+                await db.ExecuteReaderAsync(async (DbDataReader reader) =>
+                {
+                    SideBarPanel.GroupMenu? group = null;
+
+                    var currentSectionId = 0;
+
+                    while (await reader.ReadAsync())
                     {
-                        await db.ExecuteReaderAsync(async (DbDataReader reader) =>
+                        var sectionId = reader.GetInt16(0);
+                        if (sectionId != currentSectionId || group is null)
                         {
-                            SideBarPanel.GroupMenu? group = null;     
-
-                            var currentSectionId = 0;
-
-                            while (await reader.ReadAsync())
-                            {
-                                var sectionId = reader.GetInt16(0);
-                                if (sectionId != currentSectionId || group is null)
-                                {
-                                    currentSectionId = sectionId;
-                                    group = sideBarPanel.Groups.Add(reader.GetString(1).Replace("&", "&&"));
-                                }
-                                var menu = group.Items.Add(reader.GetInt16(2), reader.GetString(3));
-                                menu.SetUserAccess(reader.GetBoolean(5), reader.GetBoolean(6), reader.GetBoolean(7), reader.GetBoolean(8));
-                                var svg = reader.GetString(4);
-                                if (!string.IsNullOrWhiteSpace(svg))
-                                {
-                                    menu.Image = svg.ToImage();
-                                }
-                                switch (menu.Id)
-                                {
-                                    case 1:
-                                        menu.Type = ListingData.Products;
-                                        menu.SQLSelect = """
+                            currentSectionId = sectionId;
+                            group = sideBarPanel.Groups.Add(reader.GetString(1).Replace("&", "&&"));
+                        }
+                        var menu = group.Items.Add(reader.GetInt16(2), reader.GetString(3));
+                        menu.SetUserAccess(reader.GetBoolean(5), reader.GetBoolean(6), reader.GetBoolean(7), reader.GetBoolean(8));
+                        var svg = reader.GetString(4);
+                        if (!string.IsNullOrWhiteSpace(svg))
+                        {
+                            menu.Image = svg.ToImage();
+                        }
+                        switch (menu.Id)
+                        {
+                            case 1:
+                                menu.Type = ListingData.Products;
+                                menu.SQLSelect = """
                                         SELECT p.productid, p.name, p.sku, c.name AS categoryname, i.stock, u.name AS unitname, i.price, e.fullname, p.createddate
                                         FROM products AS p
                                             INNER JOIN categories AS c ON p.categoryid = c.categoryid
@@ -407,14 +404,14 @@ namespace Astro.Winform.Forms
                                         WHERE p.isdeleted = false
                                         ORDER BY p.name
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         UPDATE products SET isdeleted = true
                                         WHERE productid = @id
                                         """;
-                                        break;
-                                    case 3:
-                                        menu.Type = ListingData.Customers;
-                                        menu.SQLSelect = """
+                                break;
+                            case 3:
+                                menu.Type = ListingData.Customers;
+                                menu.SQLSelect = """
                                         SELECT c.contactid, 
                                             c.name, 
                                             COALESCE(ca.streetaddress || ' ' || v.name || ' ' || d.name || ' ' || cty.name || ', ' || ca.zipcode, '') AS address,
@@ -438,15 +435,15 @@ namespace Astro.Winform.Forms
                                           AND c.contacttype = 1
                                         ORDER BY c.name;
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         UPDATE contacts
                                         SET isdeleted = true
                                         WHERE contactid = @id
                                         """;
-                                        break;
-                                    case 2:
-                                        menu.Type = ListingData.Suppliers;
-                                        menu.SQLSelect = """
+                                break;
+                            case 2:
+                                menu.Type = ListingData.Suppliers;
+                                menu.SQLSelect = """
                                         SELECT c.contactid, 
                                             c.name, 
                                             COALESCE(ca.streetaddress || ' ' || v.name || ' ' || d.name || ' ' || cty.name || ', ' || ca.zipcode, '') AS address,
@@ -470,30 +467,30 @@ namespace Astro.Winform.Forms
                                           AND c.contacttype = 0
                                         ORDER BY c.name;
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         UPDATE contacts
                                         SET isdeleted = true
                                         WHERE contactid = @Id
                                         """;
-                                        break;
-                                    case 4:
-                                        menu.Type = ListingData.Employee;
-                                        menu.SQLSelect = """
+                                break;
+                            case 4:
+                                menu.Type = ListingData.Employee;
+                                menu.SQLSelect = """
                                         SELECT e.employeeid, e.fullname, e.streetaddress, e.email, e.phone, r.name AS rolename, CASE e.creatorid WHEN 0 THEN 'System' ELSE c.fullname END AS creator, e.createddate
                                         FROM employees AS e
                                         INNER JOIN roles AS r ON e.roleid = r.roleid
                                         LEFT JOIN employees AS c ON e.creatorid = c.employeeid
                                         WHERE e.isdeleted = false AND e.employeeid > 1
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         UPDATE employees
                                         SET isdeleted = true
                                         WHERE employeeid = @id
                                         """;
-                                        break;
-                                    case 5:
-                                        menu.Type = ListingData.Accounts;
-                                        menu.SQLSelect = """
+                                break;
+                            case 5:
+                                menu.Type = ListingData.Accounts;
+                                menu.SQLSelect = """
                                         SELECT acc.accountid, acc.accountname, acc.accountnumber, 
                                         CASE ap.providertype WHEN 1 THEN 'Bank' WHEN 2 THEN 'E-Wallet' WHEN 3 THEN 'E-Money' ELSE '-' END AS accounttype, 
                                         ap.name, u.fullname, acc.createddate, acc.editeddate
@@ -502,15 +499,15 @@ namespace Astro.Winform.Forms
                                         INNER JOIN employees AS u ON acc.creatorid = u.employeeid
                                         WHERE acc.isdeleted = false
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         UPDATE accounts
                                         SET isdeleted = true
                                         WHERE accountid = @id
                                         """;
-                                        break;
-                                    case 12:
-                                        menu.Type = ListingData.Purchases;
-                                        menu.SQLSelect = """
+                                break;
+                            case 12:
+                                menu.Type = ListingData.Purchases;
+                                menu.SQLSelect = """
                                         SELECT p.purchaseid, p.invoicenumber, s.name AS suppliername, p.purchasedate, p.grandtotal, p.grandtotal - p.totalpaid AS ap, 
                                             CASE p.status WHEN 2 THEN 'Lunas' WHEN 1 THEN 'Bayar Sebagian' ELSE 'Belum dibayar' END AS status, e.fullname AS creator, p.createddate
                                         FROM purchases AS p
@@ -519,51 +516,49 @@ namespace Astro.Winform.Forms
                                         WHERE p.purchasedate BETWEEN @start AND @end
                                         AND p.locationid = @location
                                         """;
-                                        break;
-                                    case 20:
-                                        menu.Type = ListingData.Users;
-                                        menu.SQLSelect = """
+                                break;
+                            case 20:
+                                menu.Type = ListingData.Users;
+                                menu.SQLSelect = """
                                         SELECT e.employeeid, e.fullname, CASE l.creatorid WHEN 0 THEN 'System' ELSE creator.fullname END AS creator, l.createddate
                                         FROM logins AS l
                                         INNER JOIN employees AS e ON l.employeeid = e.employeeid
                                         LEFT JOIN employees AS creator ON l.creatorid = creator.employeeid
                                         WHERE e.isdeleted = false AND e.employeeid > 1
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
                                         DELETE FROM logins
                                         WHERE employeeid = @id
                                         """;
-                                        break;
-                                    case 21:
-                                        menu.Type = ListingData.Roles;
-                                        menu.SQLSelect = """
+                                break;
+                            case 21:
+                                menu.Type = ListingData.Roles;
+                                menu.SQLSelect = """
                                         SELECT r.roleid, r.name, CASE WHEN r.creatorid = 0 THEN 'System' else c.fullname END AS creator, r.createddate
                                         FROM roles AS r
                                         LEFT JOIN employees AS c ON r.creatorid = c.employeeid
                                         WHERE r.roleid > 1
                                         """;
-                                        menu.SQLDelete = """
+                                menu.SQLDelete = """
 
                                         """;
-                                        break;
-                                }
-                            }
-
-                        }, commandText, db.CreateParameter("roleId", (short)1, DbType.Int16));
-                        this.sideBarPanel.OnItemClicked = this.OnSideBarMenuClicked;
-                        this.sideBarPanel.RecalculateContent();
-
-                        this.Text = "Dashboard";
-                        var dbcontrol = new DashboardUserControl();
-                        dbcontrol.Name = "0";
-                        dbcontrol.Dock = DockStyle.Fill;
-                        this.mainPanel.Controls.Add(dbcontrol);
+                                break;
+                        }
                     }
-                    this.WindowState = FormWindowState.Maximized;
-                    this.RESIZE_HANDLE_SIZE = 0;
-                    ApplyShadow();
-                }
+
+                }, commandText, db.CreateParameter("roleId", (short)1, DbType.Int16));
+                this.sideBarPanel.OnItemClicked = this.OnSideBarMenuClicked;
+                this.sideBarPanel.RecalculateContent();
+
+                this.Text = "Dashboard";
+                var dbcontrol = new DashboardUserControl();
+                dbcontrol.Name = "0";
+                dbcontrol.Dock = DockStyle.Fill;
+                this.mainPanel.Controls.Add(dbcontrol);
             }
+            this.WindowState = FormWindowState.Maximized;
+            this.RESIZE_HANDLE_SIZE = 0;
+            ApplyShadow();
         }
         #region Protected Area
         protected override void OnMouseDown(MouseEventArgs e)

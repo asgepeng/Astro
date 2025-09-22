@@ -84,7 +84,6 @@
             Name = "SPAForm";
             Padding = new Padding(3, 40, 3, 3);
             Text = "SPAForm";
-            Load += SPAForm_Load;
             ResumeLayout(false);
         }
 

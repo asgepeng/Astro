@@ -26,7 +26,16 @@ namespace PointOfSale
                 {
                     My.Application.ApiUrl = "http://localhost:5002";
                 }
-                Application.Run(new SPAForm());
+                using (var loginForm = new LoginForm())
+                {
+                    if (loginForm.ShowDialog() == DialogResult.OK)
+                    {
+                        using (var host = new AstroForm())
+                        {
+                            Application.Run(host);
+                        }
+                    }
+                }
             }
             catch(Exception ex)
             {
